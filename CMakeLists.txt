@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.16)
+project(shoz LANGUAGES C CXX CUDA)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CUDA_ARCHITECTURES all)
+set(EXE shoz)
+
+if(CMAKE_BUILD_TYPE STREQUAL "")
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+include(FetchContent)
+
+FetchContent_declare(zenohc GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c" GIT_TAG 0.10.1-rc)
+FetchContent_MakeAvailable(zenohc)
+FetchContent_declare(zenohcpp GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp" GIT_TAG 0.10.1-rc)
+FetchContent_MakeAvailable(zenohcpp)
+
+add_subdirectory(src)
