@@ -14,12 +14,12 @@ void runAsSubscriber(const char* conf_path) {
         auto subscriber = zenoh::expect<zenoh::Subscriber>(session.declare_subscriber(
             "shoz/cuda", messageHandler
         ));
+
+        std::getchar();
     } catch (const zenoh::ErrorMessage& ex) {
         std::cerr << "Zenoh: " << ex.as_string_view() << std::endl;
         exit(1);
     }
-
-    std::getchar();
 }
 
 void messageHandler(const zenoh::Sample& sample) {
