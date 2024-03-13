@@ -9,16 +9,16 @@
 void print_usage_and_exit(char* program_name);
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) print_usage_and_exit(argv[0]);
+    if (argc != 3) print_usage_and_exit(argv[0]);
 
     int opt;
-    while ((opt = getopt(argc, argv, "ps")) != -1) {
+    while ((opt = getopt(argc, argv, "p:s:")) != -1) {
         switch (opt) {
         case 'p':
-            runAsPublisher();
+            runAsPublisher(optarg);
             break;
         case 's':
-            runAsSubscriber();
+            runAsSubscriber(optarg);
             break;
         default:
             print_usage_and_exit(argv[0]);
@@ -29,6 +29,6 @@ int main(int argc, char* argv[]) {
 }
 
 void print_usage_and_exit(char* program_name) {
-    std::cerr << "Usage: " << program_name << " <-p|-s>" << std::endl;
+    std::cerr << "Usage: " << program_name << " <-p|-s> <zenoh config path>" << std::endl;
     std::exit(1);
 }

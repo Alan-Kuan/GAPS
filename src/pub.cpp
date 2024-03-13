@@ -6,8 +6,8 @@
 
 #include "work.hpp"
 
-void runAsPublisher(void) {
-    zenoh::Config config;
+void runAsPublisher(const char* conf_path) {
+    auto config = zenoh::expect<zenoh::Config>(zenoh::config_from_file(conf_path));
     auto session = zenoh::expect<zenoh::Session>(zenoh::open(std::move(config)));
     auto publisher = zenoh::expect<zenoh::Publisher>(session.declare_publisher("shoz/cuda"));
 

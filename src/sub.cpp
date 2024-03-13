@@ -6,8 +6,8 @@
 
 #include "work.hpp"
 
-void runAsSubscriber(void) {
-    zenoh::Config config;
+void runAsSubscriber(const char* conf_path) {
+    auto config = zenoh::expect<zenoh::Config>(zenoh::config_from_file(conf_path));
     auto session = zenoh::expect<zenoh::Session>(zenoh::open(std::move(config)));
     auto subscriber = zenoh::expect<zenoh::Subscriber>(session.declare_subscriber(
         "shoz/cuda", messageHandler
