@@ -15,4 +15,7 @@ FetchContent_MakeAvailable(zenohc)
 FetchContent_declare(zenohcpp GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp" GIT_TAG 0.10.1-rc)
 FetchContent_MakeAvailable(zenohcpp)
 
+find_package(CUDAToolkit REQUIRED)
+
+include_directories(include)
 add_subdirectory(src)
