@@ -47,8 +47,6 @@ void sender(void) {
         cudaMemcpy(d_arr, arr, sizeof(int) * 64, cudaMemcpyHostToDevice);
 
         alloc.shareHandle(1);
-
-        alloc.fini();
     } catch (runtime_error& err) {
         cerr << "[sender] " << err.what() << endl;
     }
@@ -70,8 +68,6 @@ void receiver(void) {
 
         for (int i = 0; i < 64; i++) cout << arr[i] << ' ';
         cout << endl;
-
-        alloc.fini();
     } catch (runtime_error& err) {
         cerr << "[receiver] " << err.what() << endl;
     }

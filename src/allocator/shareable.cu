@@ -37,11 +37,6 @@ ShareableAllocator::ShareableAllocator(const char* topic_name) {
 }
 
 ShareableAllocator::~ShareableAllocator(void) {
-    // this->detachPool();
-    // this->detachShm(this->getMetadata()->topic_name, sizeof(Metadata));
-}
-
-void ShareableAllocator::fini(void) {
     this->detachPool();
     this->detachShm(this->getMetadata()->topic_name, sizeof(Metadata));
 }

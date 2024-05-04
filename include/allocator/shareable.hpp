@@ -32,7 +32,6 @@ public:
 
     void* malloc(size_t size);
     void free(void* ptr);
-    void fini(void);
 
 private:
     CUmemGenericAllocationHandle handle;
