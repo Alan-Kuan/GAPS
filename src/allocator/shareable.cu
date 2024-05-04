@@ -50,6 +50,7 @@ void ShareableAllocator::createPool(size_t size) {
 
     size_t padded_size = this->getPaddedSize(size, &prop);
     throwOnErrorCuda(cuMemCreate(&this->handle, padded_size, &prop, 0));
+    this->handle_is_valid = true;
     this->getMetadata()->pool_size = padded_size;
 }
 
@@ -70,6 +71,7 @@ void ShareableAllocator::attachPool(void) {
 }
 
 void ShareableAllocator::detachPool(void) {
+    if (!this->handle_is_valid) return;
     size_t& size = this->getMetadata()->pool_size;
     throwOnErrorCuda(cuMemRelease(this->handle));
     throwOnErrorCuda(cuMemUnmap((CUdeviceptr) this->pool_base, size));
@@ -192,6 +194,7 @@ void ShareableAllocator::recvHandle(void) {
     ShareableHandle sh_handle = *((ShareableHandle*) CMSG_DATA(cmsg));
     throwOnErrorCuda(cuMemImportFromShareableHandle(&this->handle,
         (void*) (uintptr_t) sh_handle, CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR));
+    this->handle_is_valid = true;
 
     this->attachPool();
 }

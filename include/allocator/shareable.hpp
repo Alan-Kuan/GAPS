@@ -35,6 +35,7 @@ public:
 
 private:
     CUmemGenericAllocationHandle handle;
+    bool handle_is_valid = false;
 };
 
 #endif  // SHAREABLE_ALLOCATOR_HPP

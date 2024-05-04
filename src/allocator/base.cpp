@@ -1,6 +1,6 @@
 #include "allocator/base.hpp"
 
-#include "errno.h"
+#include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -24,7 +24,6 @@ void Allocator::attachShm(const char* shm_name, size_t size) {
 //       the name before the shared memory gets unmapped
 void Allocator::detachShm(std::string shm_name, size_t size) {
     throwOnError(munmap(this->shm_base, size));
-    // TODO: maintain a ref count in shared memory; once it reduced to 0, call unlink
-    // unlinking an shared memory file that has already been unlinked is acceptable
+    // it's ok if the file has already been deleted by some allocator
     if (shm_unlink(shm_name.c_str()) != 0 && errno != ENOENT) throwError();
 }
