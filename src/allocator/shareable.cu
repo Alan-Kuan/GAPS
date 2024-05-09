@@ -30,6 +30,8 @@ ShareableAllocator::ShareableAllocator(const char* topic_name, size_t pool_size)
     this->createPool(pool_size);
     this->attachPool();
     strcpy(this->getMetadata()->topic_name, topic_name);
+
+    this->allocator = new Tlsf(this->pool_base, pool_size);
 }
 
 ShareableAllocator::ShareableAllocator(const char* topic_name) {
@@ -199,12 +201,12 @@ void ShareableAllocator::recvHandle(void) {
     this->attachPool();
 }
 
-// TODO: implement TLSF strategy
 void* ShareableAllocator::malloc(size_t size) {
-    return this->pool_base;
+    if (!this->allocator) throwError("No allocator");
+    return this->allocator->malloc(size);
 }
 
-// TODO: implement TLSF strategy
-void ShareableAllocator::free(void* ptr) {
-
+void ShareableAllocator::free(void* addr) {
+    if (!this->allocator) throwError("No allocator");
+    this->allocator->free(addr);
 }

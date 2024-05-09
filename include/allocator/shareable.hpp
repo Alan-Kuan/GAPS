@@ -5,6 +5,7 @@
 
 #include <cuda.h>
 
+#include "alloc_algo/tlsf.hpp"
 #include "allocator/base.hpp"
 
 class ShareableAllocator : public Allocator {
@@ -31,11 +32,12 @@ public:
     void recvHandle(void);
 
     void* malloc(size_t size);
-    void free(void* ptr);
+    void free(void* addr);
 
 private:
     CUmemGenericAllocationHandle handle;
     bool handle_is_valid = false;
+    Tlsf* allocator = nullptr;
 };
 
 #endif  // SHAREABLE_ALLOCATOR_HPP
