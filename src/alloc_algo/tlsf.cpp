@@ -7,7 +7,7 @@
 Tlsf::Tlsf(void* pool_base, size_t pool_size) : pool_base(pool_base) {
     this->first_lvl = 0;
     memset(this->second_lvl, 0, sizeof(this->second_lvl));
-    memset(this->free_lists, 0, sizeof(Block*) * kFstLvlCnt * kSndLvlCnt);
+    memset(this->free_lists, 0, sizeof(this->free_lists));
 
     // NOTE: If `pool_size` is not a multiple of `kBlockMinSize`, the remaining space,
     //       whose size is less than `kBlockMinSize` will be wasted.
