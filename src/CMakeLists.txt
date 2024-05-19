@@ -2,10 +2,6 @@ add_executable(${EXE})
 target_sources(${EXE} PRIVATE main.cpp)
 target_link_libraries(${EXE} PRIVATE comm)
 
-add_executable(shareable_test)
-target_sources(shareable_test PRIVATE shareable_test.cu)
-target_link_libraries(shareable_test PRIVATE allocator error CUDA::cuda_driver)
-
 add_library(allocator STATIC)
 target_sources(allocator PRIVATE allocator/base.cpp allocator/shareable.cu)
 target_link_libraries(allocator PRIVATE alloc_algo)
