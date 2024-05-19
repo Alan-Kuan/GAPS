@@ -17,7 +17,7 @@ private:
     };
 
     void createPool(size_t size);
-    void attachPool(void);
+    void attachPool(bool read_only);
     void detachPool(void);
 
     size_t getPaddedSize(const size_t size, const CUmemAllocationProp* prop) const;

@@ -19,11 +19,11 @@ __global__ void vecMul(int* c, int* a, int* b) {
 }
 
 void sender(void);
-void receiver(bool do_sum);
+void receiver(int task);
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
-        cerr << "Usage: " << argv[0] << "1|2|3" << endl;
+        cerr << "Usage: " << argv[0] << " 1|2|3|4" << endl;
         return 1;
     }
 
@@ -32,10 +32,13 @@ int main(int argc, char* argv[]) {
         sender();
         return 0;
     case '2':
-        receiver(true);
+        receiver(2);
         return 0;
     case '3':
-        receiver(false);
+        receiver(3);
+        return 0;
+    case '4':
+        receiver(4);
         return 0;
     }
 
@@ -84,11 +87,18 @@ void sender(void) {
     }
 }
 
-void receiver(bool do_sum) {
-    if (do_sum)
+void receiver(int task) {
+    switch (task) {
+    case 2:
         cout << "Run as a receiver (add a and b)" << endl;
-    else
+        break;
+    case 3:
         cout << "Run as a receiver (muliply a and b)" << endl;
+        break;
+    case 4:
+        cout << "Run as a naughty receiver (write to read-only memory)" << endl;
+        break;
+    }
     try {
         if (cuInit(0) != CUDA_SUCCESS) throwError();
 
@@ -112,16 +122,23 @@ void receiver(bool do_sum) {
         cudaMalloc(&c, sizeof(int) * 64);
         int arr[64];
 
-        if (do_sum) {
+        switch (task) {
+        case 2:
             vecAdd<<<1, 64>>>(c, a, b);
             cudaMemcpy(arr, c, sizeof(int) * 64, cudaMemcpyDeviceToHost);
-        } else {
+            for (int i = 0; i < 64; i++) cout << arr[i] << ' ';
+            cout << endl;
+            break;
+        case 3:
             vecMul<<<1, 64>>>(c, a, b);
             cudaMemcpy(arr, c, sizeof(int) * 64, cudaMemcpyDeviceToHost);
+            for (int i = 0; i < 64; i++) cout << arr[i] << ' ';
+            cout << endl;
+            break;
+        case 4:
+            cout << cudaGetErrorString(cudaMemset(a, 0, sizeof(int) * 64)) << endl;
+            break;
         }
-
-        for (int i = 0; i < 64; i++) cout << arr[i] << ' ';
-        cout << endl;
 
         cudaFree(c);
     } catch (runtime_error& err) {

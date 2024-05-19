@@ -28,7 +28,7 @@ ShareableAllocator::ShareableAllocator(const char* topic_name, size_t pool_size)
     if (strlen(topic_name) > sizeof(Metadata().topic_name)) throwError();
     this->attachShm(topic_name, sizeof(Metadata));
     this->createPool(pool_size);
-    this->attachPool();
+    this->attachPool(false);
     strcpy(this->getMetadata()->topic_name, topic_name);
 
     this->allocator = new Tlsf(this->pool_base, pool_size);
@@ -56,7 +56,7 @@ void ShareableAllocator::createPool(size_t size) {
     this->getMetadata()->pool_size = padded_size;
 }
 
-void ShareableAllocator::attachPool(void) {
+void ShareableAllocator::attachPool(bool read_only) {
     CUdeviceptr dptr;
     CUmemAccessDesc acc_desc;
     size_t& size = this->getMetadata()->pool_size;
@@ -66,7 +66,7 @@ void ShareableAllocator::attachPool(void) {
 
     acc_desc.location.id = 0;
     acc_desc.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
-    acc_desc.flags = CU_MEM_ACCESS_FLAGS_PROT_READWRITE;
+    acc_desc.flags = read_only ? CU_MEM_ACCESS_FLAGS_PROT_READ : CU_MEM_ACCESS_FLAGS_PROT_READWRITE;
     throwOnErrorCuda(cuMemSetAccess(dptr, size, &acc_desc, 1));
 
     this->pool_base = (void*) dptr;
@@ -198,7 +198,7 @@ void ShareableAllocator::recvHandle(void) {
         (void*) (uintptr_t) sh_handle, CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR));
     this->handle_is_valid = true;
 
-    this->attachPool();
+    this->attachPool(true);
 }
 
 void* ShareableAllocator::malloc(size_t size) {
