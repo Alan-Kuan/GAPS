@@ -6,7 +6,7 @@
 #include <cuda.h>
 
 #include "alloc_algo/tlsf.hpp"
-#include "allocator/base.hpp"
+#include "allocator/allocator.hpp"
 
 class ShareableAllocator : public Allocator {
 private:

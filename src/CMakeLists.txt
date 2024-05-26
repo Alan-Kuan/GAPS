@@ -3,7 +3,7 @@ target_sources(${EXE} PRIVATE main.cpp)
 target_link_libraries(${EXE} PRIVATE comm)
 
 add_library(allocator STATIC)
-target_sources(allocator PRIVATE allocator/base.cpp allocator/shareable.cu)
+target_sources(allocator PRIVATE allocator/allocator.cpp allocator/shareable.cu)
 target_link_libraries(allocator PRIVATE alloc_algo)
 
 add_library(alloc_algo STATIC)
