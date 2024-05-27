@@ -1,12 +1,15 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.25.2)
 project(shoz LANGUAGES C CXX CUDA)
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_ARCHITECTURES 70)
-set(EXE shoz)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(CMAKE_BUILD_TYPE STREQUAL "")
     set(CMAKE_BUILD_TYPE Release)
 endif()
+
+find_package(CUDAToolkit REQUIRED)
 
 include(FetchContent)
 
@@ -15,7 +18,5 @@ FetchContent_MakeAvailable(zenohc)
 FetchContent_declare(zenohcpp GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp" GIT_TAG 0.10.1-rc)
 FetchContent_MakeAvailable(zenohcpp)
 
-find_package(CUDAToolkit REQUIRED)
-
-include_directories(include)
+include_directories(include ${CUDAToolkit_INCLUDE_DIRS})
 add_subdirectory(src)

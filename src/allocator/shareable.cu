@@ -12,6 +12,7 @@
 
 #include <cuda.h>
 
+#include "alloc_algo/tlsf.hpp"
 #include "error.hpp"
 
 namespace {
@@ -24,70 +25,37 @@ void throwOnErrorCuda(CUresult res, std::source_location loc = std::source_locat
 }
 }
 
-ShareableAllocator::ShareableAllocator(const char* topic_name, size_t pool_size) {
-    if (strlen(topic_name) > sizeof(Metadata().topic_name)) throwError();
-    this->attachShm(topic_name, sizeof(Metadata));
+ShareableAllocator::ShareableAllocator(void* metadata, size_t pool_size) {
+    this->metadata = (Metadata*) metadata;
     this->createPool(pool_size);
     this->attachPool(false);
-    strcpy(this->getMetadata()->topic_name, topic_name);
-
     this->allocator = new Tlsf(this->pool_base, pool_size);
 }
 
-ShareableAllocator::ShareableAllocator(const char* topic_name) {
-    this->attachShm(topic_name, sizeof(Metadata));
+ShareableAllocator::ShareableAllocator(void* metadata) {
+    this->metadata = (Metadata*) metadata;
 }
 
 ShareableAllocator::~ShareableAllocator(void) {
     this->detachPool();
-    this->detachShm(this->getMetadata()->topic_name, sizeof(Metadata));
 }
 
-void ShareableAllocator::createPool(size_t size) {
-    CUmemAllocationProp prop = {};
-    prop.requestedHandleTypes = CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR;
-    prop.type = CU_MEM_ALLOCATION_TYPE_PINNED;
-    prop.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
-    prop.location.id = 0;
-
-    size_t padded_size = this->getPaddedSize(size, &prop);
-    throwOnErrorCuda(cuMemCreate(&this->handle, padded_size, &prop, 0));
-    this->handle_is_valid = true;
-    this->getMetadata()->pool_size = padded_size;
+void* ShareableAllocator::malloc(size_t size) {
+    if (!this->allocator) throwError("No allocator");
+    return this->allocator->malloc(size);
 }
 
-void ShareableAllocator::attachPool(bool read_only) {
-    CUdeviceptr dptr;
-    CUmemAccessDesc acc_desc;
-    size_t& size = this->getMetadata()->pool_size;
-
-    throwOnErrorCuda(cuMemAddressReserve(&dptr, size, 0, 0, 0));
-    throwOnErrorCuda(cuMemMap(dptr, size, 0, this->handle, 0));
-
-    acc_desc.location.id = 0;
-    acc_desc.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
-    acc_desc.flags = read_only ? CU_MEM_ACCESS_FLAGS_PROT_READ : CU_MEM_ACCESS_FLAGS_PROT_READWRITE;
-    throwOnErrorCuda(cuMemSetAccess(dptr, size, &acc_desc, 1));
-
-    this->pool_base = (void*) dptr;
+void ShareableAllocator::free(void* addr) {
+    if (!this->allocator) throwError("No allocator");
+    this->allocator->free(addr);
 }
 
-void ShareableAllocator::detachPool(void) {
-    if (!this->handle_is_valid) return;
-    size_t& size = this->getMetadata()->pool_size;
-    throwOnErrorCuda(cuMemRelease(this->handle));
-    throwOnErrorCuda(cuMemUnmap((CUdeviceptr) this->pool_base, size));
-    throwOnErrorCuda(cuMemAddressFree((CUdeviceptr) this->pool_base, size));
+void ShareableAllocator::copyTo(void* dst, void* src, size_t size) {
+    cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice);
 }
 
-size_t ShareableAllocator::getPaddedSize(const size_t size, const CUmemAllocationProp* prop) const {
-    size_t gran = 0;
-    throwOnErrorCuda(cuMemGetAllocationGranularity(&gran, prop, CU_MEM_ALLOC_GRANULARITY_MINIMUM));
-    return ((size - 1) / gran + 1) * gran;
-}
-
-inline ShareableAllocator::Metadata* ShareableAllocator::getMetadata(void) const {
-    return (Metadata*) this->shm_base;
+void ShareableAllocator::copyFrom(void* dst, void* src, size_t size) {
+    cudaMemcpy(dst, src, size, cudaMemcpyDeviceToHost);
 }
 
 void ShareableAllocator::shareHandle(int count) {
@@ -103,7 +71,7 @@ void ShareableAllocator::shareHandle(int count) {
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
     throwOnError(sprintf(addr.sun_path, "/tmp/shoz/%s-server.sock",
-        this->getMetadata()->topic_name));
+        this->metadata->topic_name));
 
     throwOnError(bind(sockfd, (struct sockaddr*) &addr, sizeof(addr)));
     throwOnError(listen(sockfd, 8));
@@ -150,7 +118,7 @@ void ShareableAllocator::recvHandle(void) {
     memset(&cli_addr, 0, sizeof(cli_addr));
     cli_addr.sun_family = AF_UNIX;
     throwOnError(sprintf(cli_addr.sun_path, "/tmp/shoz/%s-client-%d-%d.sock",
-        this->getMetadata()->topic_name, getpid(), gettid()));
+        this->metadata->topic_name, getpid(), gettid()));
 
     throwOnError(bind(sockfd, (struct sockaddr*) &cli_addr, sizeof(cli_addr)));
 
@@ -158,7 +126,7 @@ void ShareableAllocator::recvHandle(void) {
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sun_family = AF_UNIX;
     throwOnError(sprintf(server_addr.sun_path, "/tmp/shoz/%s-server.sock",
-        this->getMetadata()->topic_name));
+        this->metadata->topic_name));
 
     // should wait until the server is ready
     struct stat buf;
@@ -201,12 +169,44 @@ void ShareableAllocator::recvHandle(void) {
     this->attachPool(true);
 }
 
-void* ShareableAllocator::malloc(size_t size) {
-    if (!this->allocator) throwError("No allocator");
-    return this->allocator->malloc(size);
+void ShareableAllocator::createPool(size_t size) {
+    CUmemAllocationProp prop = {};
+    prop.requestedHandleTypes = CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR;
+    prop.type = CU_MEM_ALLOCATION_TYPE_PINNED;
+    prop.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
+    prop.location.id = 0;
+
+    size_t padded_size = this->getPaddedSize(size, &prop);
+    throwOnErrorCuda(cuMemCreate(&this->handle, padded_size, &prop, 0));
+    this->handle_is_valid = true;
+    this->metadata->pool_size = padded_size;
 }
 
-void ShareableAllocator::free(void* addr) {
-    if (!this->allocator) throwError("No allocator");
-    this->allocator->free(addr);
+void ShareableAllocator::attachPool(bool read_only) {
+    CUdeviceptr dptr;
+    CUmemAccessDesc acc_desc;
+    size_t& size = this->metadata->pool_size;
+
+    throwOnErrorCuda(cuMemAddressReserve(&dptr, size, 0, 0, 0));
+    throwOnErrorCuda(cuMemMap(dptr, size, 0, this->handle, 0));
+
+    acc_desc.location.id = 0;
+    acc_desc.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
+    acc_desc.flags = read_only ? CU_MEM_ACCESS_FLAGS_PROT_READ : CU_MEM_ACCESS_FLAGS_PROT_READWRITE;
+    throwOnErrorCuda(cuMemSetAccess(dptr, size, &acc_desc, 1));
+
+    this->pool_base = (void*) dptr;
+}
+
+void ShareableAllocator::detachPool(void) {
+    if (!this->handle_is_valid) return;
+    throwOnErrorCuda(cuMemRelease(this->handle));
+    throwOnErrorCuda(cuMemUnmap((CUdeviceptr) this->pool_base, this->metadata->pool_size));
+    throwOnErrorCuda(cuMemAddressFree((CUdeviceptr) this->pool_base, this->metadata->pool_size));
+}
+
+size_t ShareableAllocator::getPaddedSize(const size_t size, const CUmemAllocationProp* prop) const {
+    size_t gran = 0;
+    throwOnErrorCuda(cuMemGetAllocationGranularity(&gran, prop, CU_MEM_ALLOC_GRANULARITY_MINIMUM));
+    return ((size - 1) / gran + 1) * gran;
 }
