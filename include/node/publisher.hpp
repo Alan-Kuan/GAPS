@@ -10,9 +10,9 @@
 
 class Publisher : public Node {
 public:
-    Publisher(void) = delete;
+    Publisher() = delete;
     Publisher(const char* topic_name, const char* conf_path, const Allocator::Domain& domain, size_t pool_size);
-    ~Publisher(void);
+    ~Publisher();
 
     void put(void* payload, size_t size);
 

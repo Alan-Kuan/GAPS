@@ -16,9 +16,9 @@ public:
         uint32_t sub_count;
     };
 
-    Node(void) = delete;
+    Node() = delete;
     Node(const char* topic_name);
-    ~Node(void);
+    ~Node();
     // prevent the node from being copied, since it may cause problem when the copy destructs
     Node(const Node&) = delete;
     Node& operator=(const Node&) = delete;

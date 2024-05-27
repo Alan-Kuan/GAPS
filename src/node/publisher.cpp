@@ -39,7 +39,7 @@ Publisher::Publisher(const char* topic_name, const char* conf_path, const Alloca
     }
 }
 
-Publisher::~Publisher(void) {
+Publisher::~Publisher() {
     delete this->allocator;
 }
 

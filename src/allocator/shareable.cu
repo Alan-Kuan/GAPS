@@ -36,7 +36,7 @@ ShareableAllocator::ShareableAllocator(void* metadata) {
     this->metadata = (Metadata*) metadata;
 }
 
-ShareableAllocator::~ShareableAllocator(void) {
+ShareableAllocator::~ShareableAllocator() {
     this->detachPool();
 }
 
@@ -110,7 +110,7 @@ void ShareableAllocator::shareHandle(int count) {
     throwOnError(unlink(addr.sun_path));
 }
 
-void ShareableAllocator::recvHandle(void) {
+void ShareableAllocator::recvHandle() {
     // setup UNIX Domain Socket client
     int sockfd = throwOnError(socket(AF_UNIX, SOCK_STREAM, 0));
 
@@ -198,7 +198,7 @@ void ShareableAllocator::attachPool(bool read_only) {
     this->pool_base = (void*) dptr;
 }
 
-void ShareableAllocator::detachPool(void) {
+void ShareableAllocator::detachPool() {
     if (!this->handle_is_valid) return;
     throwOnErrorCuda(cuMemRelease(this->handle));
     throwOnErrorCuda(cuMemUnmap((CUdeviceptr) this->pool_base, this->metadata->pool_size));

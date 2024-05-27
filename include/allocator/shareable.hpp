@@ -10,10 +10,10 @@
 
 class ShareableAllocator : public Allocator {
 public:
-    ShareableAllocator(void) = delete;
+    ShareableAllocator() = delete;
     ShareableAllocator(void* metadata, size_t pool_size);
     ShareableAllocator(void* metadata);
-    ~ShareableAllocator(void);
+    ~ShareableAllocator();
 
     void* malloc(size_t size);
     void free(void* addr);
@@ -21,14 +21,14 @@ public:
     void copyFrom(void* dst, void* src, size_t size);
 
     void shareHandle(int count);
-    void recvHandle(void);
+    void recvHandle();
 
 private:
     typedef int ShareableHandle;
 
     void createPool(size_t size);
     void attachPool(bool read_only);
-    void detachPool(void);
+    void detachPool();
 
     size_t getPaddedSize(const size_t size, const CUmemAllocationProp* prop) const;
 

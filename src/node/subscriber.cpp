@@ -28,7 +28,7 @@ Subscriber::Subscriber(const char* topic_name, const char* conf_path, const Allo
     }
 }
 
-Subscriber::~Subscriber(void) {
+Subscriber::~Subscriber() {
     delete this->allocator;
 }
 

@@ -19,7 +19,7 @@ Tlsf::Tlsf(void* pool_base, size_t pool_size) : pool_base(pool_base) {
     this->insertBlock(&(this->blocks[0]));
 }
 
-Tlsf::~Tlsf(void) {
+Tlsf::~Tlsf() {
     delete[] this->blocks;
 }
 
@@ -50,7 +50,7 @@ void Tlsf::free(void* addr) {
     this->insertBlock(block);
 }
 
-size_t Tlsf::Block::getSize(void) const {
+size_t Tlsf::Block::getSize() const {
     return this->header & ~kBlockFlagBits;
 }
 

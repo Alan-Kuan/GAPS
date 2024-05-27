@@ -25,7 +25,7 @@ Node::Node(const char* topic_name) {
     }
 }
 
-Node::~Node(void) {
+Node::~Node() {
     this->detachShm((char*) this->shm_base, this->shm_size);
 }
 

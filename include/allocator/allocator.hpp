@@ -10,7 +10,7 @@ public:
         DeviceType dev_type;
         int dev_id;
         // TODO: also need a way to convert it to index
-        int getId(void) const { return dev_id * 10 + (int) dev_type; }
+        int getId() const { return dev_id * 10 + (int) dev_type; }
     };
 
     struct Metadata {
@@ -18,7 +18,7 @@ public:
         size_t pool_size;
     };
 
-    virtual ~Allocator(void) {}
+    virtual ~Allocator() {}
 
     virtual void* malloc(size_t size) = 0;
     virtual void free(void* ptr) = 0;
@@ -27,7 +27,7 @@ public:
     // copy from pool (src) to host (dst)
     virtual void copyFrom(void* dst, void* src, size_t size) = 0;
 
-    void* getPoolBase(void) const { return this->pool_base; }
+    void* getPoolBase() const { return this->pool_base; }
 
 protected:
     virtual void createPool(size_t size) = 0;

@@ -7,7 +7,7 @@
 class Tlsf {
 public:
     Tlsf(void* pool_base, size_t pool_size);
-    ~Tlsf(void);
+    ~Tlsf();
 
     void* malloc(size_t size);
     void free(void* addr);
@@ -17,7 +17,7 @@ private:
     public:
         friend class Tlsf;
 
-        size_t getSize(void) const;
+        size_t getSize() const;
 
     private:
         // block size and free bit (LSB is used as free bit)
