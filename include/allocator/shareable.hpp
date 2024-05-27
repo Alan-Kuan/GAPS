@@ -15,10 +15,10 @@ public:
     ShareableAllocator(void* metadata);
     ~ShareableAllocator();
 
-    void* malloc(size_t size);
-    void free(void* addr);
-    void copyTo(void* dst, void* src, size_t size);
-    void copyFrom(void* dst, void* src, size_t size);
+    void* malloc(size_t size) override;
+    void free(void* addr) override;
+    void copyTo(void* dst, void* src, size_t size) override;
+    void copyFrom(void* dst, void* src, size_t size) override;
 
     void shareHandle(int count);
     void recvHandle();
@@ -26,7 +26,7 @@ public:
 private:
     typedef int ShareableHandle;
 
-    void createPool(size_t size);
+    void createPool(size_t size) override;
     void attachPool(bool read_only);
     void detachPool();
 
