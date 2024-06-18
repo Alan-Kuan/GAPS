@@ -12,9 +12,9 @@ class Subscriber : public Node {
 public:
     typedef std::function<void(void*)> MessageHandler;
 
-    Subscriber(void) = delete;
+    Subscriber() = delete;
     Subscriber(const char* topic_name, const char* conf_path, const Allocator::Domain& domain);
-    ~Subscriber(void);
+    ~Subscriber();
 
     void sub(MessageHandler handler);
 

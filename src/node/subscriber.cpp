@@ -28,19 +28,19 @@ Subscriber::Subscriber(const char* topic_name, const char* conf_path, const Allo
     }
 }
 
-Subscriber::~Subscriber(void) {
+Subscriber::~Subscriber() {
     delete this->allocator;
 }
 
 void Subscriber::sub(MessageHandler handler) {
-    MessageQueueHeader* mqh = (MessageQueueHeader*) ((uint8_t*) this->shm_base + sizeof(Allocator::Metadata) + sizeof(MessageQueueHeader));
+    MessageQueueHeader* mqh = (MessageQueueHeader*) ((uint8_t*) this->shm_base + sizeof(Allocator::Metadata));
     std::atomic_ref<uint32_t>(mqh->sub_count)++;
 
     auto callback = [handler, mqh, this](const zenoh::Sample& sample) {
         zenoh::BytesView msg = sample.get_payload();
         size_t msg_id = *((size_t*) msg.as_string_view().data());
 
-        uint8_t* msg_entry = (uint8_t*) mqh + msg_id * (sizeof(int) + kMaxDomainNum * sizeof(size_t));
+        uint8_t* msg_entry = (uint8_t*) mqh + sizeof(MessageQueueHeader) + msg_id * (sizeof(int) + kMaxDomainNum * sizeof(size_t));
         size_t* offsets = (size_t*) (msg_entry + sizeof(int));
         uint8_t* data = (uint8_t*) this->allocator->getPoolBase() + offsets[this->domain_id];
 

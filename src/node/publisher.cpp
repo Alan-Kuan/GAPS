@@ -39,15 +39,15 @@ Publisher::Publisher(const char* topic_name, const char* conf_path, const Alloca
     }
 }
 
-Publisher::~Publisher(void) {
+Publisher::~Publisher() {
     delete this->allocator;
 }
 
 void Publisher::put(void* payload, size_t size) {
     // get next available index as message id
-    MessageQueueHeader* mqh = (MessageQueueHeader*) ((uint8_t*) this->shm_base + sizeof(Allocator::Metadata) + sizeof(MessageQueueHeader));
+    MessageQueueHeader* mqh = (MessageQueueHeader*) ((uint8_t*) this->shm_base + sizeof(Allocator::Metadata));
     size_t msg_id = std::atomic_ref<size_t>(mqh->next).fetch_add(1) % kMaxMessageNum;
-    uint8_t* msg_entry = (uint8_t*) mqh + msg_id * (sizeof(int) + kMaxDomainNum * sizeof(size_t));
+    uint8_t* msg_entry = (uint8_t*) mqh + sizeof(MessageQueueHeader) + msg_id * (sizeof(int) + kMaxDomainNum * sizeof(size_t));
 
     std::atomic_ref<int> untaken_num{*((int*) msg_entry)};
     untaken_num = mqh->sub_count;
