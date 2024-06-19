@@ -1,0 +1,15 @@
+version: '3'
+services:
+  dev:
+    container_name: shoz_dev
+    build: .
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:22222:22
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
