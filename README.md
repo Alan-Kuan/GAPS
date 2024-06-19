@@ -2,7 +2,13 @@
 
 ## Environment
 A Docker development environment is priovded in `env/`.
-To setup the environment, make sure Docker and Docker Compose are installed.
+To setup the environment, make sure the following requirements are met:
+- Docker is installed
+- Docker Compose is installed
+- NVIDIA Container Toolkit is installed
+- CUDA 12.3 is supported by your host's NVIDIA driver
+- Some CUDA Driver APIs like `cuMemCreate` and `cuMemExportToShareableHandle` are supported by your NVIDIA GPU
+
 ```sh
 cd env
 docker compose up -d
