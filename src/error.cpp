@@ -3,9 +3,9 @@
 #include <errno.h>
 
 #include <cstring>
-#include <exception>
 #include <source_location>
 #include <sstream>
+#include <stdexcept>
 
 [[noreturn]] void throwError(const char* msg, std::source_location loc) {
     std::stringstream ss;
