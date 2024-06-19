@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
 #include <source_location>
 
 #include <cuda.h>
@@ -67,6 +68,8 @@ void ShareableAllocator::shareHandle(int count) {
     // setup a UNIX Domain Socket server
     int sockfd = throwOnError(socket(AF_UNIX, SOCK_STREAM, 0));
 
+    std::filesystem::create_directory("/tmp/shoz");
+
     struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
@@ -113,6 +116,8 @@ void ShareableAllocator::shareHandle(int count) {
 void ShareableAllocator::recvHandle() {
     // setup UNIX Domain Socket client
     int sockfd = throwOnError(socket(AF_UNIX, SOCK_STREAM, 0));
+
+    std::filesystem::create_directory("/tmp/shoz");
 
     struct sockaddr_un cli_addr;
     memset(&cli_addr, 0, sizeof(cli_addr));
