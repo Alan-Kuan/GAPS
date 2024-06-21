@@ -9,22 +9,11 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
-#include <source_location>
 
 #include <cuda.h>
 
 #include "alloc_algo/tlsf.hpp"
 #include "error.hpp"
-
-namespace {
-void throwOnErrorCuda(CUresult res, std::source_location loc = std::source_location::current()) {
-    if (res != CUDA_SUCCESS) {
-        const char* msg;
-        cuGetErrorString(res, &msg);
-        throwError(msg, loc);
-    }
-}
-}
 
 ShareableAllocator::ShareableAllocator(void* metadata, size_t pool_size) {
     this->metadata = (Metadata*) metadata;
