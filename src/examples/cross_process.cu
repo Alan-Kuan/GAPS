@@ -78,12 +78,7 @@ void runAsPublisher(const char* conf_path) {
 
         for (int i = 0; i < 64; i++) arr[i] = i;
         for (int i = 64; i < 128; i++) arr[i] = 5;
-        cout << "Type enter to continue..." << endl;
-        getchar();
         publisher.put(arr, sizeof(int) * 128);
-
-        cout << "Type enter to continue..." << endl;
-        getchar();
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);
@@ -110,7 +105,7 @@ void runAsSubscriber(const char* conf_path, int job) {
         if (cuInit(0) != CUDA_SUCCESS) throwError();
 
         Allocator::Domain domain = { Allocator::DeviceType::kGPU, 0 };
-        Subscriber subscriber(kTopicName, conf_path, domain);
+        Subscriber subscriber(kTopicName, conf_path, domain, kPoolSize);
         Subscriber::MessageHandler handler;
 
         int* c;
