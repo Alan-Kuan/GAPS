@@ -2,6 +2,7 @@
 #define SHAREABLE_ALLOCATOR_HPP
 
 #include <cstddef>
+#include <string>
 
 #include <cuda.h>
 
@@ -11,8 +12,8 @@
 class ShareableAllocator : public Allocator {
 public:
     ShareableAllocator() = delete;
-    ShareableAllocator(void* metadata, size_t pool_size);
-    ShareableAllocator(void* metadata);
+    ShareableAllocator(void* metadata, size_t pool_size, bool read_only = false,
+        const std::string& sock_file_dir = "/tmp/shoz");
     ~ShareableAllocator();
 
     void* malloc(size_t size) override;
@@ -20,18 +21,12 @@ public:
     void copyTo(void* dst, void* src, size_t size) override;
     void copyFrom(void* dst, void* src, size_t size) override;
 
-    void shareHandle(int count);
-    void recvHandle();
-
 private:
-    typedef int ShareableHandle;
-
     void createPool(size_t size) override;
-    void attachPool(bool read_only);
-    void detachPool();
+    void removePool();
+    size_t recvHandle(size_t pool_size);
 
-    size_t getPaddedSize(const size_t size, const CUmemAllocationProp* prop) const;
-
+    std::string sock_file_dir;
     CUmemGenericAllocationHandle handle;
     bool handle_is_valid = false;
     Metadata* metadata = nullptr;

@@ -25,12 +25,23 @@ target_sources(alloc_algo
     PRIVATE
         alloc_algo/tlsf.cpp)
 
+add_executable(mem_manager)
+target_sources(mem_manager
+    PRIVATE
+        mem_manager.cpp)
+target_link_libraries(mem_manager
+    PRIVATE
+        CUDA::cuda_driver
+        error)
+
 add_library(error STATIC)
 target_sources(error PRIVATE error.cpp)
 
 # if(DEFINED BUILD_EXAMPLES)
     add_executable(cross_process)
-    target_sources(cross_process PRIVATE examples/cross_process.cu)
+    target_sources(cross_process
+        PRIVATE
+            examples/cross_process.cu)
     target_link_libraries(cross_process
         PRIVATE
             CUDA::cuda_driver
@@ -40,5 +51,7 @@ target_sources(error PRIVATE error.cpp)
             error)
 
     add_library(vector_arithmetic STATIC)
-    target_sources(vector_arithmetic PRIVATE examples/vector_arithmetic.cu)
+    target_sources(vector_arithmetic
+        PRIVATE
+            examples/vector_arithmetic.cu)
 # endif()

@@ -33,8 +33,6 @@ Publisher::Publisher(const char* topic_name, const char* conf_path, const Alloca
     switch (domain.dev_type) {
     case Allocator::DeviceType::kGPU:
         this->allocator = (Allocator*) new ShareableAllocator((Allocator::Metadata*) this->shm_base, pool_size);
-        // TODO: make it more flexible
-        ((ShareableAllocator*) this->allocator)->shareHandle(1);
         break;
     }
 }

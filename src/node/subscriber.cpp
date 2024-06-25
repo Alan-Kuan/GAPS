@@ -11,7 +11,7 @@
 #include "allocator/shareable.hpp"
 #include "error.hpp"
 
-Subscriber::Subscriber(const char* topic_name, const char* conf_path, const Allocator::Domain& domain)
+Subscriber::Subscriber(const char* topic_name, const char* conf_path, const Allocator::Domain& domain, size_t pool_size)
         : Node(topic_name),
           z_session(nullptr),
           z_subscriber(nullptr),
@@ -21,9 +21,7 @@ Subscriber::Subscriber(const char* topic_name, const char* conf_path, const Allo
 
     switch (domain.dev_type) {
     case Allocator::DeviceType::kGPU:
-        this->allocator = (Allocator*) new ShareableAllocator((Allocator::Metadata*) this->shm_base);
-        // TODO: make it more flexible
-        ((ShareableAllocator*) this->allocator)->recvHandle();
+        this->allocator = (Allocator*) new ShareableAllocator((Allocator::Metadata*) this->shm_base, pool_size, true);
         break;
     }
 }

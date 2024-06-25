@@ -18,6 +18,7 @@ public:
         size_t pool_size;
     };
 
+    Allocator(bool read_only) : read_only(read_only) {}
     virtual ~Allocator() {}
 
     virtual void* malloc(size_t size) = 0;
@@ -33,6 +34,7 @@ protected:
     virtual void createPool(size_t size) = 0;
 
     void* pool_base = nullptr;
+    bool read_only = false;
 };
 
 #endif  // ALLOCATOR_HPP
