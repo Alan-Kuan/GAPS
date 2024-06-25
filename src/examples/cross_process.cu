@@ -1,5 +1,3 @@
-#include <bits/getopt_core.h>
-#include <cstring>
 #include <unistd.h>
 
 #include <cstddef>
