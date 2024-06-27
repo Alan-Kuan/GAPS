@@ -7,6 +7,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include <cuda.h>
+
 [[noreturn]] void throwError(const char* msg, std::source_location loc) {
     std::stringstream ss;
 
@@ -22,4 +24,11 @@
 int throwOnError(int ret, std::source_location loc) {
     if (ret < 0) throwError(strerror(errno), loc);
     return ret;
+}
+
+void throwOnErrorCuda(CUresult res, std::source_location loc) {
+    if (res == CUDA_SUCCESS) return;
+    const char* msg;
+    cuGetErrorString(res, &msg);
+    throwError(msg, loc);
 }
