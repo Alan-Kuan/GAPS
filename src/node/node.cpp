@@ -36,6 +36,8 @@ void Node::attachShm(const char* shm_name, size_t size) {
     void* ptr = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (ptr == MAP_FAILED) throwError();
     this->shm_base = ptr;
+
+    throwOnError(close(fd));
 }
 
 // NOTE: the reason why `std::string` is used is to deep copy
