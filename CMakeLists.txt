@@ -20,3 +20,4 @@ FetchContent_MakeAvailable(zenohcpp)
 
 include_directories(include ${CUDAToolkit_INCLUDE_DIRS})
 add_subdirectory(src)
+add_subdirectory(test)
