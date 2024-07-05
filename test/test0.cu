@@ -26,12 +26,12 @@ __global__ void __vecAdd(int* c, int* a, int* b) {
 }
 
 /* Global */
-TimeHelper entryTime();
-TimeHelper beginTime();
-TimeHelper endTime();
+TimeHelper entryTime;
+TimeHelper beginTime;
+TimeHelper endTime;
 Allocator::Domain domain = { Allocator::DeviceType::kGPU, 0 };
 
-void pubTest() {
+void pubTest(char *config_path) {
     try {
         cuInit(0);
         Publisher pub("topic 0", config_path, domain, 4096);
@@ -44,7 +44,7 @@ void pubTest() {
         pub.put(arr, sizeof(int) * 1024);
         endTime.setPoint();
 
-        cout << "beginTime: " << getMSec(beginTime) << ", endTime: " << getMSec(endTime) << endl;
+        cout << "beginTime: " << beginTime.getMSec() << ", endTime: " << endTime.getMSec() << endl;
 
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
@@ -55,7 +55,7 @@ void pubTest() {
     }
 }
 
-void subTest() {
+void subTest(char *config_path) {
     try {
         cuInit(0);
         Subscriber sub("topic 0", config_path, domain, 4096);
@@ -100,10 +100,10 @@ int main(int argc, char *argv[]) {
     case -1:
         return -1;
     case 0:
-        pubTest();
+        pubTest(config_path);
         break;
     default:
-        subTest();
+        subTest(config_path);
     }
 
     cout << "entry time: " << entryTime.getMSec() << endl;
