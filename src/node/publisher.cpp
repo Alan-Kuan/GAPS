@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <iostream>
 
 #include <zenoh.hxx>
 
@@ -58,6 +57,6 @@ void Publisher::put(void* payload, size_t size) {
     // notify subscribers with the message ID
     zenoh::BytesView msg((void*) &msg_id, sizeof(size_t));
     if (!this->z_publisher.put(msg)) {
-        std::cerr << "Warning: Zenoh failed to send a message" << std::endl;
+        throwError("Warning: Zenoh failed to send a message");
     }
 }
