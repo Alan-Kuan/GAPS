@@ -1,7 +1,6 @@
 version: '3'
 services:
   dev:
-    container_name: shoz_dev
     build: .
     restart: unless-stopped
     ports:
@@ -13,3 +12,5 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+    volumes:
+      - ../:/home/ubuntu/shoz

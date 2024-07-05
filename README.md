@@ -21,12 +21,11 @@ docker compose down
 ```
 
 ## Build
-Clone the repo in the development environment.
-Then, configure build instructions with CMake and build the project with Ninja.
+Configure build instructions with CMake and build the project with Ninja.
+Run the following commands in the home directory:
 ```sh
-git clone https://github.com/Alan-Kuan/shoz
-cmake -B build -G Ninja -DZENOHC_CARGO_CHANNEL=1.74.0
+cmake shoz -B build -G Ninja -DZENOHC_CARGO_CHANNEL=1.74.0
 ninja -C build
 ```
 
-After building the project, the compiled executable lies in `build/src`.
+After building the project, the compiled executables lie in `build/src`.
