@@ -9,11 +9,11 @@
 #include <cuda.h>
 #include <zenoh.hxx>
 
-#include "allocator/allocator.hpp"
 #include "error.hpp"
 #include "examples/vector_arithmetic.hpp"
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
+#include "metadata.hpp"
 
 using namespace std;
 
@@ -74,7 +74,7 @@ void runAsPublisher(const char* conf_path) {
     try {
         if (cuInit(0) != CUDA_SUCCESS) throwError();
 
-        Allocator::Domain domain = { Allocator::DeviceType::kGPU, 0 };
+        Domain domain = { DeviceType::kGPU, 0 };
         Publisher publisher(kTopicName, conf_path, domain, kPoolSize);
         int arr[128];
 
@@ -111,7 +111,7 @@ void runAsSubscriber(const char* conf_path, int job) {
     try {
         if (cuInit(0) != CUDA_SUCCESS) throwError();
 
-        Allocator::Domain domain = { Allocator::DeviceType::kGPU, 0 };
+        Domain domain = { DeviceType::kGPU, 0 };
         Subscriber subscriber(kTopicName, conf_path, domain, kPoolSize);
         Subscriber::MessageHandler handler;
 

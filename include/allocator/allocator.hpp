@@ -3,26 +3,16 @@
 
 #include <cstddef>
 
+#include "alloc_algo/tlsf.hpp"
+#include "metadata.hpp"
+
 class Allocator {
 public:
-    enum DeviceType { kHost, kGPU };
-    struct Domain {
-        DeviceType dev_type;
-        int dev_id;
-        // TODO: also need a way to convert it to index
-        int getId() const { return dev_id * 10 + (int) dev_type; }
-    };
-
-    struct Metadata {
-        char topic_name[32];
-        size_t pool_size;
-    };
-
-    Allocator(bool read_only) : read_only(read_only) {}
+    Allocator(TopicHeader* topic_header, bool read_only) : topic_header(topic_header), read_only(read_only) {}
     virtual ~Allocator() {}
 
-    virtual void* malloc(size_t size) = 0;
-    virtual void free(void* ptr) = 0;
+    virtual size_t malloc(size_t size);
+    virtual void free(size_t offset);
     // copy to pool (dst) from host (src)
     virtual void copyTo(void* dst, void* src, size_t size) = 0;
     // copy from pool (src) to host (dst)
@@ -34,7 +24,9 @@ protected:
     virtual void createPool(size_t size) = 0;
 
     void* pool_base = nullptr;
+    TopicHeader* topic_header = nullptr;
     bool read_only = false;
+    Tlsf* allocator = nullptr;
 };
 
 #endif  // ALLOCATOR_HPP

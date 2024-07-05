@@ -10,46 +10,49 @@
 #include "allocator/allocator.hpp"
 #include "allocator/shareable.hpp"
 #include "error.hpp"
+#include "metadata.hpp"
 
-Subscriber::Subscriber(const char* topic_name, const char* conf_path, const Allocator::Domain& domain, size_t pool_size)
-        : Node(topic_name),
+Subscriber::Subscriber(const char* topic_name, const char* conf_path, const Domain& domain, size_t pool_size)
+        : Node(topic_name, pool_size, domain.getId()),
           z_session(nullptr),
-          z_subscriber(nullptr),
-          domain_id(domain.getId()) {
+          z_subscriber(nullptr) {
     auto config = zenoh::expect<zenoh::Config>(zenoh::config_from_file(conf_path));
     this->z_session = zenoh::expect<zenoh::Session>(zenoh::open(std::move(config)));
 
     switch (domain.dev_type) {
-    case Allocator::DeviceType::kGPU:
-        this->allocator = (Allocator*) new ShareableAllocator((Allocator::Metadata*) this->shm_base, pool_size, true);
+    case DeviceType::kGPU:
+        this->allocator = (Allocator*) new ShareableAllocator((TopicHeader*) this->shm_base, true);
         break;
     }
 }
 
 Subscriber::~Subscriber() {
-    delete this->allocator;
+    TopicHeader* topic_header = getTopicHeader(this->shm_base);
+    std::atomic_ref<uint32_t>(topic_header->sub_count)--;
 }
 
 void Subscriber::sub(MessageHandler handler) {
-    MessageQueueHeader* mqh = (MessageQueueHeader*) ((uint8_t*) this->shm_base + sizeof(Allocator::Metadata));
-    std::atomic_ref<uint32_t>(mqh->sub_count)++;
+    TopicHeader* topic_header = getTopicHeader(this->shm_base);
+    std::atomic_ref<uint32_t>(topic_header->interest_count)++;
+    std::atomic_ref<uint32_t>(topic_header->sub_count)++;
 
-    auto callback = [handler, mqh, this](const zenoh::Sample& sample) {
+    MessageQueueHeader* mq_header = getMessageQueueHeader(getDomainMap(getTlsfHeader(topic_header)));
+
+    auto callback = [=, this](const zenoh::Sample& sample) {
         zenoh::BytesView msg = sample.get_payload();
         size_t msg_id = *((size_t*) msg.as_string_view().data());
 
-        uint8_t* msg_entry = (uint8_t*) mqh + sizeof(MessageQueueHeader) + msg_id * (sizeof(int) + kMaxDomainNum * sizeof(size_t));
-        size_t* offsets = (size_t*) (msg_entry + sizeof(int));
-        uint8_t* data = (uint8_t*) this->allocator->getPoolBase() + offsets[this->domain_id];
-
-        // TODO: check if data is valid; if not, copy valid ones to this domain
-
-        std::atomic_ref<int> untaken_num = std::atomic_ref<int>(*((int*) msg_entry));
-        if (untaken_num.fetch_sub(1) == 1) {
-            // TODO: free the memory via corresponding allocator
-        }
+        MessageQueueEntry* mq_entry = getMessageQueueEntry(mq_header, msg_id);
+        size_t offset = mq_entry->offset;
+        // TODO: check availability; if not available, copy valid ones to this domain
+        void* data = (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
 
         handler((void*) data);
+
+        // last subscriber reading the message should free the allocation
+        if (std::atomic_ref<uint32_t>(mq_entry->taken_num).fetch_add(1) == topic_header->sub_count - 1) {
+            this->allocator->free(offset);
+        }
     };
 
     try {

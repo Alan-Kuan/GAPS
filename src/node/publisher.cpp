@@ -12,16 +12,15 @@
 
 #include "allocator/allocator.hpp"
 #include "allocator/shareable.hpp"
+#include "error.hpp"
+#include "metadata.hpp"
 
-Publisher::Publisher(const char* topic_name, const char* conf_path, const Allocator::Domain& domain, size_t pool_size)
-        : Node(topic_name),
+Publisher::Publisher(const char* topic_name, const char* conf_path, const Domain& domain, size_t pool_size)
+        : Node(topic_name, pool_size, domain.getId()),
           z_session(nullptr),
-          z_publisher(nullptr),
-          domain_id(domain.getId()) {
-    MessageQueueHeader* mqh = (MessageQueueHeader*) ((uint8_t*) this->shm_base + sizeof(Allocator::Metadata));
-    mqh->capacity = kMaxMessageNum;
-    mqh->next = 0;
-    mqh->sub_count = 0;
+          z_publisher(nullptr) {
+    TopicHeader* topic_header = getTopicHeader(this->shm_base);
+    std::atomic_ref<uint32_t>(topic_header->interest_count)++;
 
     auto config = zenoh::expect<zenoh::Config>(zenoh::config_from_file(conf_path));
     this->z_session = zenoh::expect<zenoh::Session>(zenoh::open(std::move(config)));
@@ -31,33 +30,32 @@ Publisher::Publisher(const char* topic_name, const char* conf_path, const Alloca
     this->z_publisher = zenoh::expect<zenoh::Publisher>(z_session.declare_publisher(z_topic_name));
 
     switch (domain.dev_type) {
-    case Allocator::DeviceType::kGPU:
-        this->allocator = (Allocator*) new ShareableAllocator((Allocator::Metadata*) this->shm_base, pool_size);
+    case DeviceType::kGPU:
+        this->allocator = (Allocator*) new ShareableAllocator((TopicHeader*) this->shm_base);
         break;
     }
 }
 
-Publisher::~Publisher() {
-    delete this->allocator;
-}
-
 void Publisher::put(void* payload, size_t size) {
-    // get next available index as message id
-    MessageQueueHeader* mqh = (MessageQueueHeader*) ((uint8_t*) this->shm_base + sizeof(Allocator::Metadata));
-    size_t msg_id = std::atomic_ref<size_t>(mqh->next).fetch_add(1) % kMaxMessageNum;
-    uint8_t* msg_entry = (uint8_t*) mqh + sizeof(MessageQueueHeader) + msg_id * (sizeof(int) + kMaxDomainNum * sizeof(size_t));
-
-    std::atomic_ref<int> untaken_num{*((int*) msg_entry)};
-    untaken_num = mqh->sub_count;
-
-    // go through each subscribed domain and allocate a space and put the data there
-    void* addr = this->allocator->malloc(size);
-    size_t offset = (uint8_t*) addr - (uint8_t*) this->allocator->getPoolBase();
-    size_t* offsets = (size_t*) (msg_entry + sizeof(int));
-    offsets[this->domain_id] = offset;
-
+    size_t offset = this->allocator->malloc(size);
+    if (offset == -1) throwError("No free space in the pool");
+    void* addr = (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
     this->allocator->copyTo(addr, payload, size);
 
+    // get next available index as message id
+    MessageQueueHeader* mq_header = getMessageQueueHeader(getDomainMap(getTlsfHeader(getTopicHeader(this->shm_base))));
+    size_t msg_id = std::atomic_ref<size_t>(mq_header->next).fetch_add(1) % kMaxMessageNum;
+    MessageQueueEntry* mq_entry = getMessageQueueEntry(mq_header, msg_id);
+
+    // TODO: free the the corresponding space if it hasn't been freed
+
+    // NOTE: though `taken_num` and `avail` should be atomic referenced, it's okay because
+    //       no other process will access these variables at this moment
+    mq_entry->taken_num = 0;
+    mq_entry->offset = offset;
+    mq_entry->avail = 1 << this->domain_idx;
+
+    // notify subscribers with the message ID
     zenoh::BytesView msg((void*) &msg_id, sizeof(size_t));
     if (!this->z_publisher.put(msg)) {
         std::cerr << "Warning: Zenoh failed to send a message" << std::endl;

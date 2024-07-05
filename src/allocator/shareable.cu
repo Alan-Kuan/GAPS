@@ -15,29 +15,19 @@
 
 #include "alloc_algo/tlsf.hpp"
 #include "error.hpp"
+#include "metadata.hpp"
 
-ShareableAllocator::ShareableAllocator(void* metadata, size_t pool_size, bool read_only, const std::string& sock_file_dir)
-        : Allocator(read_only),
+ShareableAllocator::ShareableAllocator(TopicHeader* topic_header, bool read_only, const std::string& sock_file_dir)
+        : Allocator(topic_header, read_only),
           sock_file_dir(sock_file_dir) {
-    this->metadata = (Metadata*) metadata;
-    this->createPool(pool_size);
-    this->allocator = new Tlsf(this->pool_base, pool_size);
+    this->createPool(topic_header->pool_size);
+    this->allocator = new Tlsf(getTlsfHeader(topic_header));
 
     std::filesystem::create_directory(sock_file_dir);
 }
 
 ShareableAllocator::~ShareableAllocator() {
     this->removePool();
-}
-
-void* ShareableAllocator::malloc(size_t size) {
-    if (!this->allocator) throwError("No allocator");
-    return this->allocator->malloc(size);
-}
-
-void ShareableAllocator::free(void* addr) {
-    if (!this->allocator) throwError("No allocator");
-    this->allocator->free(addr);
 }
 
 void ShareableAllocator::copyTo(void* dst, void* src, size_t size) {
@@ -49,18 +39,17 @@ void ShareableAllocator::copyFrom(void* dst, void* src, size_t size) {
 }
 
 void ShareableAllocator::createPool(size_t size) {
-    size_t padded_size = this->recvHandle(size);
-    this->metadata->pool_size = padded_size;
+    this->recvHandle();
 
     CUdeviceptr dptr;
-    throwOnErrorCuda(cuMemAddressReserve(&dptr, padded_size, 0, 0, 0));
-    throwOnErrorCuda(cuMemMap(dptr, padded_size, 0, this->handle, 0));
+    throwOnErrorCuda(cuMemAddressReserve(&dptr, size, 0, 0, 0));
+    throwOnErrorCuda(cuMemMap(dptr, size, 0, this->handle, 0));
 
     CUmemAccessDesc acc_desc;
     acc_desc.location.id = 0;
     acc_desc.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
     acc_desc.flags = this->read_only ? CU_MEM_ACCESS_FLAGS_PROT_READ : CU_MEM_ACCESS_FLAGS_PROT_READWRITE;
-    throwOnErrorCuda(cuMemSetAccess(dptr, padded_size, &acc_desc, 1));
+    throwOnErrorCuda(cuMemSetAccess(dptr, size, &acc_desc, 1));
 
     this->pool_base = (void*) dptr;
 }
@@ -68,11 +57,11 @@ void ShareableAllocator::createPool(size_t size) {
 void ShareableAllocator::removePool() {
     if (!this->handle_is_valid) return;
     throwOnErrorCuda(cuMemRelease(this->handle));
-    throwOnErrorCuda(cuMemUnmap((CUdeviceptr) this->pool_base, this->metadata->pool_size));
-    throwOnErrorCuda(cuMemAddressFree((CUdeviceptr) this->pool_base, this->metadata->pool_size));
+    throwOnErrorCuda(cuMemUnmap((CUdeviceptr) this->pool_base, this->topic_header->pool_size));
+    throwOnErrorCuda(cuMemAddressFree((CUdeviceptr) this->pool_base, this->topic_header->pool_size));
 }
 
-size_t ShareableAllocator::recvHandle(size_t pool_size) {
+void ShareableAllocator::recvHandle() {
     // setup UNIX Domain Socket client
     int sockfd = throwOnError(socket(AF_UNIX, SOCK_STREAM, 0));
 
@@ -81,7 +70,7 @@ size_t ShareableAllocator::recvHandle(size_t pool_size) {
     cli_addr.sun_family = AF_UNIX;
     throwOnError(sprintf(cli_addr.sun_path, "%s/%s-client-%d-%d.sock",
         this->sock_file_dir.c_str(),
-        this->metadata->topic_name,
+        this->topic_header->topic_name,
         getpid(),
         gettid()));
 
@@ -105,8 +94,8 @@ size_t ShareableAllocator::recvHandle(size_t pool_size) {
         char topic_name[32];
     } buf_req;
 
-    buf_req.pool_size = pool_size;
-    strcpy(buf_req.topic_name, this->metadata->topic_name);
+    buf_req.pool_size = this->topic_header->pool_size;
+    strcpy(buf_req.topic_name, this->topic_header->topic_name);
 
     throwOnError(send(sockfd, &buf_req, sizeof(buf_req), 0));
 
@@ -114,10 +103,10 @@ size_t ShareableAllocator::recvHandle(size_t pool_size) {
     struct msghdr msg;
     struct iovec iov[1];
     char ctrl_buf[CMSG_SPACE(sizeof(int))];
-    size_t padded_size;
+    char dummy;
 
-    iov[0].iov_base = &padded_size;
-    iov[0].iov_len = sizeof(size_t);
+    iov[0].iov_base = &dummy;
+    iov[0].iov_len = 1;
 
     msg.msg_name = nullptr;
     msg.msg_namelen = 0;
@@ -139,6 +128,4 @@ size_t ShareableAllocator::recvHandle(size_t pool_size) {
     throwOnErrorCuda(cuMemImportFromShareableHandle(&this->handle,
         (void*) (uintptr_t) sh_handle, CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR));
     this->handle_is_valid = true;
-
-    return padded_size;
 }

@@ -4,28 +4,10 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "ticket_lock.hpp"
+
 class Tlsf {
 public:
-    Tlsf(void* pool_base, size_t pool_size);
-    ~Tlsf();
-
-    void* malloc(size_t size);
-    void free(void* addr);
-
-private:
-    class Block {
-    public:
-        friend class Tlsf;
-
-        size_t getSize() const;
-
-    private:
-        // block size and free bit (LSB is used as free bit)
-        size_t header;
-        Block* prev_free;
-        Block* next_free;
-    };
-
     static constexpr int kWidthMinusOne = (sizeof(size_t) << 3) - 1;
 
     static const size_t kBlockFlagBits = 0b1;
@@ -36,30 +18,57 @@ private:
     static constexpr int kSndLvlCnt = 1 << kSndLvlIdx;
     static constexpr size_t kBlockMinSize = 1 << kSndLvlIdx;
 
+    class BlockMetadata {
+    public:
+        friend class Tlsf;
+
+        size_t getSize() const;
+
+    private:
+        // block size and free bit (LSB is used as free bit)
+        size_t header;
+        size_t prev_free_idx;
+        size_t next_free_idx;
+    };
+
+    struct Header {
+        // this is a spin lock; keep the critical section tiny
+        TicketLock lock;
+        // whether the pool has been initialized
+        bool inited;
+        // aligned to a multiple of the minimum block size
+        size_t aligned_pool_size;
+        // number of blocks in this pool
+        size_t block_count;
+        // indicate if any block exists in the group of lists indexed by `fidx`
+        uint32_t first_lvl;
+        // indicate if any block exists in the list indexed by `fidx` and `sidx`
+        uint32_t second_lvl[kFstLvlCnt];
+        // free lists of blocks (saved in the form of their indices)
+        size_t free_lists[kFstLvlCnt][kSndLvlCnt];
+    };
+
+    Tlsf() = delete;
+    Tlsf(Header* tlsf_header);
+
+    size_t malloc(size_t size);
+    void free(size_t offset);
+
+private:
     void mapping(size_t size, int* fidx, int* sidx) const;
     size_t alignSize(size_t size) const;
 
-    Block* getBlockFromPayload(void* addr);
-    Block* findSuitableBlock(size_t size, int* fidx, int* sidx);
+    size_t findSuitableBlock(size_t size, int* fidx, int* sidx);
 
-    Block* splitBlock(Block* block, size_t size);
-    Block* mergeBlock(Block* block);
+    size_t splitBlock(size_t idx, size_t size);
+    size_t mergeBlock(size_t idx);
 
-    void insertBlock(Block* block);
-    void removeBlock(Block* block);
-    void removeBlock(Block* block, int fidx, int sidx);
+    void insertBlock(size_t idx);
+    void removeBlock(size_t idx);
+    void removeBlock(size_t idx, int fidx, int sidx);
 
-    void* pool_base;
-    size_t pool_size;
-    // indicate if any block exists in the group of lists indexed by `fidx`
-    uint32_t first_lvl;
-    // indicate if any block exists in the list indexed by `fidx` and `sidx`
-    uint32_t second_lvl[kFstLvlCnt];
-    // free lists of blocks
-    Block* free_lists[kFstLvlCnt][kSndLvlCnt];
-    // where block is actually placed
-    Block* blocks;
-    size_t block_count;
+    Header* tlsf_header = nullptr;
+    BlockMetadata* blocks = nullptr;
 };
 
 #endif  // TLSF_HPP
