@@ -47,7 +47,7 @@ void Subscriber::sub(MessageHandler handler) {
         // TODO: check availability; if not available, copy valid ones to this domain
         void* data = (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
 
-        handler((void*) data);
+        handler(data, mq_entry->size);
 
         // last subscriber reading the message should free the allocation
         if (std::atomic_ref<uint32_t>(mq_entry->taken_num).fetch_add(1) == topic_header->sub_count - 1) {

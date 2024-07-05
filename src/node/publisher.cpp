@@ -52,6 +52,7 @@ void Publisher::put(void* payload, size_t size) {
     //       no other process will access these variables at this moment
     mq_entry->taken_num = 0;
     mq_entry->offset = offset;
+    mq_entry->size = size;
     mq_entry->avail = 1 << this->domain_idx;
 
     // notify subscribers with the message ID

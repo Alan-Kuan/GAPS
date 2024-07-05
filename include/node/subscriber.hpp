@@ -10,7 +10,7 @@
 
 class Subscriber : public Node {
 public:
-    typedef std::function<void(void*)> MessageHandler;
+    typedef std::function<void(void*, size_t)> MessageHandler;
 
     Subscriber() = delete;
     Subscriber(const char* topic_name, const char* conf_path, const Domain& domain, size_t pool_size);

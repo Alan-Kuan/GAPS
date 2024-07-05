@@ -42,6 +42,8 @@ struct MessageQueueEntry {
     uint32_t taken_num;
     // address offset of the allocated space for the payload
     size_t offset;
+    // size of the payload
+    size_t size;
     // a bitmap indicates whether the payload exists in the corresponding domain (should be atomic referenced)
     uint32_t avail;
 };
