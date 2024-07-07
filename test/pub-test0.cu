@@ -8,7 +8,6 @@
 #include <ctime>
 #include <stdexcept>
 #include <iostream>
-#include <chrono>
 
 #include <cuda.h>
 #include <zenoh.hxx>
@@ -56,58 +55,14 @@ void pubTest(char *config_path) {
     }
 }
 
-void subTest(char *config_path) {
-    try {
-        cuInit(0);
-        Subscriber sub("topic 0", config_path, domain, 4096);
-        Subscriber::MessageHandler handler;
-
-        int* c;
-        cudaMalloc(&c, sizeof(int) * 512);
-
-        handler = [c](void *msg) {
-            beginTime.setPoint();
-            int arr[512];
-            int* a = (int*) msg;
-            int* b = (int*) msg + 512;
-
-            __vecAdd<<<1, 512>>>(c, a, b);
-
-            cudaMemcpy(arr, c, sizeof(int) * 512, cudaMemcpyDeviceToHost);
-            cout << "a + b:" << endl;
-            for (int i = 0; i < 512; i++) cout << arr[i] << ' ';
-            cout << endl;
-
-            cout << "beginTime: " << beginTime.getMSec() << endl;
-        };
-
-        sub.sub(handler);
-        sleep(5);
-    } catch (zenoh::ErrorMessage& err) {
-        cerr << "Zenoh: " << err.as_string_view() << endl;
-        exit(1);
-    } catch (runtime_error& err) {
-        cerr << "Subscriber: " << err.what() << endl;
-        exit(1);
-    }
-}
-
 int main(int argc, char *argv[]) {
 
     entryTime.setPoint();
     char *config_path = argv[1];
 
-    switch (fork()) {
-    case -1:
-        return -1;
-    case 0:
-        pubTest(config_path);
-        break;
-    default:
-        subTest(config_path);
-    }
+    pubTest(config_path);
 
-    cout << "entry time: " << entryTime.getMSec() << endl;
+    cout << argv[0] << " entry time: " << entryTime.getMSec() << endl;
 
     return 0;
 }

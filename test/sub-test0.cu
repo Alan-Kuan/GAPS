@@ -8,7 +8,6 @@
 #include <ctime>
 #include <stdexcept>
 #include <iostream>
-#include <chrono>
 
 #include <cuda.h>
 #include <zenoh.hxx>
@@ -31,30 +30,6 @@ TimeHelper entryTime;
 TimeHelper beginTime;
 TimeHelper endTime;
 Allocator::Domain domain = { Allocator::DeviceType::kGPU, 0 };
-
-void pubTest(char *config_path) {
-    try {
-        cuInit(0);
-        Publisher pub("topic 0", config_path, domain, 4096);
-
-        int arr[1024];
-
-        for (int i = 0; i < 1024; i++) arr[i] = rand() % 10;
-
-        beginTime.setPoint();
-        pub.put(arr, sizeof(int) * 1024);
-        endTime.setPoint();
-
-        cout << "beginTime: " << beginTime.getMSec() << ", endTime: " << endTime.getMSec() << endl;
-
-    } catch (zenoh::ErrorMessage& err) {
-        cerr << "Zenoh: " << err.as_string_view() << endl;
-        exit(1);
-    } catch (runtime_error& err) {
-        cerr << "Publisher: " << err.what() << endl;
-        exit(1);
-    }
-}
 
 void subTest(char *config_path) {
     try {
@@ -82,7 +57,6 @@ void subTest(char *config_path) {
         };
 
         sub.sub(handler);
-        sleep(5);
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);
@@ -97,17 +71,9 @@ int main(int argc, char *argv[]) {
     entryTime.setPoint();
     char *config_path = argv[1];
 
-    switch (fork()) {
-    case -1:
-        return -1;
-    case 0:
-        pubTest(config_path);
-        break;
-    default:
-        subTest(config_path);
-    }
+    subTest(config_path);
 
-    cout << "entry time: " << entryTime.getMSec() << endl;
+    cout << argv[0] << " entry time: " << entryTime.getMSec() << endl;
 
     return 0;
 }
