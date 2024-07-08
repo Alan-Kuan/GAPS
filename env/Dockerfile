@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update && apt install -y \
     build-essential ninja-build \
-    sudo curl wget git tar openssh-server
+    sudo curl wget git tar tmux openssh-server
 
 # cmake
 WORKDIR /opt

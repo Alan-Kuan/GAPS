@@ -10,7 +10,8 @@ class Node {
 public:
     struct MessageQueueHeader {
         size_t capacity;
-        // indicates the next index available to put the message (should be atomic referenced)
+        // indicates the next index available to put the message (should be
+        // atomic referenced)
         size_t next;
         // number of subscribers (should be atomic referenced)
         uint32_t sub_count;
@@ -19,7 +20,8 @@ public:
     Node() = delete;
     Node(const char* topic_name);
     ~Node();
-    // prevent the node from being copied, since it may cause problem when the copy destructs
+    // prevent the node from being copied, since it may cause problem when the
+    // copy destructs
     Node(const Node&) = delete;
     Node& operator=(const Node&) = delete;
 

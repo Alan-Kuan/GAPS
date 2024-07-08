@@ -13,7 +13,7 @@ class ShareableAllocator : public Allocator {
 public:
     ShareableAllocator() = delete;
     ShareableAllocator(void* metadata, size_t pool_size, bool read_only = false,
-        const std::string& sock_file_dir = "/tmp/shoz");
+                       const std::string& sock_file_dir = "/tmp/shoz");
     ~ShareableAllocator();
 
     void* malloc(size_t size) override;
