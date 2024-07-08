@@ -1,8 +1,7 @@
-#include "allocator/allocator.hpp"
 #include "allocator/shareable.hpp"
 
-#include <sys/stat.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/un.h>
 #include <unistd.h>
 
@@ -14,11 +13,13 @@
 #include <cuda.h>
 
 #include "alloc_algo/tlsf.hpp"
+#include "allocator/allocator.hpp"
 #include "error.hpp"
 
-ShareableAllocator::ShareableAllocator(void* metadata, size_t pool_size, bool read_only, const std::string& sock_file_dir)
-        : Allocator(read_only),
-          sock_file_dir(sock_file_dir) {
+ShareableAllocator::ShareableAllocator(void* metadata, size_t pool_size,
+                                       bool read_only,
+                                       const std::string& sock_file_dir)
+        : Allocator(read_only), sock_file_dir(sock_file_dir) {
     this->metadata = (Metadata*) metadata;
     this->createPool(pool_size);
     this->allocator = new Tlsf(this->pool_base, pool_size);
@@ -26,9 +27,7 @@ ShareableAllocator::ShareableAllocator(void* metadata, size_t pool_size, bool re
     std::filesystem::create_directory(sock_file_dir);
 }
 
-ShareableAllocator::~ShareableAllocator() {
-    this->removePool();
-}
+ShareableAllocator::~ShareableAllocator() { this->removePool(); }
 
 void* ShareableAllocator::malloc(size_t size) {
     if (!this->allocator) throwError("No allocator");
@@ -59,7 +58,8 @@ void ShareableAllocator::createPool(size_t size) {
     CUmemAccessDesc acc_desc;
     acc_desc.location.id = 0;
     acc_desc.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
-    acc_desc.flags = this->read_only ? CU_MEM_ACCESS_FLAGS_PROT_READ : CU_MEM_ACCESS_FLAGS_PROT_READWRITE;
+    acc_desc.flags = this->read_only ? CU_MEM_ACCESS_FLAGS_PROT_READ
+                                     : CU_MEM_ACCESS_FLAGS_PROT_READWRITE;
     throwOnErrorCuda(cuMemSetAccess(dptr, padded_size, &acc_desc, 1));
 
     this->pool_base = (void*) dptr;
@@ -68,8 +68,10 @@ void ShareableAllocator::createPool(size_t size) {
 void ShareableAllocator::removePool() {
     if (!this->handle_is_valid) return;
     throwOnErrorCuda(cuMemRelease(this->handle));
-    throwOnErrorCuda(cuMemUnmap((CUdeviceptr) this->pool_base, this->metadata->pool_size));
-    throwOnErrorCuda(cuMemAddressFree((CUdeviceptr) this->pool_base, this->metadata->pool_size));
+    throwOnErrorCuda(
+        cuMemUnmap((CUdeviceptr) this->pool_base, this->metadata->pool_size));
+    throwOnErrorCuda(cuMemAddressFree((CUdeviceptr) this->pool_base,
+                                      this->metadata->pool_size));
 }
 
 size_t ShareableAllocator::recvHandle(size_t pool_size) {
@@ -80,24 +82,25 @@ size_t ShareableAllocator::recvHandle(size_t pool_size) {
     memset(&cli_addr, 0, sizeof(cli_addr));
     cli_addr.sun_family = AF_UNIX;
     throwOnError(sprintf(cli_addr.sun_path, "%s/%s-client-%d-%d.sock",
-        this->sock_file_dir.c_str(),
-        this->metadata->topic_name,
-        getpid(),
-        gettid()));
+                         this->sock_file_dir.c_str(),
+                         this->metadata->topic_name, getpid(), gettid()));
 
     throwOnError(bind(sockfd, (struct sockaddr*) &cli_addr, sizeof(cli_addr)));
 
     struct sockaddr_un server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sun_family = AF_UNIX;
-    throwOnError(sprintf(server_addr.sun_path, "%s/server.sock", this->sock_file_dir.c_str()));
+    throwOnError(sprintf(server_addr.sun_path, "%s/server.sock",
+                         this->sock_file_dir.c_str()));
 
     // should wait until the server is ready
     struct stat buf;
-    for (int tries = 0; tries < 2 && (stat(server_addr.sun_path, &buf) != 0); tries++) {
+    for (int tries = 0; tries < 2 && (stat(server_addr.sun_path, &buf) != 0);
+         tries++) {
         usleep(50000);
     }
-    throwOnError(connect(sockfd, (struct sockaddr*) &server_addr, sizeof(server_addr)));
+    throwOnError(
+        connect(sockfd, (struct sockaddr*) &server_addr, sizeof(server_addr)));
 
     // send a request for the handle of a memory pool
     struct {
@@ -134,10 +137,11 @@ size_t ShareableAllocator::recvHandle(size_t pool_size) {
     // import the shareable handle into a generic handle
     struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
     if (!cmsg || cmsg->cmsg_len != CMSG_LEN(sizeof(int))) throwError();
-    
+
     int sh_handle = *((int*) CMSG_DATA(cmsg));
-    throwOnErrorCuda(cuMemImportFromShareableHandle(&this->handle,
-        (void*) (uintptr_t) sh_handle, CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR));
+    throwOnErrorCuda(cuMemImportFromShareableHandle(
+        &this->handle, (void*) (uintptr_t) sh_handle,
+        CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR));
     this->handle_is_valid = true;
 
     return padded_size;

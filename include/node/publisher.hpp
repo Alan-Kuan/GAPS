@@ -11,7 +11,8 @@
 class Publisher : public Node {
 public:
     Publisher() = delete;
-    Publisher(const char* topic_name, const char* conf_path, const Allocator::Domain& domain, size_t pool_size);
+    Publisher(const char* topic_name, const char* conf_path,
+              const Allocator::Domain& domain, size_t pool_size);
     ~Publisher();
 
     void put(void* payload, size_t size);

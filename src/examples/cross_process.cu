@@ -3,8 +3,8 @@
 #include <cstddef>
 #include <cstdlib>
 #include <ctime>
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
 
 #include <cuda.h>
 #include <zenoh.hxx>
@@ -57,7 +57,8 @@ int main(int argc, char* argv[]) {
 }
 
 void printUsageAndExit(char* program_name) {
-    cerr << "Usage: " << program_name << " OPTIONS ZENOH_CONFIG" << endl << endl;
+    cerr << "Usage: " << program_name << " OPTIONS ZENOH_CONFIG" << endl
+         << endl;
     cerr << "OPTIONS:" << endl;
     cerr << "  -p       run as a publisher" << endl;
     cerr << "  -s JOB   run as a subscriber" << endl;
@@ -74,7 +75,7 @@ void runAsPublisher(const char* conf_path) {
     try {
         if (cuInit(0) != CUDA_SUCCESS) throwError();
 
-        Allocator::Domain domain = { Allocator::DeviceType::kGPU, 0 };
+        Allocator::Domain domain = {Allocator::DeviceType::kGPU, 0};
         Publisher publisher(kTopicName, conf_path, domain, kPoolSize);
         int arr[128];
 
@@ -104,14 +105,15 @@ void runAsSubscriber(const char* conf_path, int job) {
         cout << "Run as a subscriber (element-wise multiplication)" << endl;
         break;
     case 3:
-        cout << "Run as a naughty subscriber (write to read-only memory)" << endl;
+        cout << "Run as a naughty subscriber (write to read-only memory)"
+             << endl;
         break;
     }
 
     try {
         if (cuInit(0) != CUDA_SUCCESS) throwError();
 
-        Allocator::Domain domain = { Allocator::DeviceType::kGPU, 0 };
+        Allocator::Domain domain = {Allocator::DeviceType::kGPU, 0};
         Subscriber subscriber(kTopicName, conf_path, domain, kPoolSize);
         Subscriber::MessageHandler handler;
 
@@ -149,7 +151,8 @@ void runAsSubscriber(const char* conf_path, int job) {
             handler = [](void* msg) {
                 int* a = (int*) msg;
 
-                cout << cudaGetErrorString(cudaMemset(a, 0, sizeof(int) * 64)) << endl;
+                cout << cudaGetErrorString(cudaMemset(a, 0, sizeof(int) * 64))
+                     << endl;
             };
             break;
         }
