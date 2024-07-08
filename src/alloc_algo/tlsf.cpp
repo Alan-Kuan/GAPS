@@ -9,8 +9,8 @@ Tlsf::Tlsf(void* pool_base, size_t pool_size) : pool_base(pool_base) {
     memset(this->second_lvl, 0, sizeof(this->second_lvl));
     memset(this->free_lists, 0, sizeof(this->free_lists));
 
-    // NOTE: If `pool_size` is not a multiple of `kBlockMinSize`, the remaining space,
-    //       whose size is less than `kBlockMinSize` will be wasted.
+    // NOTE: If `pool_size` is not a multiple of `kBlockMinSize`, the remaining
+    // space, whose size is less than `kBlockMinSize` will be wasted.
     this->block_count = pool_size / kBlockMinSize;
     this->blocks = new Tlsf::Block[this->block_count];
     this->pool_size = this->block_count * kBlockMinSize;
@@ -19,9 +19,7 @@ Tlsf::Tlsf(void* pool_base, size_t pool_size) : pool_base(pool_base) {
     this->insertBlock(&(this->blocks[0]));
 }
 
-Tlsf::~Tlsf() {
-    delete[] this->blocks;
-}
+Tlsf::~Tlsf() { delete[] this->blocks; }
 
 void* Tlsf::malloc(size_t size) {
     if (size == 0 || size > this->pool_size) return nullptr;
@@ -50,12 +48,10 @@ void Tlsf::free(void* addr) {
     this->insertBlock(block);
 }
 
-size_t Tlsf::Block::getSize() const {
-    return this->header & ~kBlockFlagBits;
-}
+size_t Tlsf::Block::getSize() const { return this->header & ~kBlockFlagBits; }
 
 void Tlsf::mapping(size_t size, int* fidx, int* sidx) const {
-    // index of leftmost 1-bit 
+    // index of leftmost 1-bit
     *fidx = kWidthMinusOne - __builtin_clzll(size);
     // `kSndLvlIdx` bits from the right of the leftmost 1-bit
     *sidx = (size ^ (1 << *fidx)) >> (*fidx - kSndLvlIdx);
@@ -67,12 +63,14 @@ size_t Tlsf::alignSize(size_t size) const {
 }
 
 Tlsf::Block* Tlsf::getBlockFromPayload(void* addr) {
-    size_t offset = ((uint8_t*) addr - (uint8_t*) this->pool_base) / kBlockMinSize;
+    size_t offset =
+        ((uint8_t*) addr - (uint8_t*) this->pool_base) / kBlockMinSize;
     return this->blocks + offset;
 }
 
 Tlsf::Block* Tlsf::findSuitableBlock(size_t size, int* fidx, int* sidx) {
-    // non-empty lists indexed by `*fidx` and second-level indices not less than `*sidx`
+    // non-empty lists indexed by `*fidx` and second-level indices not less than
+    // `*sidx`
     uint32_t non_empty_lists = this->second_lvl[*fidx] & (~0U << *sidx);
 
     if (!non_empty_lists) {

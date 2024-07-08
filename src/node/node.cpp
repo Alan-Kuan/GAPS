@@ -15,9 +15,12 @@
 Node::Node(const char* topic_name) {
     if (strlen(topic_name) > kMaxTopicNameLen) throwError();
 
-    this->shm_size = sizeof(Allocator::Metadata) +
-        // TODO: we assume subscribers from all memory domains here; can be on demand in the future
-        sizeof(MessageQueueHeader) + kMaxMessageNum * (sizeof(int) + kMaxDomainNum * sizeof(size_t));
+    this->shm_size =
+        sizeof(Allocator::Metadata) +
+        // TODO: we assume subscribers from all memory domains here; can be on
+        // demand in the future
+        sizeof(MessageQueueHeader) +
+        kMaxMessageNum * (sizeof(int) + kMaxDomainNum * sizeof(size_t));
     this->attachShm(topic_name, this->shm_size);
 
     if (((char*) this->shm_base)[0] == '\0') {
@@ -25,9 +28,7 @@ Node::Node(const char* topic_name) {
     }
 }
 
-Node::~Node() {
-    this->detachShm((char*) this->shm_base, this->shm_size);
-}
+Node::~Node() { this->detachShm((char*) this->shm_base, this->shm_size); }
 
 void Node::attachShm(const char* shm_name, size_t size) {
     int fd = throwOnError(shm_open(shm_name, O_CREAT | O_RDWR, 0666));
