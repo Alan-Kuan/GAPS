@@ -58,6 +58,6 @@ void Publisher::put(void* payload, size_t size) {
     // notify subscribers with the message ID
     zenoh::BytesView msg((void*) &msg_id, sizeof(size_t));
     if (!this->z_publisher.put(msg)) {
-        throwError("Warning: Zenoh failed to send a message");
+        throwError("Zenoh failed to send a message");
     }
 }
