@@ -27,7 +27,6 @@ __global__ void __vecAdd(int* c, int* a, int* b) {
 }
 
 /* Global */
-TimeHelper entryTime;
 TimeHelper beginTime;
 TimeHelper endTime;
 Allocator::Domain domain = { Allocator::DeviceType::kGPU, 0 };
@@ -94,7 +93,6 @@ void subTest(char *config_path) {
 
 int main(int argc, char *argv[]) {
 
-    entryTime.setPoint();
     char *config_path = argv[1];
 
     switch (fork()) {
@@ -106,8 +104,6 @@ int main(int argc, char *argv[]) {
     default:
         subTest(config_path);
     }
-
-    cout << "entry time: " << entryTime.getMSec() << endl;
 
     return 0;
 }

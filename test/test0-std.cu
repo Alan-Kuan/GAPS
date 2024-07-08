@@ -27,9 +27,7 @@ __global__ void __vecAdd(int* c, int* a, int* b) {
 }
 
 /* Global */
-TimeHelper entryTime;
-TimeHelper beginTime;
-TimeHelper endTime;
+StdTimeHelper timeHelper;
 Allocator::Domain domain = { Allocator::DeviceType::kGPU, 0 };
 
 void pubTest(char *config_path) {
@@ -37,17 +35,17 @@ void pubTest(char *config_path) {
         cuInit(0);
         Publisher pub("topic 0", config_path, domain, 4096);
 
-        chrono::steady_clock::time_point
-
         int arr[1024];
 
         for (int i = 0; i < 1024; i++) arr[i] = rand() % 10;
 
-        beginTime.setPoint();
+        timeHelper.setPoint();
         pub.put(arr, sizeof(int) * 1024);
-        endTime.setPoint();
+        timeHelper.setPoint();
 
-        cout << "beginTime: " << beginTime.getMSec() << ", endTime: " << endTime.getMSec() << endl;
+        auto durObj = timeHelper.getDuration<StdTimeHelper::millisec>(0, 1);
+
+        cout << "publisher duration : " <<  durObj.count() << endl;
 
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
@@ -68,22 +66,28 @@ void subTest(char *config_path) {
         cudaMalloc(&c, sizeof(int) * 512);
 
         handler = [c](void *msg) {
-            beginTime.setPoint();
+            
             int arr[512];
             int* a = (int*) msg;
             int* b = (int*) msg + 512;
 
             __vecAdd<<<1, 512>>>(c, a, b);
 
+            timeHelper.setPoint();
             cudaMemcpy(arr, c, sizeof(int) * 512, cudaMemcpyDeviceToHost);
+            timeHelper.setPoint();
+
             cout << "a + b:" << endl;
             for (int i = 0; i < 512; i++) cout << arr[i] << ' ';
             cout << endl;
 
-            cout << "beginTime: " << beginTime.getMSec() << endl;
+            cout << "beginTime: " << endl;
         };
 
+        timeHelper.setPoint();
         sub.sub(handler);
+        timeHelper.setPoint();
+        
         sleep(5);
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
@@ -96,7 +100,6 @@ void subTest(char *config_path) {
 
 int main(int argc, char *argv[]) {
 
-    entryTime.setPoint();
     char *config_path = argv[1];
 
     switch (fork()) {
@@ -108,8 +111,6 @@ int main(int argc, char *argv[]) {
     default:
         subTest(config_path);
     }
-
-    cout << "entry time: " << entryTime.getMSec() << endl;
 
     return 0;
 }
