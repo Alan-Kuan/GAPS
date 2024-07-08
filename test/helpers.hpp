@@ -6,18 +6,19 @@
 
 namespace hlp {
 
-class TimevalPoint {
+class TimePoint {
 public:
-    TimevalPoint() : tv({0, 0}) {}
+    TimePoint() : tv({0, 0}) {}
+
+    inline void set() {
+        gettimeofday(&tv, 0);
+    } 
 
     inline double getMSec() {
         return (double) this->tv.tv_sec * 1000.0 
              + (double) this->tv.tv_usec / 1000.0;
     }
 
-    inline void setPoint() {
-        gettimeofday(&tv, 0);
-    } 
 private:
     timeval tv;
 };
@@ -26,20 +27,20 @@ class TimeHelper {
 public:
     TimeHelper(size_t capacity) : tpCounter(0) {
         this->capacity = capacity;
-        recorder = new TimevalPoint[capacity];
+        recorder = new TimePoint[capacity];
 
         for (size_t i = 0; i < capacity; i++) {
-            recorder[i] = TimevalPoint();
+            recorder[i] = TimePoint();
         }
     } 
 
     inline void setPoint() {
-        recorder[tpCounter % capacity].setPoint();
+        recorder[tpCounter % capacity].set();
         tpCounter++;
     }
 
     inline double getMSec(size_t tpIndex) {
-        TimevalPoint tvp = recorder[tpIndex % capacity];
+        TimePoint tvp = recorder[tpIndex % capacity];
         return tvp.getMSec();
     }
 
@@ -54,7 +55,7 @@ private:
     // timeval tv;
     size_t tpCounter; // time point counter
     size_t capacity;
-    TimevalPoint *recorder;
+    TimePoint* recorder;
 };
 
 class StdTimeHelper {
@@ -93,7 +94,7 @@ public:
 
 private:
     size_t timePointCounter;
-    clock::time_point *recorder;
+    clock::time_point* recorder;
 };
 
 // static inline void tryCatcher(std::function<void(int)>& f) {
