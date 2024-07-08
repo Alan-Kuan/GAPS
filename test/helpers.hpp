@@ -6,25 +6,41 @@
 
 namespace hlp {
 
+class TimevalPoint {
+public:
+    TimevalPoint() : tv({0, 0}) {}
+
+    inline double getMSec() {
+        return (double) this->tv.tv_sec * 1000.0 
+             + (double) this->tv.tv_usec / 1000.0;
+    }
+
+    inline void setPoint() {
+        gettimeofday(&tv, 0);
+    } 
+private:
+    timeval tv;
+};
+
 class TimeHelper {
 public:
     TimeHelper(size_t capacity) : tpCounter(0) {
         this->capacity = capacity;
-        recorder = new timeval[capacity];
+        recorder = new TimevalPoint[capacity];
 
         for (size_t i = 0; i < capacity; i++) {
-            recorder[i] = (timeval) {0, 0};
+            recorder[i] = TimevalPoint();
         }
     } 
 
     inline void setPoint() {
-        gettimeofday(&recorder[tpCounter % capacity], 0);
+        recorder[tpCounter % capacity].setPoint();
         tpCounter++;
     }
 
     inline double getMSec(size_t tpIndex) {
-        timeval tv = recorder[tpIndex % capacity];
-        return (double) tv.tv_sec * 1000.0 + (double) tv.tv_usec / 1000.0;
+        TimevalPoint tvp = recorder[tpIndex % capacity];
+        return tvp.getMSec();
     }
 
     ~TimeHelper() {
@@ -38,7 +54,7 @@ private:
     // timeval tv;
     size_t tpCounter; // time point counter
     size_t capacity;
-    timeval *recorder;
+    TimevalPoint *recorder;
 };
 
 class StdTimeHelper {
