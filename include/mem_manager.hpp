@@ -23,7 +23,8 @@ private:
     size_t createPool(const char* name, size_t size);
     void removePool(const char* name);
 
-    size_t getPaddedSize(const size_t size, const CUmemAllocationProp* prop) const;
+    size_t getPaddedSize(const size_t size,
+                         const CUmemAllocationProp* prop) const;
 
     std::unordered_map<std::string, Pool> pools;
     std::string sock_file_dir;

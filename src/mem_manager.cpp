@@ -1,14 +1,14 @@
 #include "mem_manager.hpp"
 
-#include <sys/stat.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/un.h>
 #include <unistd.h>
 
+#include <csignal>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
-#include <csignal>
 #include <cstring>
 #include <filesystem>
 #include <iostream>
@@ -41,7 +41,8 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-MemManager::MemManager(const std::string& sock_file_dir) : sock_file_dir(sock_file_dir) {
+MemManager::MemManager(const std::string& sock_file_dir)
+        : sock_file_dir(sock_file_dir) {
     std::filesystem::create_directory(sock_file_dir);
 }
 
@@ -98,15 +99,17 @@ MemManager::~MemManager() {
 
         auto entry = this->pools.find(buf_req.topic_name);
         if (entry == this->pools.end()) {
-            padded_size = this->createPool(buf_req.topic_name, buf_req.pool_size);
+            padded_size =
+                this->createPool(buf_req.topic_name, buf_req.pool_size);
         } else {
             padded_size = entry->second.size;
         }
 
         // export the handle to a shareable handle
         int sh_handle;
-        throwOnErrorCuda(cuMemExportToShareableHandle((void*) &sh_handle,
-            this->pools[buf_req.topic_name].handle, CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR, 0));
+        throwOnErrorCuda(cuMemExportToShareableHandle(
+            (void*) &sh_handle, this->pools[buf_req.topic_name].handle,
+            CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR, 0));
 
         iov[0].iov_base = &padded_size;
         iov[0].iov_len = sizeof(size_t);
@@ -138,8 +141,10 @@ void MemManager::removePool(const char* name) {
     this->pools.erase(name);
 }
 
-size_t MemManager::getPaddedSize(const size_t size, const CUmemAllocationProp* prop) const {
+size_t MemManager::getPaddedSize(const size_t size,
+                                 const CUmemAllocationProp* prop) const {
     size_t gran = 0;
-    throwOnErrorCuda(cuMemGetAllocationGranularity(&gran, prop, CU_MEM_ALLOC_GRANULARITY_MINIMUM));
+    throwOnErrorCuda(cuMemGetAllocationGranularity(
+        &gran, prop, CU_MEM_ALLOC_GRANULARITY_MINIMUM));
     return ((size - 1) / gran + 1) * gran;
 }

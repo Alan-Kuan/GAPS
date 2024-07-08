@@ -12,8 +12,7 @@
 [[noreturn]] void throwError(const char* msg, std::source_location loc) {
     std::stringstream ss;
 
-    ss << "file: " << loc.file_name()
-       << '(' << loc.line() << ") "
+    ss << "file: " << loc.file_name() << '(' << loc.line() << ") "
        << "in `" << loc.function_name() << '`';
 
     if (msg) ss << ": " << msg;
