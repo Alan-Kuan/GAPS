@@ -4,10 +4,9 @@
 #include <cstdint>
 #include <cstring>
 
-// TODO: make sure really multi-process-safe
-
 // NOTE: `tlsf_header` is initialized in Node's constructor
 Tlsf::Tlsf(Header* tlsf_header) : tlsf_header(tlsf_header) {
+    // TODO: use different lock
     tlsf_header->lock.lock();
     bool pool_inited = tlsf_header->inited;
     if (!pool_inited) tlsf_header->inited = true;
@@ -22,12 +21,20 @@ Tlsf::Tlsf(Header* tlsf_header) : tlsf_header(tlsf_header) {
 
 size_t Tlsf::malloc(size_t size) {
     if (size == 0 || size > this->tlsf_header->aligned_pool_size) return -1;
+
     size = this->alignSize(size);
     int fidx, sidx;
     this->mapping(size, &fidx, &sidx);
+
+    // prevent the found block from being removed in mergeBlock()
+    this->tlsf_header->lock.lock();
     size_t block_idx = findSuitableBlock(size, &fidx, &sidx);
-    if (block_idx == -1) return -1;
+    if (block_idx == -1) {
+        this->tlsf_header->lock.unlock();
+        return -1;
+    }
     this->removeBlock(block_idx, fidx, sidx);
+    this->tlsf_header->lock.unlock();
 
     if (this->blocks[block_idx].getSize() > size) {
         size_t rest_block_idx = this->splitBlock(block_idx, size);
@@ -41,8 +48,8 @@ void Tlsf::free(size_t offset) {
     if (offset == -1) return;
     size_t block_idx = offset / kBlockMinSize;
     if (this->blocks[block_idx].header & kBlockFreeFlag) return;
-    this->blocks[block_idx].header |= kBlockFreeFlag;
     block_idx = this->mergeBlock(block_idx);
+    this->blocks[block_idx].header |= kBlockFreeFlag;
     this->insertBlock(block_idx);
 }
 
@@ -63,7 +70,6 @@ size_t Tlsf::alignSize(size_t size) const {
 }
 
 size_t Tlsf::findSuitableBlock(size_t size, int* fidx, int* sidx) {
-    this->tlsf_header->lock.lock();
     // non-empty lists indexed by `*fidx` and second-level indices not less than `*sidx`
     uint32_t non_empty_lists = this->tlsf_header->second_lvl[*fidx] & (~0U << *sidx);
 
@@ -77,9 +83,7 @@ size_t Tlsf::findSuitableBlock(size_t size, int* fidx, int* sidx) {
     }
 
     *sidx = __builtin_ffs(non_empty_lists) - 1;
-    size_t block_idx = this->tlsf_header->free_lists[*fidx][*sidx];
-    this->tlsf_header->lock.unlock();
-    return block_idx;
+    return this->tlsf_header->free_lists[*fidx][*sidx];
 }
 
 size_t Tlsf::splitBlock(size_t block_idx, size_t size) {
@@ -98,6 +102,8 @@ size_t Tlsf::mergeBlock(size_t block_idx) {
     BlockMetadata* next = block + 1;
     size_t new_block_idx = block_idx;
 
+    // prevent next block or previous block chosen by findSuitableBlock() before removeBlock() is called
+    this->tlsf_header->lock.lock();
     if (block_idx < this->tlsf_header->block_count - 1 && (next->header & kBlockFreeFlag)) {
         block->header += next->getSize();
         this->removeBlock(block_idx + 1);
@@ -107,6 +113,7 @@ size_t Tlsf::mergeBlock(size_t block_idx) {
         this->removeBlock(block_idx);
         new_block_idx = block_idx - 1;
     }
+    this->tlsf_header->lock.unlock();
 
     return new_block_idx;
 }
@@ -137,13 +144,15 @@ void Tlsf::removeBlock(size_t block_idx) {
 }
 
 void Tlsf::removeBlock(size_t block_idx, int fidx, int sidx) {
+    // NOTE: Why the following 5 lines should be included in the critical section is because
+    // when neighoring blocks are removed at the same time, the list may break into 2 parts.
+    // E.g., 2 & 3 are removed: [1]<->[2]<->[3]<->[4] => [1]<->[3] [2]<->[4]
     size_t prev_idx = this->blocks[block_idx].prev_free_idx;
     size_t next_idx = this->blocks[block_idx].next_free_idx;
 
     if (prev_idx != -1) this->blocks[prev_idx].next_free_idx = next_idx;
     if (next_idx != -1) this->blocks[next_idx].prev_free_idx = prev_idx;
 
-    this->tlsf_header->lock.lock();
     if (this->tlsf_header->free_lists[fidx][sidx] == block_idx) {
         this->tlsf_header->free_lists[fidx][sidx] = next_idx;
 
@@ -154,7 +163,6 @@ void Tlsf::removeBlock(size_t block_idx, int fidx, int sidx) {
             }
         }
     }
-    this->tlsf_header->lock.unlock();
 
     this->blocks[block_idx].header &= ~kBlockFreeFlag;
 }
