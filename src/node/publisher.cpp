@@ -18,9 +18,6 @@ Publisher::Publisher(const char* topic_name, const char* conf_path, const Domain
         : Node(topic_name, pool_size, domain.getId()),
           z_session(nullptr),
           z_publisher(nullptr) {
-    TopicHeader* topic_header = getTopicHeader(this->shm_base);
-    std::atomic_ref<uint32_t>(topic_header->interest_count)++;
-
     auto config = zenoh::expect<zenoh::Config>(zenoh::config_from_file(conf_path));
     this->z_session = zenoh::expect<zenoh::Session>(zenoh::open(std::move(config)));
 

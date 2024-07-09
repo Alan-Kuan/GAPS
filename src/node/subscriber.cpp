@@ -33,7 +33,6 @@ Subscriber::~Subscriber() {
 
 void Subscriber::sub(MessageHandler handler) {
     TopicHeader* topic_header = getTopicHeader(this->shm_base);
-    std::atomic_ref<uint32_t>(topic_header->interest_count)++;
     std::atomic_ref<uint32_t>(topic_header->sub_count)++;
 
     MessageQueueHeader* mq_header = getMessageQueueHeader(getDomainMap(getTlsfHeader(topic_header)));

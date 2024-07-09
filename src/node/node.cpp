@@ -34,6 +34,7 @@ Node::Node(const char* topic_name, size_t pool_size, uint16_t domain_id) {
         strcpy(topic_header->topic_name, topic_name);
         topic_header->pool_size = padded_pool_size;
     }
+    std::atomic_ref<uint32_t>(topic_header->interest_count)++;
 
     Tlsf::Header* tlsf_header = getTlsfHeader(topic_header);
     // NOTE: if `pool_size` is not a multiple of `kBlockMinSize`, the remaining space will be wasted
