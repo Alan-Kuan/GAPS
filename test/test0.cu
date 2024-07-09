@@ -44,7 +44,10 @@ void pubTest(char *config_path) {
         pub.put(arr, sizeof(int) * 1024);
         endTime.set();
 
-        cout << "beginTime: " << beginTime.getMSec() << ", endTime: " << endTime.getMSec() << endl;
+        sleep(1);
+
+        cout << "pub begin: " << fixed << beginTime.getMSec();
+        cout << ", end: " << fixed << endTime.getMSec() << endl;
 
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
@@ -73,11 +76,11 @@ void subTest(char *config_path) {
             __vecAdd<<<1, 512>>>(c, a, b);
 
             cudaMemcpy(arr, c, sizeof(int) * 512, cudaMemcpyDeviceToHost);
-            cout << "a + b:" << endl;
-            for (int i = 0; i < 512; i++) cout << arr[i] << ' ';
-            cout << endl;
+            // cout << "a + b:" << endl;
+            // for (int i = 0; i < 512; i++) cout << arr[i] << ' ';
+            // cout << endl;
 
-            cout << "beginTime: " << beginTime.getMSec() << endl;
+            cout << "sub handle begin: " << fixed << beginTime.getMSec() << endl;
         };
 
         sub.sub(handler);

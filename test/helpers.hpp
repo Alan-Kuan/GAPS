@@ -3,6 +3,7 @@
 #include <chrono>
 #include <ctime>
 #include <functional>
+#include <iostream>
 
 namespace hlp {
 
@@ -30,53 +31,63 @@ private:
     timeval tv;
 };
 
-class TimeHelper {
+class Timer {
 public:
-    TimeHelper(size_t capacity) : tpCounter(0) {
-        this->capacity = capacity;
-        recorder = new TimePoint[capacity];
+    Timer() : capacity(64), size(0) {
+        this->recorder = new TimePoint[this->capacity];
+    }
 
-        for (size_t i = 0; i < capacity; i++) {
-            recorder[i] = TimePoint();
-        }
-    } 
+    Timer(size_t capacity) : size(0) {
+        this->capacity = capacity;
+        this->recorder = new TimePoint[capacity];
+    }
 
     inline void setPoint() {
-        recorder[tpCounter % capacity].set();
-        tpCounter++;
+        if (this->size >= capacity) {
+            std::cerr << "TimeHelper is full of capacity";
+            exit(1);
+        }
+        this->recorder[this->size++].set();
     }
 
     inline double getMSec(size_t tpIndex) {
-        TimePoint tvp = recorder[tpIndex % capacity];
+        TimePoint tvp = this->recorder[tpIndex];
         return tvp.getMSec();
+    }
+
+    inline void showAll() {
+        for (size_t i = 0; i < this->size; i++) {
+            std::cout << std::fixed << this->getMSec(i) << "\n";
+        }
+    }
+
+    inline size_t getSize() {
+        return this->size;
     }
 
     static inline double calcDuration(TimePoint t1, TimePoint t2) {
         return (t2 - t1).getMSec();
     }
 
-    ~TimeHelper() {
+    ~Timer() {
         delete[] this->recorder;
     }
-    
-    TimeHelper() = delete;
-    TimeHelper(const TimeHelper &) = delete;
 
 private:
     // timeval tv;
-    size_t tpCounter; // time point counter
+    size_t size; // time point counter
     size_t capacity;
     TimePoint* recorder;
 };
 
-class StdTimeHelper {
+class StdTimer {
 public:
     using clock = std::chrono::steady_clock;
     using sec = std::chrono::seconds;
     using millisec = std::chrono::milliseconds;
     using microsec = std::chrono::microseconds;
 
-    StdTimeHelper(size_t capacity) : timePointCounter(0) {
+    StdTimer(size_t capacity) : timePointCounter(0) {
         recorder = new clock::time_point[capacity];
     }
 
@@ -96,12 +107,12 @@ public:
         return std::chrono::duration_cast<T>(t1 - t2);
     }
 
-    ~StdTimeHelper() {
+    ~StdTimer() {
         delete[] recorder;
     }
 
-    StdTimeHelper() = delete;
-    StdTimeHelper(const StdTimeHelper &) = delete;
+    StdTimer() = delete;
+    StdTimer(const StdTimer &) = delete;
 
 private:
     size_t timePointCounter;
