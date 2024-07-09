@@ -29,6 +29,10 @@ Node::Node(const char* topic_name, size_t pool_size, uint16_t domain_id) {
     this->attachShm(topic_name, this->shm_size);
 
     TopicHeader* topic_header = getTopicHeader(this->shm_base);
+    Tlsf::Header* tlsf_header = getTlsfHeader(topic_header);
+    DomainMap* domain_map = getDomainMap(tlsf_header);
+    MessageQueueHeader* mq_header = getMessageQueueHeader(domain_map);
+
     // init the header if this is a newly created topic
     if (topic_header->topic_name[0] == '\0') {
         strcpy(topic_header->topic_name, topic_name);
@@ -36,13 +40,13 @@ Node::Node(const char* topic_name, size_t pool_size, uint16_t domain_id) {
     }
     std::atomic_ref<uint32_t>(topic_header->interest_count)++;
 
-    Tlsf::Header* tlsf_header = getTlsfHeader(topic_header);
     // NOTE: if `pool_size` is not a multiple of `kBlockMinSize`, the remaining space will be wasted
     tlsf_header->aligned_pool_size = block_count * Tlsf::kBlockMinSize;
     tlsf_header->block_count = block_count;
 
+    mq_header->capacity = kMaxMessageNum;
+
     // map unique ID of its domain to an index
-    DomainMap* domain_map = getDomainMap(tlsf_header);
     int i = 0;
     domain_map->lock.lock();
     for (; i < 32 && domain_map->map[i] > 0; i++) {
@@ -60,9 +64,6 @@ Node::Node(const char* topic_name, size_t pool_size, uint16_t domain_id) {
     domain_map->map[i] = domain_id;
     domain_map->lock.unlock();
     this->domain_idx = i;
-
-    MessageQueueHeader* mq_header = getMessageQueueHeader(domain_map);
-    mq_header->capacity = kMaxMessageNum;
 }
 
 Node::~Node() {
