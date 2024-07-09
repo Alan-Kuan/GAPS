@@ -9,14 +9,21 @@ namespace hlp {
 class TimePoint {
 public:
     TimePoint() : tv({0, 0}) {}
+    TimePoint(timeval t) : tv(t) {}
 
     inline void set() {
         gettimeofday(&tv, 0);
-    } 
+    }
 
     inline double getMSec() {
-        return (double) this->tv.tv_sec * 1000.0 
-             + (double) this->tv.tv_usec / 1000.0;
+        return (double) tv.tv_sec * 1000.0 + (double) tv.tv_usec / 1000.0;
+    }
+
+    TimePoint operator-(TimePoint const &obj) {
+        return TimePoint({
+            tv.tv_sec - obj.tv.tv_sec,
+            tv.tv_usec - obj.tv.tv_usec
+        });
     }
 
 private:
@@ -42,6 +49,10 @@ public:
     inline double getMSec(size_t tpIndex) {
         TimePoint tvp = recorder[tpIndex % capacity];
         return tvp.getMSec();
+    }
+
+    static inline double calcDuration(TimePoint t1, TimePoint t2) {
+        return (t2 - t1).getMSec();
     }
 
     ~TimeHelper() {

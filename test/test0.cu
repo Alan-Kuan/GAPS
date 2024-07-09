@@ -27,8 +27,8 @@ __global__ void __vecAdd(int* c, int* a, int* b) {
 }
 
 /* Global */
-TimevalPoint beginTime;
-TimevalPoint endTime;
+TimePoint beginTime;
+TimePoint endTime;
 Allocator::Domain domain = { Allocator::DeviceType::kGPU, 0 };
 
 void pubTest(char *config_path) {
@@ -40,9 +40,9 @@ void pubTest(char *config_path) {
 
         for (int i = 0; i < 1024; i++) arr[i] = rand() % 10;
 
-        beginTime.setPoint();
+        beginTime.set();
         pub.put(arr, sizeof(int) * 1024);
-        endTime.setPoint();
+        endTime.set();
 
         cout << "beginTime: " << beginTime.getMSec() << ", endTime: " << endTime.getMSec() << endl;
 
@@ -65,7 +65,7 @@ void subTest(char *config_path) {
         cudaMalloc(&c, sizeof(int) * 512);
 
         handler = [c](void *msg) {
-            beginTime.setPoint();
+            beginTime.set();
             int arr[512];
             int* a = (int*) msg;
             int* b = (int*) msg + 512;
