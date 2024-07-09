@@ -52,6 +52,7 @@ void Subscriber::sub(MessageHandler handler) {
         // last subscriber reading the message should free the allocation
         if (std::atomic_ref<uint32_t>(mq_entry->taken_num).fetch_add(1) == topic_header->sub_count - 1) {
             this->allocator->free(offset);
+            mq_entry->avail = 0;
         }
     };
 

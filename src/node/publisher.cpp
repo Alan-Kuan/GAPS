@@ -36,6 +36,9 @@ Publisher::Publisher(const char* topic_name, const char* conf_path, const Domain
 }
 
 void Publisher::put(void* payload, size_t size) {
+    if (!payload) throwError("Payload was not provided");
+    if (size == 0) return;
+
     size_t offset = this->allocator->malloc(size);
     if (offset == -1) throwError("No free space in the pool");
     void* addr = (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
@@ -46,7 +49,10 @@ void Publisher::put(void* payload, size_t size) {
     size_t msg_id = std::atomic_ref<size_t>(mq_header->next).fetch_add(1) % kMaxMessageNum;
     MessageQueueEntry* mq_entry = getMessageQueueEntry(mq_header, msg_id);
 
-    // TODO: free the the corresponding space if it hasn't been freed
+    // free the payload's space if it hasn't been freed
+    if (mq_entry->avail) {
+        this->allocator->free(mq_entry->offset);
+    }
 
     // NOTE: though `taken_num` and `avail` should be atomic referenced, it's okay because
     //       no other process will access these variables at this moment

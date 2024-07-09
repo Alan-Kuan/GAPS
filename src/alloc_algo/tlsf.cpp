@@ -40,6 +40,7 @@ size_t Tlsf::malloc(size_t size) {
 void Tlsf::free(size_t offset) {
     if (offset == -1) return;
     size_t block_idx = offset / kBlockMinSize;
+    if (this->blocks[block_idx].header & kBlockFreeFlag) return;
     this->blocks[block_idx].header |= kBlockFreeFlag;
     block_idx = this->mergeBlock(block_idx);
     this->insertBlock(block_idx);
