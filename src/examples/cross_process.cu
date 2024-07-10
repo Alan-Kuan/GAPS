@@ -5,6 +5,7 @@
 #include <ctime>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 
 #include <cuda.h>
 #include <zenoh.hxx>
@@ -18,7 +19,7 @@
 using namespace std;
 
 void printUsageAndExit(char* program_name);
-void runAsPublisher(const char* conf_path);
+void runAsPublisher(const char* conf_path, int n);
 void runAsSubscriber(const char* conf_path, int job);
 
 const char kTopicName[] = "cross_process";
@@ -31,24 +32,51 @@ int main(int argc, char* argv[]) {
     if (argc < 3) printUsageAndExit(argv[0]);
 
     bool run_as_pub = false;
-    int job = 0;
-
+    bool run_as_sub = false;
+    int n = 1;
+    int job = 1;
+    size_t end_idx = 0;
     int opt;
-    while ((opt = getopt(argc, argv, "ps:")) != -1) {
-        switch (opt) {
-        case 'p':
-            run_as_pub = true;
-            break;
-        case 's':
-            job = strtol(optarg, nullptr, 10);
-            break;
-        default:
-            printUsageAndExit(argv[0]);
+
+    try {
+        while ((opt = getopt(argc, argv, "p:s:")) != -1) {
+            switch (opt) {
+            case 'p':
+                run_as_pub = true;
+                n = stoi(optarg, &end_idx, 10);
+                if (optarg[end_idx] != '\0') {
+                    cerr << "The given argument is not a number" << endl;
+                    return 1;
+                }
+                break;
+            case 's':
+                run_as_sub = true;
+                job = stoi(optarg, &end_idx, 10);
+                if (optarg[end_idx] != '\0') {
+                    cerr << "The given argument is not a number" << endl;
+                    return 1;
+                }
+                break;
+            default:
+                printUsageAndExit(argv[0]);
+            }
         }
+    } catch (invalid_argument& err) {
+        cerr << "The given argument is not a number" << endl;
+        return 1;
+    } catch (out_of_range& err) {
+        cerr << "The given argument is too large or too small" << endl;
+        return 1;
     }
 
+    if (run_as_pub && run_as_sub) {
+        cerr << "Should only be either a publisher or a subscriber" << endl;
+        return 1;
+    }
+    if (n <= 0 || job < 1 || job > 3) printUsageAndExit(argv[0]);
+
     if (run_as_pub) {
-        runAsPublisher(argv[optind]);
+        runAsPublisher(argv[optind], n);
     } else {
         runAsSubscriber(argv[optind], job);
     }
@@ -60,17 +88,20 @@ void printUsageAndExit(char* program_name) {
     cerr << "Usage: " << program_name << " OPTIONS ZENOH_CONFIG" << endl
          << endl;
     cerr << "OPTIONS:" << endl;
-    cerr << "  -p       run as a publisher" << endl;
+    cerr << "  -p N     run as a publisher" << endl;
+    cerr << "     N     number of messages to publish" << endl;
     cerr << "  -s JOB   run as a subscriber" << endl;
-    cerr << "     1     element-wise addition for 2 vectors" << endl;
-    cerr << "     2     element-wise multiplication for 2 vectors" << endl;
-    cerr << "     3     modify shared readonly memory" << endl;
+    cerr << "     JOB=1 element-wise addition for 2 vectors" << endl;
+    cerr << "     JOB=2 element-wise multiplication for 2 vectors" << endl;
+    cerr << "     JOB=3 modify shared readonly memory" << endl << endl;
+    cerr << "ZENOH_CONFIG:" << endl;
+    cerr << "  path to the config file for a Zenoh node" << endl;
     exit(1);
 }
 
-void runAsPublisher(const char* conf_path) {
+void runAsPublisher(const char* conf_path, int n) {
     cout << "Run as a publisher" << endl;
-    srand(time(nullptr));
+    srand(time(nullptr) + getpid());
 
     try {
         if (cuInit(0) != CUDA_SUCCESS) throwError();
@@ -79,14 +110,17 @@ void runAsPublisher(const char* conf_path) {
         Publisher publisher(kTopicName, conf_path, domain, kPoolSize);
         int arr[128];
 
-        for (int i = 0; i < 128; i++) arr[i] = rand() % 10;
-        cout << "A:" << endl;
-        for (int i = 0; i < 64; i++) cout << arr[i] << ' ';
-        cout << endl << "B:" << endl;
-        for (int i = 64; i < 128; i++) cout << arr[i] << ' ';
-        cout << endl;
+        for (int T = 0; T < n; T++) {
+            cout << '#' << (T + 1) << ":" << endl;
+            for (int i = 0; i < 128; i++) arr[i] = rand() % 10;
+            cout << "  A: ";
+            for (int i = 0; i < 64; i++) cout << arr[i] << ' ';
+            cout << endl << "  B: ";
+            for (int i = 64; i < 128; i++) cout << arr[i] << ' ';
+            cout << endl;
 
-        publisher.put(arr, sizeof(int) * 128);
+            publisher.put(arr, sizeof(int) * 128);
+        }
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);
