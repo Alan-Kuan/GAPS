@@ -68,7 +68,8 @@ Node::Node(const char* topic_name, size_t pool_size, uint16_t domain_id) {
 
 Node::~Node() {
     TopicHeader* topic_header = getTopicHeader(this->shm_base);
-    // TODO: make it a critical section
+    // TODO: make it a critical section, i.e., make sure no other node just joins
+    // right after the condition is met but before unlinking the file
     if (std::atomic_ref<uint32_t>(topic_header->interest_count).fetch_sub(1) == 1) {
         throwOnError(shm_unlink(topic_header->topic_name));
     }
