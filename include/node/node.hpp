@@ -2,23 +2,14 @@
 #define NODE_HPP
 
 #include <cstddef>
-#include <string>
+#include <cstdint>
 
 #include "allocator/allocator.hpp"
 
 class Node {
 public:
-    struct MessageQueueHeader {
-        size_t capacity;
-        // indicates the next index available to put the message (should be
-        // atomic referenced)
-        size_t next;
-        // number of subscribers (should be atomic referenced)
-        uint32_t sub_count;
-    };
-
     Node() = delete;
-    Node(const char* topic_name);
+    Node(const char* topic_name, size_t pool_size, uint16_t domain_id);
     ~Node();
     // prevent the node from being copied, since it may cause problem when the
     // copy destructs
@@ -33,10 +24,12 @@ protected:
     void* shm_base = nullptr;
     size_t shm_size = 0;
     Allocator* allocator = nullptr;
+    uint16_t domain_idx;
 
 private:
     void attachShm(const char* shm_name, size_t size);
-    void detachShm(std::string shm_name, size_t size);
+    void detachShm(size_t size);
+    size_t getPaddedSize(const size_t size) const;
 };
 
 #endif  // NODE_HPP

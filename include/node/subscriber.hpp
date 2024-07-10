@@ -5,16 +5,16 @@
 
 #include <zenoh.hxx>
 
-#include "allocator/allocator.hpp"
+#include "metadata.hpp"
 #include "node/node.hpp"
 
 class Subscriber : public Node {
 public:
-    typedef std::function<void(void*)> MessageHandler;
+    typedef std::function<void(void*, size_t)> MessageHandler;
 
     Subscriber() = delete;
     Subscriber(const char* topic_name, const char* conf_path,
-               const Allocator::Domain& domain, size_t pool_size);
+               const Domain& domain, size_t pool_size);
     ~Subscriber();
 
     void sub(MessageHandler handler);
@@ -22,7 +22,6 @@ public:
 private:
     zenoh::Session z_session;
     zenoh::Subscriber z_subscriber;
-    int domain_id;
 };
 
 #endif  // SUBSCRIBER_HPP

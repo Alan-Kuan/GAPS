@@ -9,9 +9,9 @@
 #include <cuda.h>
 #include <zenoh.hxx>
 
-#include "allocator/allocator.hpp"
 #include "error.hpp"
 #include "examples/vector_arithmetic.hpp"
+#include "metadata.hpp"
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
 
@@ -75,7 +75,7 @@ void runAsPublisher(const char* conf_path) {
     try {
         if (cuInit(0) != CUDA_SUCCESS) throwError();
 
-        Allocator::Domain domain = {Allocator::DeviceType::kGPU, 0};
+        Domain domain = {DeviceType::kGPU, 0};
         Publisher publisher(kTopicName, conf_path, domain, kPoolSize);
         int arr[128];
 
@@ -113,42 +113,53 @@ void runAsSubscriber(const char* conf_path, int job) {
     try {
         if (cuInit(0) != CUDA_SUCCESS) throwError();
 
-        Allocator::Domain domain = {Allocator::DeviceType::kGPU, 0};
+        Domain domain = {DeviceType::kGPU, 0};
         Subscriber subscriber(kTopicName, conf_path, domain, kPoolSize);
         Subscriber::MessageHandler handler;
 
-        int* c;
-        cudaMalloc(&c, sizeof(int) * 64);
-
         switch (job) {
         case 1:
-            handler = [c](void* msg) {
-                int arr[64];
+            handler = [](void* msg, size_t size) {
+                size_t arr_size = size / 2;
+                int count = arr_size / sizeof(int);
+                int* arr = new int[count];
                 int* a = (int*) msg;
-                int* b = (int*) msg + 64;
+                int* b = (int*) msg + count;
+                int* c;
+                cudaMalloc(&c, arr_size);
 
-                vecAdd(c, a, b, 64);
-                cudaMemcpy(arr, c, sizeof(int) * 64, cudaMemcpyDeviceToHost);
+                vecAdd(c, a, b, count);
+                cudaMemcpy(arr, c, arr_size, cudaMemcpyDeviceToHost);
+                cudaFree(c);
+
                 cout << "a + b:" << endl;
-                for (int i = 0; i < 64; i++) cout << arr[i] << ' ';
+                for (int i = 0; i < count; i++) cout << arr[i] << ' ';
                 cout << endl;
+                delete[] arr;
             };
             break;
         case 2:
-            handler = [c](void* msg) {
-                int arr[64];
+            handler = [](void* msg, size_t size) {
+                size_t arr_size = size / 2;
+                int count = arr_size / sizeof(int);
+                int* arr = new int[count];
                 int* a = (int*) msg;
-                int* b = (int*) msg + 64;
+                int* b = (int*) msg + count;
+                int* c;
+                cudaMalloc(&c, arr_size);
 
-                vecMul(c, a, b, 64);
-                cudaMemcpy(arr, c, sizeof(int) * 64, cudaMemcpyDeviceToHost);
+                vecMul(c, a, b, count);
+                cudaMemcpy(arr, c, arr_size, cudaMemcpyDeviceToHost);
+                cudaFree(c);
+
                 cout << "a x b:" << endl;
                 for (int i = 0; i < 64; i++) cout << arr[i] << ' ';
                 cout << endl;
+                delete[] arr;
             };
             break;
         case 3:
-            handler = [](void* msg) {
+            handler = [](void* msg, size_t _) {
                 int* a = (int*) msg;
 
                 cout << cudaGetErrorString(cudaMemset(a, 0, sizeof(int) * 64))
@@ -160,7 +171,6 @@ void runAsSubscriber(const char* conf_path, int job) {
 
         cout << "Type enter to continue..." << endl;
         getchar();
-        cudaFree(c);
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);
