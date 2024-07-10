@@ -1,18 +1,15 @@
 #include "alloc_algo/tlsf.hpp"
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 
 // NOTE: `tlsf_header` is initialized in Node's constructor
 Tlsf::Tlsf(Header* tlsf_header) : tlsf_header(tlsf_header) {
-    // TODO: use different lock
-    tlsf_header->lock.lock();
-    bool pool_inited = tlsf_header->inited;
-    if (!pool_inited) tlsf_header->inited = true;
-    tlsf_header->lock.unlock();
-
     this->blocks = (BlockMetadata*) ((uintptr_t) tlsf_header + sizeof(Header));
+
+    bool pool_inited = std::atomic_ref<bool>(tlsf_header->inited).exchange(true);
     if (!pool_inited) {
         this->blocks[0].header = tlsf_header->aligned_pool_size | kBlockFreeFlag;
         this->insertBlock(0);

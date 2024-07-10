@@ -34,7 +34,7 @@ public:
     struct Header {
         // this is a spin lock; keep the critical section tiny
         TicketLock lock;
-        // whether the pool has been initialized
+        // whether the pool has been initialized (should be atomic referenced)
         bool inited;
         // aligned to a multiple of the minimum block size
         size_t aligned_pool_size;
