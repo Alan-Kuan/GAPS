@@ -1,6 +1,9 @@
 services:
   dev:
-    build: .
+    build:
+      context: .
+      args:
+        - IMG=${IMG}
     restart: unless-stopped
     ports:
       - 127.0.0.1:22222:22

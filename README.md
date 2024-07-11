@@ -10,6 +10,18 @@ To setup the environment, make sure the following requirements are met:
 - CUDA 12.3 is supported by your host's NVIDIA driver
 - Some CUDA Driver APIs like `cuMemCreate` and `cuMemExportToShareableHandle` are supported by your NVIDIA GPU
 
+First, update `.env` in `env/`.
+If the host machine is NVIDIA Jetson series devkit, such as AGX Orin or Orin Nano, write:
+```
+IMG=nvcr.io/nvidia/l4t-cuda:12.2.12-devel
+```
+
+Otherwise, write:
+```
+IMG=nvidia/cuda:12.3.0-devel-ubuntu22.04
+```
+
+Then, run the following commands:
 ```sh
 cd env
 docker compose up -d
