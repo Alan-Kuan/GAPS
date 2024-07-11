@@ -29,3 +29,10 @@ ninja -C build
 ```
 
 After building the project, the compiled executables lie in `build/src`.
+
+## Pre-Commit
+Pre-commit is used to setup clang-format pre-commit hooks.
+
+1. Install [pre-commit](https://pre-commit.com/) in your Python virtual environment.
+2. Run `pre-commit install` to install the hooks.
+3. Each time before committing, committed files will be formatted with `clang-format`.
