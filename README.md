@@ -6,6 +6,7 @@ To setup the environment, make sure the following requirements are met:
 - Docker is installed
 - Docker Compose is installed
 - NVIDIA Container Toolkit is installed
+    - Follow the installation and configuration steps [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 - CUDA 12.3 is supported by your host's NVIDIA driver
 - Some CUDA Driver APIs like `cuMemCreate` and `cuMemExportToShareableHandle` are supported by your NVIDIA GPU
 
