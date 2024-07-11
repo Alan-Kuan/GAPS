@@ -67,7 +67,7 @@ void subTest(char *config_path) {
         int* c;
         cudaMalloc(&c, sizeof(int) * 512);
 
-        handler = [c](void *msg) {
+        handler = [c](void *msg, size_t size) {
             beginTime.set();
             int arr[512];
             int* a = (int*) msg;
