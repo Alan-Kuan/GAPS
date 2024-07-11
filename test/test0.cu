@@ -29,7 +29,7 @@ __global__ void __vecAdd(int* c, int* a, int* b) {
 /* Global */
 TimePoint beginTime;
 TimePoint endTime;
-Allocator::Domain domain = { Allocator::DeviceType::kGPU, 0 };
+Domain domain = { DeviceType::kGPU, 0 };
 
 void pubTest(char *config_path) {
     try {
