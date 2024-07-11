@@ -8,11 +8,13 @@ target_link_libraries(node
     PRIVATE
         zenohcxx::zenohc::lib
         allocator
+        ticket_lock
         error)
 
 add_library(allocator STATIC)
 target_sources(allocator
     PRIVATE
+        allocator/allocator.cpp
         allocator/shareable.cu)
 target_link_libraries(allocator
     PRIVATE
@@ -24,6 +26,14 @@ add_library(alloc_algo STATIC)
 target_sources(alloc_algo
     PRIVATE
         alloc_algo/tlsf.cpp)
+target_link_libraries(alloc_algo
+    PRIVATE
+        ticket_lock)
+
+add_library(ticket_lock STATIC)
+target_sources(ticket_lock
+    PRIVATE
+        ticket_lock.cpp)
 
 add_executable(mem_manager)
 target_sources(mem_manager

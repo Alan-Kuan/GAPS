@@ -77,6 +77,9 @@ MemManager::~MemManager() {
     struct iovec iov[1];
     char ctrl_buf[CMSG_SPACE(sizeof(int))];
 
+    iov[0].iov_base = (void*) "";
+    iov[0].iov_len = 1;
+
     msg.msg_name = nullptr;
     msg.msg_namelen = 0;
     msg.msg_iov = iov;
@@ -91,18 +94,13 @@ MemManager::~MemManager() {
     cmsg->cmsg_type = SCM_RIGHTS;
 
     while (true) {
-        size_t padded_size;
         int cli_fd = throwOnError(accept(sockfd, nullptr, nullptr));
 
         // receive request
         throwOnError(recv(cli_fd, &buf_req, sizeof(buf_req), 0));
 
-        auto entry = this->pools.find(buf_req.topic_name);
-        if (entry == this->pools.end()) {
-            padded_size =
-                this->createPool(buf_req.topic_name, buf_req.pool_size);
-        } else {
-            padded_size = entry->second.size;
+        if (!this->pools.count(buf_req.topic_name)) {
+            this->createPool(buf_req.topic_name, buf_req.pool_size);
         }
 
         // export the handle to a shareable handle
@@ -110,9 +108,6 @@ MemManager::~MemManager() {
         throwOnErrorCuda(cuMemExportToShareableHandle(
             (void*) &sh_handle, this->pools[buf_req.topic_name].handle,
             CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR, 0));
-
-        iov[0].iov_base = &padded_size;
-        iov[0].iov_len = sizeof(size_t);
         *((int*) CMSG_DATA(cmsg)) = sh_handle;
 
         throwOnError(sendmsg(cli_fd, &msg, 0));
@@ -120,7 +115,7 @@ MemManager::~MemManager() {
     }
 }
 
-size_t MemManager::createPool(const char* name, size_t size) {
+void MemManager::createPool(const char* name, size_t size) {
     CUmemAllocationProp prop = {};
     prop.requestedHandleTypes = CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR;
     prop.type = CU_MEM_ALLOCATION_TYPE_PINNED;
@@ -128,23 +123,12 @@ size_t MemManager::createPool(const char* name, size_t size) {
     prop.location.id = 0;
 
     Pool pool;
-    size_t padded_size = this->getPaddedSize(size, &prop);
-    throwOnErrorCuda(cuMemCreate(&pool.handle, padded_size, &prop, 0));
-    pool.size = padded_size;
+    throwOnErrorCuda(cuMemCreate(&pool.handle, size, &prop, 0));
+    pool.size = size;
     this->pools[name] = pool;
-
-    return padded_size;
 }
 
 void MemManager::removePool(const char* name) {
     throwOnErrorCuda(cuMemRelease(this->pools[name].handle));
     this->pools.erase(name);
-}
-
-size_t MemManager::getPaddedSize(const size_t size,
-                                 const CUmemAllocationProp* prop) const {
-    size_t gran = 0;
-    throwOnErrorCuda(cuMemGetAllocationGranularity(
-        &gran, prop, CU_MEM_ALLOC_GRANULARITY_MINIMUM));
-    return ((size - 1) / gran + 1) * gran;
 }
