@@ -19,3 +19,5 @@ target_link_libraries(test0-std
         node
         allocator
 )
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/script/* DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

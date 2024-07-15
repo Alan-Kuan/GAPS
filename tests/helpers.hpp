@@ -38,6 +38,8 @@ public:
         this->recorder = new TimePoint[capacity];
     }
 
+    /* record a time point and store in an array "recorder"
+     */
     inline void setPoint() {
         if (this->size >= capacity) {
             std::cerr << "TimeHelper is full of capacity";
@@ -46,11 +48,14 @@ public:
         this->recorder[this->size++].set();
     }
 
+    /* return a time point according to index;
+     */
     inline double getMSec(size_t tpIndex) {
-        TimePoint tvp = this->recorder[tpIndex];
-        return tvp.getMSec();
+        return this->recorder[tpIndex].getMSec();
     }
 
+    /* print all the time points store in array
+     */
     inline void showAll() {
         for (size_t i = 0; i < this->size; i++) {
             std::cout << std::fixed << this->getMSec(i) << "\n";
