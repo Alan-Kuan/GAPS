@@ -11,10 +11,10 @@
 #include <zenoh.hxx>
 
 #include "error.hpp"
-#include "examples/vector_arithmetic.hpp"
 #include "metadata.hpp"
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
+#include "vector_arithmetic.hpp"
 
 using namespace std;
 

@@ -1,4 +1,4 @@
-#include "examples/vector_arithmetic.hpp"
+#include "vector_arithmetic.hpp"
 
 #include <cstddef>
 
