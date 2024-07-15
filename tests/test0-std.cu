@@ -1,23 +1,23 @@
 // #define ZENOHCXX_ZENOHC
 
-#include <unistd.h>
 #include <sys/time.h>
+#include <unistd.h>
 
+#include <chrono>
 #include <cstddef>
 #include <cstdlib>
 #include <ctime>
-#include <stdexcept>
 #include <iostream>
-#include <chrono>
+#include <stdexcept>
 
 #include <cuda.h>
 #include <zenoh.hxx>
 
 #include "allocator/allocator.hpp"
 #include "examples/vector_arithmetic.hpp"
+#include "helpers.hpp"
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
-#include "helpers.hpp"
 
 using namespace std;
 using namespace hlp;
@@ -28,9 +28,9 @@ __global__ void __vecAdd(int* c, int* a, int* b) {
 
 /* Global */
 StdTimeHelper timeHelper;
-Allocator::Domain domain = { Allocator::DeviceType::kGPU, 0 };
+Allocator::Domain domain = {Allocator::DeviceType::kGPU, 0};
 
-void pubTest(char *config_path) {
+void pubTest(char* config_path) {
     try {
         cuInit(0);
         Publisher pub("topic 0", config_path, domain, 4096);
@@ -45,7 +45,7 @@ void pubTest(char *config_path) {
 
         auto durObj = timeHelper.getDuration<StdTimeHelper::millisec>(0, 1);
 
-        cout << "publisher duration : " <<  durObj.count() << endl;
+        cout << "publisher duration : " << durObj.count() << endl;
 
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
@@ -56,7 +56,7 @@ void pubTest(char *config_path) {
     }
 }
 
-void subTest(char *config_path) {
+void subTest(char* config_path) {
     try {
         cuInit(0);
         Subscriber sub("topic 0", config_path, domain, 4096);
@@ -65,8 +65,7 @@ void subTest(char *config_path) {
         int* c;
         cudaMalloc(&c, sizeof(int) * 512);
 
-        handler = [c](void *msg) {
-            
+        handler = [c](void* msg) {
             int arr[512];
             int* a = (int*) msg;
             int* b = (int*) msg + 512;
@@ -87,7 +86,7 @@ void subTest(char *config_path) {
         timeHelper.setPoint();
         sub.sub(handler);
         timeHelper.setPoint();
-        
+
         sleep(5);
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
@@ -98,9 +97,8 @@ void subTest(char *config_path) {
     }
 }
 
-int main(int argc, char *argv[]) {
-
-    char *config_path = argv[1];
+int main(int argc, char* argv[]) {
+    char* config_path = argv[1];
 
     switch (fork()) {
     case -1:
@@ -114,4 +112,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-

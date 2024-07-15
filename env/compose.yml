@@ -1,16 +1,12 @@
-version: '3'
 services:
   dev:
-    build: .
+    build:
+      context: .
+      args:
+        - IMG=${IMG}
     restart: unless-stopped
     ports:
       - 127.0.0.1:22222:22
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
     volumes:
       - ../:/home/ubuntu/shoz
+    runtime: nvidia

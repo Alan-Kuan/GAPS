@@ -12,19 +12,15 @@ public:
     TimePoint() : tv({0, 0}) {}
     TimePoint(timeval t) : tv(t) {}
 
-    inline void set() {
-        gettimeofday(&tv, 0);
-    }
+    inline void set() { gettimeofday(&tv, 0); }
 
     inline double getMSec() {
         return (double) tv.tv_sec * 1000.0 + (double) tv.tv_usec / 1000.0;
     }
 
-    TimePoint operator-(TimePoint const &obj) {
-        return TimePoint({
-            tv.tv_sec - obj.tv.tv_sec,
-            tv.tv_usec - obj.tv.tv_usec
-        });
+    TimePoint operator-(TimePoint const& obj) {
+        return TimePoint(
+            {tv.tv_sec - obj.tv.tv_sec, tv.tv_usec - obj.tv.tv_usec});
     }
 
 private:
@@ -61,21 +57,17 @@ public:
         }
     }
 
-    inline size_t getSize() {
-        return this->size;
-    }
+    inline size_t getSize() { return this->size; }
 
     static inline double calcDuration(TimePoint t1, TimePoint t2) {
         return (t2 - t1).getMSec();
     }
 
-    ~Timer() {
-        delete[] this->recorder;
-    }
+    ~Timer() { delete[] this->recorder; }
 
 private:
     // timeval tv;
-    size_t size; // time point counter
+    size_t size;  // time point counter
     size_t capacity;
     TimePoint* recorder;
 };
@@ -107,12 +99,10 @@ public:
         return std::chrono::duration_cast<T>(t1 - t2);
     }
 
-    ~StdTimer() {
-        delete[] recorder;
-    }
+    ~StdTimer() { delete[] recorder; }
 
     StdTimer() = delete;
-    StdTimer(const StdTimer &) = delete;
+    StdTimer(const StdTimer&) = delete;
 
 private:
     size_t timePointCounter;

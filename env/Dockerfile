@@ -1,4 +1,5 @@
-FROM nvidia/cuda:12.3.0-devel-ubuntu22.04
+ARG IMG=nvidia/cuda:12.3.0-devel-ubuntu22.04
+FROM $IMG
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -16,11 +17,6 @@ WORKDIR /
 RUN useradd ubuntu -m -G sudo -s /usr/bin/bash
 RUN passwd -d ubuntu
 RUN echo 'export PATH="/opt/cmake-3.29.6-linux-`arch`/bin:/usr/local/cuda/bin:${PATH}"' >> /home/ubuntu/.bashrc
-
-# rustup
-WORKDIR /home/ubuntu
-USER ubuntu
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain=1.74.0 -y
 
 # ssh server
 WORKDIR /

@@ -1,23 +1,23 @@
 // #define ZENOHCXX_ZENOHC
 
-#include <unistd.h>
 #include <sys/time.h>
+#include <unistd.h>
 
+#include <chrono>
 #include <cstddef>
 #include <cstdlib>
 #include <ctime>
-#include <stdexcept>
 #include <iostream>
-#include <chrono>
+#include <stdexcept>
 
 #include <cuda.h>
 #include <zenoh.hxx>
 
 #include "allocator/allocator.hpp"
 #include "examples/vector_arithmetic.hpp"
+#include "helpers.hpp"
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
-#include "helpers.hpp"
 
 using namespace std;
 using namespace hlp;
@@ -29,9 +29,9 @@ __global__ void __vecAdd(int* c, int* a, int* b) {
 /* Global */
 TimePoint beginTime;
 TimePoint endTime;
-Domain domain = { DeviceType::kGPU, 0 };
+Domain domain = {DeviceType::kGPU, 0};
 
-void pubTest(char *config_path) {
+void pubTest(char* config_path) {
     try {
         cuInit(0);
         Publisher pub("topic 0", config_path, domain, 4096);
@@ -58,7 +58,7 @@ void pubTest(char *config_path) {
     }
 }
 
-void subTest(char *config_path) {
+void subTest(char* config_path) {
     try {
         cuInit(0);
         Subscriber sub("topic 0", config_path, domain, 4096);
@@ -67,7 +67,7 @@ void subTest(char *config_path) {
         int* c;
         cudaMalloc(&c, sizeof(int) * 512);
 
-        handler = [c](void *msg, size_t size) {
+        handler = [c](void* msg, size_t size) {
             beginTime.set();
             int arr[512];
             int* a = (int*) msg;
@@ -80,7 +80,8 @@ void subTest(char *config_path) {
             // for (int i = 0; i < 512; i++) cout << arr[i] << ' ';
             // cout << endl;
 
-            cout << "sub handle begin: " << fixed << beginTime.getMSec() << endl;
+            cout << "sub handle begin: " << fixed << beginTime.getMSec()
+                 << endl;
         };
 
         sub.sub(handler);
@@ -94,9 +95,8 @@ void subTest(char *config_path) {
     }
 }
 
-int main(int argc, char *argv[]) {
-
-    char *config_path = argv[1];
+int main(int argc, char* argv[]) {
+    char* config_path = argv[1];
 
     switch (fork()) {
     case -1:
@@ -110,4 +110,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
