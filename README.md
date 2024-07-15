@@ -34,10 +34,10 @@ docker compose down
 ```
 
 ## Build
-Configure build instructions with CMake and build the project with Ninja.
-Run the following commands in the home directory:
+To configure build instructions with CMake and build the project with Ninja,
+run the following commands in the parent directory of `shoz/`:
 ```sh
-cmake shoz -B build -G Ninja -DZENOHC_CARGO_CHANNEL=1.74.0
+cmake shoz -B build -G Ninja
 ninja -C build
 ```
 

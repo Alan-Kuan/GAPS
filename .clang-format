@@ -87,7 +87,7 @@ IncludeCategories:
     Priority:        3
     SortPriority:    0
     CaseSensitive:   false
-  - Regex:           '^<zenoh.*\.hxx>'
+  - Regex:           '^<zenoh.*\.h(xx)?>'
     Priority:        3
     SortPriority:    0
     CaseSensitive:   false

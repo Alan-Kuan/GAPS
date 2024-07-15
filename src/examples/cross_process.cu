@@ -19,9 +19,10 @@
 using namespace std;
 
 void printUsageAndExit(char* program_name);
-void runAsPublisher(const char* conf_path, int n);
-void runAsSubscriber(const char* conf_path, int job);
+void runAsPublisher(const char* llocator, int n);
+void runAsSubscriber(const char* llocator, int job);
 
+const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
 const char kTopicName[] = "cross_process";
 const size_t kPoolSize = 1024;
 
@@ -75,18 +76,18 @@ int main(int argc, char* argv[]) {
     }
     if (n <= 0 || job < 1 || job > 3) printUsageAndExit(argv[0]);
 
+    const char* llocator = optind < argc ? argv[optind] : kDftLLocator;
     if (run_as_pub) {
-        runAsPublisher(argv[optind], n);
+        runAsPublisher(llocator, n);
     } else {
-        runAsSubscriber(argv[optind], job);
+        runAsSubscriber(llocator, job);
     }
 
     return 0;
 }
 
 void printUsageAndExit(char* program_name) {
-    cerr << "Usage: " << program_name << " OPTIONS ZENOH_CONFIG" << endl
-         << endl;
+    cerr << "Usage: " << program_name << " OPTIONS L_LOCATOR" << endl << endl;
     cerr << "OPTIONS:" << endl;
     cerr << "  -p N     run as a publisher" << endl;
     cerr << "     N     number of messages to publish" << endl;
@@ -94,12 +95,14 @@ void printUsageAndExit(char* program_name) {
     cerr << "     JOB=1 element-wise addition for 2 vectors" << endl;
     cerr << "     JOB=2 element-wise multiplication for 2 vectors" << endl;
     cerr << "     JOB=3 modify shared readonly memory" << endl << endl;
-    cerr << "ZENOH_CONFIG:" << endl;
-    cerr << "  path to the config file for a Zenoh node" << endl;
+    cerr << "L_LOCATOR:" << endl;
+    cerr << "  listening locator string for p2p mode (Default: "
+            "udp/224.0.0.123:7447#iface=lo)"
+         << endl;
     exit(1);
 }
 
-void runAsPublisher(const char* conf_path, int n) {
+void runAsPublisher(const char* llocator, int n) {
     cout << "Run as a publisher" << endl;
     srand(time(nullptr) + getpid());
 
@@ -107,7 +110,7 @@ void runAsPublisher(const char* conf_path, int n) {
         if (cuInit(0) != CUDA_SUCCESS) throwError();
 
         Domain domain = {DeviceType::kGPU, 0};
-        Publisher publisher(kTopicName, conf_path, domain, kPoolSize);
+        Publisher publisher(kTopicName, llocator, domain, kPoolSize);
         int arr[128];
 
         for (int T = 0; T < n; T++) {
@@ -130,7 +133,7 @@ void runAsPublisher(const char* conf_path, int n) {
     }
 }
 
-void runAsSubscriber(const char* conf_path, int job) {
+void runAsSubscriber(const char* llocator, int job) {
     switch (job) {
     case 1:
         cout << "Run as a subscriber (element-wise addition)" << endl;
@@ -148,7 +151,7 @@ void runAsSubscriber(const char* conf_path, int job) {
         if (cuInit(0) != CUDA_SUCCESS) throwError();
 
         Domain domain = {DeviceType::kGPU, 0};
-        Subscriber subscriber(kTopicName, conf_path, domain, kPoolSize);
+        Subscriber subscriber(kTopicName, llocator, domain, kPoolSize);
         Subscriber::MessageHandler handler;
 
         switch (job) {
