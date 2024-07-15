@@ -1,13 +1,12 @@
 #include "node/publisher.hpp"
 
-#include <zenoh-pico/config.h>
-
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
 
+#include <zenoh-pico/config.h>
 #include <zenoh.hxx>
 
 #include "allocator/allocator.hpp"
