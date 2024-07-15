@@ -207,7 +207,7 @@ void runAsSubscriber(const char* llocator, int job) {
         subscriber.sub(handler);
 
         cout << "Type enter to continue..." << endl;
-        getchar();
+        cin.get();
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);
