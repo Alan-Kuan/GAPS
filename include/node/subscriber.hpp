@@ -13,7 +13,7 @@ public:
     typedef std::function<void(void*, size_t)> MessageHandler;
 
     Subscriber() = delete;
-    Subscriber(const char* topic_name, const char* conf_path,
+    Subscriber(const char* topic_name, const char* llocator,
                const Domain& domain, size_t pool_size);
     ~Subscriber();
 

@@ -1,5 +1,7 @@
 #include "node/subscriber.hpp"
 
+#include <zenoh-pico/config.h>
+
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
@@ -12,13 +14,14 @@
 #include "error.hpp"
 #include "metadata.hpp"
 
-Subscriber::Subscriber(const char* topic_name, const char* conf_path,
+Subscriber::Subscriber(const char* topic_name, const char* llocator,
                        const Domain& domain, size_t pool_size)
         : Node(topic_name, pool_size, domain.getId()),
           z_session(nullptr),
           z_subscriber(nullptr) {
-    auto config =
-        zenoh::expect<zenoh::Config>(zenoh::config_from_file(conf_path));
+    zenoh::Config config;
+    config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
+    config.insert(Z_CONFIG_LISTEN_KEY, llocator);
     this->z_session =
         zenoh::expect<zenoh::Session>(zenoh::open(std::move(config)));
 

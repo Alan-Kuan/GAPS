@@ -6,7 +6,7 @@ target_sources(node
         node/subscriber.cpp)
 target_link_libraries(node
     PRIVATE
-        zenohcxx::zenohc::lib
+        zenohcxx::zenohpico
         allocator
         ticket_lock
         error)
@@ -55,7 +55,7 @@ target_sources(error PRIVATE error.cpp)
     target_link_libraries(cross_process
         PRIVATE
             CUDA::cuda_driver
-            zenohcxx::zenohc::lib
+            zenohcxx::zenohpico
             vector_arithmetic
             node
             error)
