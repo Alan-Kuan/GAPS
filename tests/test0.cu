@@ -27,17 +27,18 @@ __global__ void __vecAdd(int* c, int* a, int* b) {
 
 /* Global */
 #define POOL_SIZE 4096
+const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
 Timer timer;
 Domain domain = {DeviceType::kGPU, 0};
 sem_t* sem;
 size_t transmit_size = 0;
 size_t asize = 0;
 
-void pubTest(char* config_path) {
+void pubTest(const char* zenConfig) {
     try {
         cuInit(0);
         timer.setPoint();
-        Publisher pub("topic 0", config_path, domain, POOL_SIZE);
+        Publisher pub("topic 0", zenConfig, domain, POOL_SIZE);
         timer.setPoint();
 
         int* arr = new int[asize];
@@ -61,10 +62,10 @@ void pubTest(char* config_path) {
     }
 }
 
-void subTest(char* config_path) {
+void subTest(const char* zenConfig) {
     try {
         cuInit(0);
-        Subscriber sub("topic 0", config_path, domain, POOL_SIZE);
+        Subscriber sub("topic 0", zenConfig, domain, POOL_SIZE);
         Subscriber::MessageHandler handler;
 
         int* c;
@@ -97,7 +98,7 @@ void subTest(char* config_path) {
         std::cout << "regist done, ready to post\n";
         sem_post(sem);
 
-        sleep(2);  // waiting publisher to transmit data
+        sleep(1);  // waiting publisher to transmit data
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);
@@ -108,22 +109,22 @@ void subTest(char* config_path) {
 }
 
 int main(int argc, char* argv[]) {
-    char* config_path = argv[1];
+    const char* config = kDftLLocator;
 
     sem = sem_open("/sem_share", O_CREAT, 0660, 0);
-    transmit_size = stoul(argv[2]);
+    transmit_size = stoul(argv[1]);
     asize = transmit_size / sizeof(int);
 
     switch (fork()) {
     case -1:
         return -1;
     case 0:
-        pubTest(config_path);
+        pubTest(config);
         cout << "pub:\n";
         timer.showAll();
         break;
     default:
-        subTest(config_path);
+        subTest(config);
         cout << "sub:\n";
         timer.showAll();
     }
