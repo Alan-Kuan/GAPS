@@ -4,7 +4,7 @@ target_include_directories(test0 PRIVATE .)
 target_link_libraries(test0
     PRIVATE
         CUDA::cuda_driver
-        zenohcxx::zenohc::lib
+        zenohcxx::zenohpico
         node
         allocator
 )

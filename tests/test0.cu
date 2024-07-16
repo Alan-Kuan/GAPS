@@ -14,7 +14,6 @@
 #include <zenoh.hxx>
 
 #include "allocator/allocator.hpp"
-#include "examples/vector_arithmetic.hpp"
 #include "helpers.hpp"
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
