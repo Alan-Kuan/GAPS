@@ -29,7 +29,7 @@ __global__ void __vecAdd(int* c, int* a, int* b) {
 #define POOL_SIZE 65536
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
 Domain domain = {DeviceType::kGPU, 0};
-sem_t* sem;
+sem_t* sem_ready;
 size_t transmit_size = 0;
 size_t asize = 0;
 
@@ -45,7 +45,7 @@ void pubTest(const char* zenConfig) {
 
         for (int i = 0; i < asize; i++) arr[i] = rand() % 10;
 
-        sem_wait(sem);
+        sem_wait(sem_ready);
         timer.setPoint();
         // pub.put(arr, sizeof(int) * 1024);
         pub.put(arr, transmit_size);
@@ -65,18 +65,18 @@ void pubTest(const char* zenConfig) {
 
 void subTest(const char* zenConfig) {
     Timer timer;
+    sem_t sem_end;
+    sem_init(&sem_end, 0, 0);
     try {
         cuInit(0);
         Subscriber sub("topic 0", zenConfig, domain, POOL_SIZE);
         Subscriber::MessageHandler handler;
 
-        bool handleEnd = false;
-
         int* c;
         size_t vsize = asize / 2;  // decompose data from publisher
         cudaMalloc(&c, sizeof(int) * vsize);
 
-        handler = [c, vsize, &handleEnd, &timer](void* msg, size_t size) {
+        handler = [c, vsize, &sem_end, &timer](void* msg, size_t size) {
             // std::cout << "Is it all ready?: " << size << std::endl;
 
             timer.setPoint();
@@ -94,18 +94,15 @@ void subTest(const char* zenConfig) {
             // cout << "a + b:" << endl;
             // for (int i = 0; i < 512; i++) cout << arr[i] << ' ';
             // cout << endl;
-            handleEnd = true;
+            sem_post(&sem_end);
         };
 
         timer.setPoint();
         sub.sub(handler);
         timer.setPoint();
-        sem_post(sem);
+        sem_post(sem_ready);
 
-        std::cout << handleEnd << "busy waiting\n";
-        while (!handleEnd) {
-        }
-        std::cout << handleEnd << "leave\n";
+        sem_wait(&sem_end);
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);
@@ -125,7 +122,7 @@ int main(int argc, char* argv[]) {
 
     const char* config = kDftLLocator;
 
-    sem = sem_open("/sem_share", O_CREAT, 0660, 0);
+    sem_ready = sem_open("/sem_share", O_CREAT, 0660, 0);
     transmit_size = stoul(argv[1]);
     asize = transmit_size / sizeof(int);
 
