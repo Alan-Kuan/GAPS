@@ -6,6 +6,7 @@ target_sources(node
     node/subscriber.cpp)
 target_link_libraries(node
     PRIVATE
+    CUDA::cuda_driver
     zenohcxx::zenohpico
     allocator
     ticket_lock

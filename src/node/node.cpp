@@ -9,8 +9,9 @@
 #include <cstdint>
 #include <cstring>
 
+#include <cuda.h>
+
 #include "alloc_algo/tlsf.hpp"
-#include "cuda.h"
 #include "error.hpp"
 #include "metadata.hpp"
 

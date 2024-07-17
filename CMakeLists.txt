@@ -25,7 +25,9 @@ FetchContent_MakeAvailable(zenohpico)
 FetchContent_declare(zenohcpp GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp" GIT_TAG 0.11.0.3)
 FetchContent_MakeAvailable(zenohcpp)
 
-include_directories(include ${CUDAToolkit_INCLUDE_DIRS})
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CUDAToolkit_INCLUDE_DIRS})
 add_subdirectory(src)
 
 if(BUILD_EXAMPLES)
