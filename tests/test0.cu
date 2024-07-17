@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
         subTest(config);
     }
 
-    sem_close(sem);
+    sem_close(sem_ready);
     sem_unlink("/sem_share");
     return 0;
 }
