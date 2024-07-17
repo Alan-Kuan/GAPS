@@ -1,11 +1,10 @@
 #!/bin/bash
-max=4096
-min=4
+max=65536
+min=16
 app=test0
-
-rm -rf $log
 
 for (( i=${min}; i<=${max}; i=i*2 ))
 do
-    ./${app} ${i} >> ${app}-${i}-log
+    echo "size transmit:" ${i}
+    ./${app} ${i} > ${app}-${i}-log
 done

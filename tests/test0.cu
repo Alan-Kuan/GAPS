@@ -26,15 +26,15 @@ __global__ void __vecAdd(int* c, int* a, int* b) {
 }
 
 /* Global */
-#define POOL_SIZE 4096
+#define POOL_SIZE 65536
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
-Timer timer;
 Domain domain = {DeviceType::kGPU, 0};
 sem_t* sem;
 size_t transmit_size = 0;
 size_t asize = 0;
 
 void pubTest(const char* zenConfig) {
+    Timer timer;
     try {
         cuInit(0);
         timer.setPoint();
@@ -60,19 +60,23 @@ void pubTest(const char* zenConfig) {
         cerr << "Publisher: " << err.what() << endl;
         exit(1);
     }
+    timer.showAll("pub");
 }
 
 void subTest(const char* zenConfig) {
+    Timer timer;
     try {
         cuInit(0);
         Subscriber sub("topic 0", zenConfig, domain, POOL_SIZE);
         Subscriber::MessageHandler handler;
 
+        bool handleEnd = false;
+
         int* c;
         size_t vsize = asize / 2;  // decompose data from publisher
         cudaMalloc(&c, sizeof(int) * vsize);
 
-        handler = [c, vsize](void* msg, size_t size) {
+        handler = [c, vsize, &handleEnd, &timer](void* msg, size_t size) {
             // std::cout << "Is it all ready?: " << size << std::endl;
 
             timer.setPoint();
@@ -90,15 +94,18 @@ void subTest(const char* zenConfig) {
             // cout << "a + b:" << endl;
             // for (int i = 0; i < 512; i++) cout << arr[i] << ' ';
             // cout << endl;
+            handleEnd = true;
         };
 
         timer.setPoint();
         sub.sub(handler);
         timer.setPoint();
-        std::cout << "regist done, ready to post\n";
         sem_post(sem);
 
-        sleep(1);  // waiting publisher to transmit data
+        std::cout << handleEnd << "busy waiting\n";
+        while (!handleEnd) {
+        }
+        std::cout << handleEnd << "leave\n";
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);
@@ -106,9 +113,16 @@ void subTest(const char* zenConfig) {
         cerr << "Subscriber: " << err.what() << endl;
         exit(1);
     }
+
+    timer.showAll("sub");
 }
 
 int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        cerr << "usage: ./test0 [size](4~" << POOL_SIZE << ")\n";
+        exit(1);
+    }
+
     const char* config = kDftLLocator;
 
     sem = sem_open("/sem_share", O_CREAT, 0660, 0);
@@ -120,13 +134,9 @@ int main(int argc, char* argv[]) {
         return -1;
     case 0:
         pubTest(config);
-        cout << "pub:\n";
-        timer.showAll();
         break;
     default:
         subTest(config);
-        cout << "sub:\n";
-        timer.showAll();
     }
 
     sem_close(sem);

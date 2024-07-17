@@ -42,7 +42,7 @@ public:
      */
     inline void setPoint() {
         if (this->size >= capacity) {
-            std::cerr << "TimeHelper is full of capacity";
+            std::cerr << "recorder is full\n";
             exit(1);
         }
         this->recorder[this->size++].set();
@@ -56,9 +56,10 @@ public:
 
     /* print all the time points store in array
      */
-    inline void showAll() {
+    inline void showAll(const char* prefix) {
         for (size_t i = 0; i < this->size; i++) {
-            std::cout << std::fixed << this->getMSec(i) << "\n";
+            std::cout << prefix << ": " << std::fixed << this->getMSec(i)
+                      << "\n";
         }
     }
 
