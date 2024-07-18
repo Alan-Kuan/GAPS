@@ -29,7 +29,7 @@ void pubTest(const char*);
 void subTest(const char*);
 
 /* Global */
-#define POOL_SIZE 65536
+const size_t kPoolSize = 65536;
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
 Domain domain = {DeviceType::kGPU, 0};
 sem_t* sem_ready;
@@ -38,7 +38,7 @@ size_t asize = 0;
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        cerr << "usage: ./test0 [size](4~" << POOL_SIZE << ")\n";
+        cerr << "usage: ./test0 [size](4~" << kPoolSize << ")\n";
         exit(1);
     }
 
@@ -68,7 +68,7 @@ void pubTest(const char* zenConfig) {
     try {
         cuInit(0);
         timer.setPoint();
-        Publisher pub("topic 0", zenConfig, domain, POOL_SIZE);
+        Publisher pub("topic 0", zenConfig, domain, kPoolSize);
         timer.setPoint();
 
         int* arr = new int[asize];
@@ -100,7 +100,7 @@ void subTest(const char* zenConfig) {
     sem_init(&sem_subend, 0, 0);
     try {
         cuInit(0);
-        Subscriber sub("topic 0", zenConfig, domain, POOL_SIZE);
+        Subscriber sub("topic 0", zenConfig, domain, kPoolSize);
         Subscriber::MessageHandler handler;
 
         int* c;
