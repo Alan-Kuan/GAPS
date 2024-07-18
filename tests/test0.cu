@@ -46,10 +46,11 @@ void pubTest(const char* zenConfig) {
         for (int i = 0; i < asize; i++) arr[i] = rand() % 10;
 
         sem_wait(sem_ready);
-        timer.setPoint();
-        // pub.put(arr, sizeof(int) * 1024);
-        pub.put(arr, transmit_size);
-        timer.setPoint();
+        for (int i = 0; i < 5; i++) {
+            timer.setPoint();
+            pub.put(arr, transmit_size);
+            timer.setPoint();
+        }
 
         delete[] arr;
 
@@ -65,8 +66,8 @@ void pubTest(const char* zenConfig) {
 
 void subTest(const char* zenConfig) {
     Timer timer;
-    sem_t sem_end;
-    sem_init(&sem_end, 0, 0);
+    sem_t sem_subend;
+    sem_init(&sem_subend, 0, 0);
     try {
         cuInit(0);
         Subscriber sub("topic 0", zenConfig, domain, POOL_SIZE);
@@ -76,33 +77,35 @@ void subTest(const char* zenConfig) {
         size_t vsize = asize / 2;  // decompose data from publisher
         cudaMalloc(&c, sizeof(int) * vsize);
 
-        handler = [c, vsize, &sem_end, &timer](void* msg, size_t size) {
-            // std::cout << "Is it all ready?: " << size << std::endl;
-
+        handler = [c, &sem_subend, &timer](void* msg, size_t size) {
             timer.setPoint();
-            int* arr = new int[vsize];
+            size_t arr_size = size / 2;
+            size_t count = arr_size / sizeof(int);
+            int* arr = new int[count];
             int* a = (int*) msg;
-            int* b = (int*) msg + vsize;
+            int* b = (int*) msg + count;
 
             timer.setPoint();
             __vecAdd<<<1, 512>>>(c, a, b);
             timer.setPoint();
 
             timer.setPoint();
-            cudaMemcpy(arr, c, sizeof(int) * vsize, cudaMemcpyDeviceToHost);
+            cudaMemcpy(arr, c, arr_size, cudaMemcpyDeviceToHost);
             timer.setPoint();
             // cout << "a + b:" << endl;
             // for (int i = 0; i < 512; i++) cout << arr[i] << ' ';
             // cout << endl;
-            sem_post(&sem_end);
+            sem_post(&sem_subend);
         };
 
         timer.setPoint();
         sub.sub(handler);
         timer.setPoint();
+        // usleep(1000000);
         sem_post(sem_ready);
 
-        sem_wait(&sem_end);
+        sem_wait(&sem_subend);
+
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);
@@ -111,6 +114,7 @@ void subTest(const char* zenConfig) {
         exit(1);
     }
 
+    sem_close(&sem_subend);
     timer.showAll("sub");
 }
 
