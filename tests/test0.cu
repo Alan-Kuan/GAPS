@@ -25,6 +25,9 @@ __global__ void __vecAdd(int* c, int* a, int* b) {
     c[threadIdx.x] = a[threadIdx.x] + b[threadIdx.x];
 }
 
+void pubTest(const char*);
+void subTest(const char*);
+
 /* Global */
 #define POOL_SIZE 65536
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
@@ -32,6 +35,33 @@ Domain domain = {DeviceType::kGPU, 0};
 sem_t* sem_ready;
 size_t transmit_size = 0;
 size_t asize = 0;
+
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        cerr << "usage: ./test0 [size](4~" << POOL_SIZE << ")\n";
+        exit(1);
+    }
+
+    const char* config = kDftLLocator;
+
+    sem_ready = sem_open("/sem_share", O_CREAT, 0660, 0);
+    transmit_size = stoul(argv[1]);
+    asize = transmit_size / sizeof(int);
+
+    switch (fork()) {
+    case -1:
+        return -1;
+    case 0:
+        pubTest(config);
+        break;
+    default:
+        subTest(config);
+    }
+
+    sem_close(sem_ready);
+    sem_unlink("/sem_share");
+    return 0;
+}
 
 void pubTest(const char* zenConfig) {
     Timer timer;
@@ -95,6 +125,7 @@ void subTest(const char* zenConfig) {
             // cout << "a + b:" << endl;
             // for (int i = 0; i < 512; i++) cout << arr[i] << ' ';
             // cout << endl;
+            delete[] arr;
             sem_post(&sem_subend);
         };
 
@@ -116,31 +147,4 @@ void subTest(const char* zenConfig) {
 
     sem_close(&sem_subend);
     timer.showAll("sub");
-}
-
-int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        cerr << "usage: ./test0 [size](4~" << POOL_SIZE << ")\n";
-        exit(1);
-    }
-
-    const char* config = kDftLLocator;
-
-    sem_ready = sem_open("/sem_share", O_CREAT, 0660, 0);
-    transmit_size = stoul(argv[1]);
-    asize = transmit_size / sizeof(int);
-
-    switch (fork()) {
-    case -1:
-        return -1;
-    case 0:
-        pubTest(config);
-        break;
-    default:
-        subTest(config);
-    }
-
-    sem_close(sem_ready);
-    sem_unlink("/sem_share");
-    return 0;
 }
