@@ -123,16 +123,4 @@ private:
     clock::time_point* recorder;
 };
 
-// static inline void tryCatcher(std::function<void(int)>& f) {
-//     try {
-//         f();
-//     } catch (zenoh::ErrorMessage& err) {
-//         cerr << "Zenoh: " << err.as_string_view() << endl;
-//         exit(1);
-//     } catch (runtime_error& err) {
-//         cerr << "Publisher: " << err.what() << endl;
-//         exit(1);
-//     }
-// }
-
 }  // namespace hlp
