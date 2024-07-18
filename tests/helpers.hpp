@@ -48,6 +48,10 @@ public:
         this->recorder[this->size++].set();
     }
 
+    /* let the recorder be empty size.
+     */
+    inline void reset() { this->size = 0; }
+
     /* return a time point according to index;
      */
     inline double getMSec(size_t tpIndex) {
@@ -62,6 +66,10 @@ public:
                       << "\n";
         }
     }
+
+    /* write all time point to a file
+     */
+    inline void writeAll(const char* prefix, const char* filename) {}
 
     inline size_t getSize() { return this->size; }
 
