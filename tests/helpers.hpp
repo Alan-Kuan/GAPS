@@ -2,7 +2,9 @@
 
 #include <chrono>
 #include <ctime>
+#include <fstream>
 #include <functional>
+#include <iomanip>
 #include <iostream>
 
 namespace hlp {
@@ -69,7 +71,15 @@ public:
 
     /* write all time point to a file
      */
-    inline void writeAll(const char* prefix, const char* filename) {}
+    inline void writeAll(const char* filename) {
+        std::ofstream logfile;
+        logfile.open(filename);
+        for (size_t i = 0; i < this->size; i++) {
+            logfile << std::fixed << std::setprecision(3) << this->getMSec(i)
+                    << "\n";
+        }
+        logfile.close();
+    }
 
     inline size_t getSize() { return this->size; }
 
