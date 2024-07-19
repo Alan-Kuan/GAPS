@@ -2,7 +2,9 @@
 
 #include <chrono>
 #include <ctime>
+#include <fstream>
 #include <functional>
+#include <iomanip>
 #include <iostream>
 
 namespace hlp {
@@ -42,11 +44,15 @@ public:
      */
     inline void setPoint() {
         if (this->size >= capacity) {
-            std::cerr << "TimeHelper is full of capacity";
+            std::cerr << "recorder is full\n";
             exit(1);
         }
         this->recorder[this->size++].set();
     }
+
+    /* let the recorder be empty size.
+     */
+    inline void reset() { this->size = 0; }
 
     /* return a time point according to index;
      */
@@ -56,10 +62,23 @@ public:
 
     /* print all the time points store in array
      */
-    inline void showAll() {
+    inline void showAll(const char* prefix) {
         for (size_t i = 0; i < this->size; i++) {
-            std::cout << std::fixed << this->getMSec(i) << "\n";
+            std::cout << prefix << ": " << std::fixed << this->getMSec(i)
+                      << "\n";
         }
+    }
+
+    /* write all time point to a file
+     */
+    inline void writeAll(const char* filename) {
+        std::ofstream logfile;
+        logfile.open(filename);
+        for (size_t i = 0; i < this->size; i++) {
+            logfile << std::fixed << std::setprecision(3) << this->getMSec(i)
+                    << "\n";
+        }
+        logfile.close();
     }
 
     inline size_t getSize() { return this->size; }
@@ -113,17 +132,5 @@ private:
     size_t timePointCounter;
     clock::time_point* recorder;
 };
-
-// static inline void tryCatcher(std::function<void(int)>& f) {
-//     try {
-//         f();
-//     } catch (zenoh::ErrorMessage& err) {
-//         cerr << "Zenoh: " << err.as_string_view() << endl;
-//         exit(1);
-//     } catch (runtime_error& err) {
-//         cerr << "Publisher: " << err.what() << endl;
-//         exit(1);
-//     }
-// }
 
 }  // namespace hlp
