@@ -91,6 +91,10 @@ IncludeCategories:
     Priority:        3
     SortPriority:    0
     CaseSensitive:   false
+  - Regex:           '^<opencv.*\.h(pp)?>'
+    Priority:        3
+    SortPriority:    0
+    CaseSensitive:   false
   - Regex:           '^<ext/.*\.h>'
     Priority:        2
     SortPriority:    0
