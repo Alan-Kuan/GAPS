@@ -23,3 +23,5 @@ target_link_libraries(test0-p2p
 set(SCRIPT_DIR "${CMAKE_BINARY_DIR}/tests")
 file(MAKE_DIRECTORY ${SCRIPT_DIR})
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/script/test0.sh DESTINATION ${SCRIPT_DIR})
+
+add_subdirectory(video)
