@@ -3,9 +3,14 @@ FROM $IMG
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# dev dependencies
 RUN apt update && apt install -y \
     build-essential ninja-build \
     sudo curl wget git tar tmux openssh-server
+
+# optional dev dependencies
+RUN apt update && apt install -y \
+    libopencv-dev
 
 # cmake
 WORKDIR /opt

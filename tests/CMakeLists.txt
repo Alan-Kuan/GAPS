@@ -19,3 +19,5 @@ target_link_libraries(test0-p2p
         node
         allocator
 )
+
+add_subdirectory(video)
