@@ -20,6 +20,11 @@ public:
         return (double) tv.tv_sec * 1000.0 + (double) tv.tv_usec / 1000.0;
     }
 
+    inline double getMSec(long mod) {
+        return (double) (tv.tv_sec % mod) * 1000.0 +
+               (double) tv.tv_usec / 1000.0;
+    }
+
     TimePoint operator-(TimePoint const& obj) {
         return TimePoint(
             {tv.tv_sec - obj.tv.tv_sec, tv.tv_usec - obj.tv.tv_usec});
@@ -57,7 +62,7 @@ public:
     /* return a time point according to index;
      */
     inline double getMSec(size_t tpIndex) {
-        return this->recorder[tpIndex].getMSec();
+        return this->recorder[tpIndex].getMSec(10000);
     }
 
     /* print all the time points store in array
@@ -75,8 +80,7 @@ public:
         std::ofstream logfile;
         logfile.open(filename);
         for (size_t i = 0; i < this->size; i++) {
-            logfile << std::fixed << std::setprecision(3) << this->getMSec(i)
-                    << "\n";
+            logfile << std::fixed << this->getMSec(i) << "\n";
         }
         logfile.close();
     }
