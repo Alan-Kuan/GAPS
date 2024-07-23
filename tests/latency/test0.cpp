@@ -85,7 +85,7 @@ void pubTest(const char* llocator, size_t pool_size) {
         exit(1);
     }
 
-    timer.writeAll("pub-log-test0.csv");
+    timer.dump("pub-log-test0.csv");
 }
 
 void subTest(const char* llocator, size_t pool_size) {
@@ -119,5 +119,5 @@ void subTest(const char* llocator, size_t pool_size) {
     }
 
     sem_close(&sem_subend);
-    timer.showAll("sub-log-test0.csv");
+    timer.dump("sub-log-test0.csv");
 }

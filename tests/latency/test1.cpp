@@ -92,7 +92,7 @@ void pubTest(size_t tsize, size_t times) {
         exit(1);
     }
 
-    timer.writeAll("pub-log-test1.csv");
+    timer.dump("pub-log-test1.csv");
 }
 
 void subTest() {
@@ -122,5 +122,5 @@ void subTest() {
         exit(1);
     }
 
-    timer.writeAll("sub-log-test1.csv");
+    timer.dump("sub-log-test1.csv");
 }
