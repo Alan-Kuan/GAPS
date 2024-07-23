@@ -17,16 +17,14 @@
 using namespace std;
 using namespace hlp;
 
-__global__ void __vecAdd(int* c, int* a, int* b) {
-    c[threadIdx.x] = a[threadIdx.x] + b[threadIdx.x];
-}
-
-void pubTest(const char*);
-void subTest(const char*);
+void pubTest(const char* llocator, size_t pool_size);
+void subTest(const char* llocator, size_t pool_size);
 
 /* Global */
-const size_t kPoolSize = 65536;
+const char kTopic[] = "topic 0";
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
+const size_t kPoolSize = 65536;
+
 Domain domain = {DeviceType::kGPU, 0};
 sem_t* sem_ready;
 size_t transmit_size = 0;
@@ -34,13 +32,12 @@ size_t asize = 0;
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        cerr << "usage: ./test0 [size](4~" << kPoolSize << ")\n";
+        cerr << "Usage: " << argv[0] << " [size] (4 ~ " << kPoolSize << ")"
+             << endl;
         exit(1);
     }
 
-    const char* config = kDftLLocator;
-
-    sem_ready = sem_open("/sem_share", O_CREAT, 0660, 0);
+    sem_ready = sem_open("/test0_sem_ready", O_CREAT, 0660, 0);
     transmit_size = stoul(argv[1]);
     asize = transmit_size / sizeof(int);
 
@@ -48,27 +45,28 @@ int main(int argc, char* argv[]) {
     case -1:
         return -1;
     case 0:
-        pubTest(config);
+        pubTest(kDftLLocator, kPoolSize);
         break;
     default:
-        subTest(config);
+        subTest(kDftLLocator, kPoolSize);
     }
 
     sem_close(sem_ready);
-    sem_unlink("/sem_share");
+    sem_unlink("/test0_sem_ready");
     return 0;
 }
 
-void pubTest(const char* zenConfig) {
+void pubTest(const char* llocator, size_t pool_size) {
     Timer timer;
+
     try {
         cuInit(0);
+
         timer.setPoint();
-        Publisher pub("topic 0", zenConfig, domain, kPoolSize);
+        Publisher pub(kTopic, llocator, domain, pool_size);
         timer.setPoint();
 
         int* arr = new int[asize];
-
         for (int i = 0; i < asize; i++) arr[i] = rand() % 10;
 
         sem_wait(sem_ready);
@@ -79,7 +77,6 @@ void pubTest(const char* zenConfig) {
         }
 
         delete[] arr;
-
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);
@@ -87,52 +84,32 @@ void pubTest(const char* zenConfig) {
         cerr << "Publisher: " << err.what() << endl;
         exit(1);
     }
-    timer.showAll("pub");
+
+    timer.writeAll("pub-log-test0.csv");
 }
 
-void subTest(const char* zenConfig) {
+void subTest(const char* llocator, size_t pool_size) {
     Timer timer;
     sem_t sem_subend;
     sem_init(&sem_subend, 0, 0);
+
     try {
         cuInit(0);
-        Subscriber sub("topic 0", zenConfig, domain, kPoolSize);
-        Subscriber::MessageHandler handler;
+        timer.setPoint();
+        Subscriber sub(kTopic, llocator, domain, pool_size);
+        timer.setPoint();
 
-        int* c;
-        size_t vsize = asize / 2;  // decompose data from publisher
-        cudaMalloc(&c, sizeof(int) * vsize);
-
-        handler = [c, &sem_subend, &timer](void* msg, size_t size) {
+        auto handler = [&sem_subend, &timer](void* msg, size_t size) {
             timer.setPoint();
-            size_t arr_size = size / 2;
-            size_t count = arr_size / sizeof(int);
-            int* arr = new int[count];
-            int* a = (int*) msg;
-            int* b = (int*) msg + count;
-
-            timer.setPoint();
-            __vecAdd<<<1, 512>>>(c, a, b);
-            timer.setPoint();
-
-            timer.setPoint();
-            cudaMemcpy(arr, c, arr_size, cudaMemcpyDeviceToHost);
-            timer.setPoint();
-            // cout << "a + b:" << endl;
-            // for (int i = 0; i < 512; i++) cout << arr[i] << ' ';
-            // cout << endl;
-            delete[] arr;
             sem_post(&sem_subend);
         };
 
         timer.setPoint();
         sub.sub(handler);
         timer.setPoint();
-        // usleep(1000000);
         sem_post(sem_ready);
 
         sem_wait(&sem_subend);
-
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);
@@ -142,5 +119,5 @@ void subTest(const char* zenConfig) {
     }
 
     sem_close(&sem_subend);
-    timer.showAll("sub");
+    timer.showAll("sub-log-test0.csv");
 }

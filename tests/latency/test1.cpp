@@ -20,21 +20,23 @@ using namespace hlp;
 void pubTest(size_t tsize, size_t times);
 void subTest();
 
-__global__ void __vecAdd(int* c, int* a, int* b) {
-    c[threadIdx.x] = a[threadIdx.x] + b[threadIdx.x];
-}
-
-const size_t kPoolSize = 65536;
+const char kTopic[] = "test0-p2p";
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
+const size_t kPoolSize = 65536;
 
 int main(int argc, char* argv[]) {
-    if (argc < 2 || (argc < 4 && stoi(argv[1]) == 0)) {
-        cerr << " Pub:\n";
-        cerr << "     arg1 [number] 0\n";
-        cerr << "     arg2 [number] size\n";
-        cerr << "     arg3 [number] times\n";
-        cerr << " Sub:\n";
-        cerr << "     arg1 [number] 1\n";
+    if (argc < 2 || (stoi(argv[1]) == 0 && argc < 4)) {
+        cerr << "Usage: " << argv[0] << " TYPE [SIZE] [TIMES]\n\n"
+             << "TYPE:\n"
+             << "  0    publisher\n"
+             << "  1    subscriber\n"
+             << "SIZE:\n"
+             << "  size of the message to publish in bytes (only effective "
+                "when TYPE=0)\n"
+             << "TIMES:\n"
+             << "  number of times to publish a message (only effective when "
+                "TYPE=0)"
+             << endl;
         exit(1);
     }
     int node_type = stoi(argv[1]);
@@ -47,42 +49,41 @@ int main(int argc, char* argv[]) {
         subTest();
         break;
     default:
-        cerr << "not in case\n";
+        cerr << "Unknown type" << endl;
+        return 1;
     }
 
     return 0;
 }
 
 void pubTest(size_t tsize, size_t times) {
-    cout << "size: " << tsize << "\n";
-    cout << "times: " << times << "\n";
-    cout << "enter to send messages\n";
+    cout << "size: " << tsize << endl;
+    cout << "times: " << times << endl;
+    cout << "Type enter to send messages" << endl;
     cin.get();
 
+    Timer timer(10000);
     Domain domain = {DeviceType::kGPU, 0};
     size_t arr_size = tsize;
     size_t count = arr_size / sizeof(int);
 
-    Timer timer(10000);
     try {
         cuInit(0);
+
         timer.setPoint();
-        Publisher pub("topic0", kDftLLocator, domain, kPoolSize);
+        Publisher pub(kTopic, kDftLLocator, domain, kPoolSize);
         timer.setPoint();
 
         int* arr = new int[count];
-
         for (int i = 0; i < count; i++) arr[i] = rand() % 10;
 
         for (int i = 0; i < times; i++) {
-            cout << "time: " << i + 1 << "\n";
             timer.setPoint();
             pub.put(arr, arr_size);
             timer.setPoint();
         }
 
         delete[] arr;
-
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);
@@ -90,46 +91,29 @@ void pubTest(size_t tsize, size_t times) {
         cerr << "Publisher: " << err.what() << endl;
         exit(1);
     }
-    timer.writeAll("pub-log.csv");
+
+    timer.writeAll("pub-log-test1.csv");
 }
 
 void subTest() {
-    Domain domain = {DeviceType::kGPU, 0};
     Timer timer(10000);
+    Domain domain = {DeviceType::kGPU, 0};
 
     try {
         cuInit(0);
 
-        Subscriber sub("topic0", kDftLLocator, domain, kPoolSize);
+        timer.setPoint();
+        Subscriber sub(kTopic, kDftLLocator, domain, kPoolSize);
+        timer.setPoint();
+
+        auto handler = [&timer](void* msg, size_t size) { timer.setPoint(); };
 
         timer.setPoint();
-        sub.sub([&timer](void* msg, size_t size) {
-            timer.setPoint();
-
-            size_t arr_size = size / 2;
-            int count = arr_size / sizeof(int);
-            int* arr = new int[count];
-            int* a = (int*) msg;
-            int* b = (int*) msg + count;
-            int* c;
-            cudaMalloc(&c, arr_size);
-
-            timer.setPoint();
-            __vecAdd<<<1, 512>>>(c, a, b);
-            timer.setPoint();
-
-            timer.setPoint();
-            cudaMemcpy(arr, c, arr_size, cudaMemcpyDeviceToHost);
-            timer.setPoint();
-
-            cudaFree(c);
-
-            delete[] arr;
-        });
+        sub.sub(handler);
         timer.setPoint();
-        cout << "enter to leave\n";
+
+        cout << "Type enter to leave" << endl;
         cin.get();
-
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);
@@ -137,5 +121,6 @@ void subTest() {
         cerr << "Subscriber: " << err.what() << endl;
         exit(1);
     }
-    timer.writeAll("sub-log.csv");
+
+    timer.writeAll("sub-log-test1.csv");
 }
