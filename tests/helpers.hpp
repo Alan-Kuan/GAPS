@@ -33,8 +33,9 @@ public:
 
         logfile << std::fixed << std::setprecision(6);
         for (size_t i = 0; i < this->size; i++) {
-            auto val = this->time_points[i].time_since_epoch().count();
-            logfile << val << std::endl;
+            std::chrono::duration<double, std::milli> dur =
+                this->time_points[i].time_since_epoch();
+            logfile << dur.count() << std::endl;
         }
 
         logfile.close();
