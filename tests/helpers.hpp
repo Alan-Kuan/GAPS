@@ -7,7 +7,7 @@ namespace hlp {
 
 class Timer {
 public:
-    using clock = std::chrono::steady_clock;
+    using clock = std::chrono::system_clock;
 
     Timer(size_t capacity) : capacity(capacity), size(0) {
         this->time_points = new clock::time_point[capacity];
@@ -33,9 +33,8 @@ public:
 
         logfile << std::fixed << std::setprecision(6);
         for (size_t i = 0; i < this->size; i++) {
-            std::chrono::duration<double, std::milli> point =
-                this->time_points[i] - this->time_points[0];
-            logfile << point.count() << std::endl;
+            auto val = this->time_points[i].time_since_epoch().count();
+            logfile << val << std::endl;
         }
 
         logfile.close();
