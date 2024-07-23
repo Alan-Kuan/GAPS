@@ -1,3 +1,5 @@
 build
+*.mp4
+*.csv
 # clangd
 .cache
