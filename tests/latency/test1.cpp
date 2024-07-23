@@ -59,8 +59,6 @@ int main(int argc, char* argv[]) {
 void pubTest(size_t tsize, size_t times) {
     cout << "size: " << tsize << endl;
     cout << "times: " << times << endl;
-    cout << "Type enter to send messages" << endl;
-    cin.get();
 
     Timer timer(10000);
     Domain domain = {DeviceType::kGPU, 0};
