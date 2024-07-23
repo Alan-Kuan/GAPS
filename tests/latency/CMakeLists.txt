@@ -10,7 +10,6 @@ target_link_libraries(test0
     CUDA::cuda_driver
     zenohcxx::zenohpico
     node
-    allocator
 )
 
 add_executable(test0-p2p)
@@ -25,7 +24,6 @@ target_link_libraries(test0-p2p
     CUDA::cuda_driver
     zenohcxx::zenohpico
     node
-    allocator
 )
 
 set(SCRIPT_DIR "${CMAKE_BINARY_DIR}/tests/latency")
