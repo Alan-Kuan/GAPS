@@ -10,7 +10,6 @@
 #include <cuda.h>
 #include <zenoh.hxx>
 
-#include "error.hpp"
 #include "metadata.hpp"
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
@@ -107,7 +106,9 @@ void runAsPublisher(const char* llocator, int n) {
     srand(time(nullptr) + getpid());
 
     try {
-        if (cuInit(0) != CUDA_SUCCESS) throwError();
+        if (cuInit(0) != CUDA_SUCCESS) {
+            throw runtime_error("Failed to init CUDA");
+        }
 
         Domain domain = {DeviceType::kGPU, 0};
         Publisher publisher(kTopicName, llocator, domain, kPoolSize);
@@ -148,7 +149,9 @@ void runAsSubscriber(const char* llocator, int job) {
     }
 
     try {
-        if (cuInit(0) != CUDA_SUCCESS) throwError();
+        if (cuInit(0) != CUDA_SUCCESS) {
+            throw runtime_error("Failed to init CUDA");
+        }
 
         Domain domain = {DeviceType::kGPU, 0};
         Subscriber subscriber(kTopicName, llocator, domain, kPoolSize);

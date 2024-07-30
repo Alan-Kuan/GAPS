@@ -10,8 +10,7 @@ target_link_libraries(cross_process
     CUDA::cuda_driver
     zenohcxx::zenohpico
     vector_arithmetic
-    node
-    error)
+    node)
 
 add_library(vector_arithmetic STATIC)
 target_sources(vector_arithmetic
