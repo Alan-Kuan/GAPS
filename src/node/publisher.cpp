@@ -60,8 +60,7 @@ void Publisher::put(void* payload, size_t size) {
     }
 
     // NOTE: though `taken_num` and `avail` should be atomic referenced, it's
-    // okay because
-    //       no other process will access these variables at this moment
+    // okay because no other process will access these variables at this moment
     mq_entry->taken_num = 0;
     mq_entry->offset = offset;
     mq_entry->size = size;
