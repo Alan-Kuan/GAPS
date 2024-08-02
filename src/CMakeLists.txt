@@ -49,3 +49,6 @@ add_library(error STATIC)
 target_sources(error
     PRIVATE
     error.cpp)
+
+nanobind_add_module(pyshoz
+    pyshoz.cpp)
