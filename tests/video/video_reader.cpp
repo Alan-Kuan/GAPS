@@ -57,7 +57,8 @@ int main(int argc, char* argv[]) {
         Mat frame;
         vector<uchar> frame_vec;
 
-        ofstream out("send.out");
+        ofstream out;
+        if (dump_hash) out.open("send.out");
 
         while (true) {
             cap >> frame;

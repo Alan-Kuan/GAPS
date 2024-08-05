@@ -68,7 +68,8 @@ int main(int argc, char* argv[]) {
         cudaMalloc(&filter_d, sizeof(filter));
         cudaMemcpy(filter_d, filter, sizeof(filter), cudaMemcpyHostToDevice);
 
-        ofstream out("recv.out");
+        ofstream out;
+        if (dump_hash) out.open("recv.out");
 
         sub.sub([dump_hash, frame_blurred_d, frame_blurred, filter_d, &out,
                  &writer](void* data_d, size_t size) {
