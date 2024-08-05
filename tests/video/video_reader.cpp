@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <vector>
 
-#include <cuda.h>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/videoio.hpp>
 #include <zenoh.hxx>
@@ -49,11 +48,6 @@ int main(int argc, char* argv[]) {
     VideoCapture cap(input_path);
     if (!cap.isOpened()) {
         cerr << "Failed to open the video file" << endl;
-        return 1;
-    }
-
-    if (cuInit(0)) {
-        cerr << "Failed to init CUDA" << endl;
         return 1;
     }
 

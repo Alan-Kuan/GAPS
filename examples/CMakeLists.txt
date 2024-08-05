@@ -7,7 +7,6 @@ target_include_directories(cross_process
     ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(cross_process
     PRIVATE
-    CUDA::cuda_driver
     zenohcxx::zenohpico
     vector_arithmetic
     node)

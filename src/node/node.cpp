@@ -18,6 +18,8 @@
 Node::Node(const char* topic_name, size_t pool_size, uint16_t domain_id) {
     if (strlen(topic_name) > kMaxTopicNameLen) throwError();
 
+    throwOnErrorCuda(cuInit(0));
+
     // create new / attach existing shared memory
     size_t padded_pool_size = this->getPaddedSize(pool_size);
     size_t block_count = padded_pool_size / Tlsf::kBlockMinSize;

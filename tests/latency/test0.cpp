@@ -7,7 +7,6 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <cuda.h>
 #include <zenoh.hxx>
 
 #include "helpers.hpp"
@@ -60,8 +59,6 @@ void pubTest(const char* llocator, size_t pool_size) {
     Timer timer;
 
     try {
-        cuInit(0);
-
         timer.setPoint();
         Publisher pub(kTopic, llocator, domain, pool_size);
         timer.setPoint();
@@ -94,7 +91,6 @@ void subTest(const char* llocator, size_t pool_size) {
     sem_init(&sem_subend, 0, 0);
 
     try {
-        cuInit(0);
         timer.setPoint();
         Subscriber sub(kTopic, llocator, domain, pool_size);
         timer.setPoint();

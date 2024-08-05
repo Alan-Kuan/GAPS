@@ -5,7 +5,6 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <cuda.h>
 #include <opencv2/videoio.hpp>
 #include <zenoh.hxx>
 
@@ -44,11 +43,6 @@ int main(int argc, char* argv[]) {
 
     if (optind >= argc) printUsageAndExit(argv[0]);
     output_path = argv[optind];
-
-    if (cuInit(0)) {
-        cerr << "Failed to init CUDA" << endl;
-        return 1;
-    }
 
     cout << "Will write the output to '" << output_path << '\'' << endl;
 

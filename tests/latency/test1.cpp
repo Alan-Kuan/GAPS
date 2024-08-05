@@ -7,7 +7,6 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <cuda.h>
 #include <zenoh.hxx>
 
 #include "helpers.hpp"
@@ -66,8 +65,6 @@ void pubTest(size_t tsize, size_t times) {
     size_t count = arr_size / sizeof(int);
 
     try {
-        cuInit(0);
-
         timer.setPoint();
         Publisher pub(kTopic, kDftLLocator, domain, kPoolSize);
         timer.setPoint();
@@ -98,8 +95,6 @@ void subTest() {
     Domain domain = {DeviceType::kGPU, 0};
 
     try {
-        cuInit(0);
-
         timer.setPoint();
         Subscriber sub(kTopic, kDftLLocator, domain, kPoolSize);
         timer.setPoint();
