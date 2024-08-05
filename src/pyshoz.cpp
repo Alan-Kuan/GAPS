@@ -8,8 +8,8 @@
 #include <nanobind/stl/string.h>
 
 #include "metadata.hpp"
-#include "node/publisher.hpp"
-#include "node/subscriber.hpp"
+#include "node/python_iface/publisher.hpp"
+#include "node/python_iface/subscriber.hpp"
 
 namespace nb = nanobind;
 

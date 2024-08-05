@@ -10,8 +10,8 @@
 #include <zenoh.hxx>
 
 #include "metadata.hpp"
-#include "node/publisher.hpp"
-#include "node/subscriber.hpp"
+#include "node/cpp_iface/publisher.hpp"
+#include "node/cpp_iface/subscriber.hpp"
 #include "vector_arithmetic.hpp"
 
 using namespace std;

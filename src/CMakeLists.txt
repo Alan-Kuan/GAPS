@@ -3,7 +3,9 @@ target_sources(node
     PRIVATE
     node/node.cpp
     node/publisher.cpp
-    node/subscriber.cpp)
+    node/subscriber.cpp
+    node/cpp_iface/publisher.cpp
+    node/cpp_iface/subscriber.cpp)
 target_link_libraries(node
     PRIVATE
     CUDA::cuda_driver
@@ -56,6 +58,8 @@ nanobind_add_module(pyshoz
     node/node.cpp
     node/publisher.cpp
     node/subscriber.cpp
+    node/python_iface/publisher.cpp
+    node/python_iface/subscriber.cpp
     allocator/allocator.cpp
     allocator/shareable.cu
     alloc_algo/tlsf.cpp

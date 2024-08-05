@@ -1,27 +1,21 @@
-#ifndef SUBSCRIBER_HPP
-#define SUBSCRIBER_HPP
-
-#include <functional>
+#ifndef __SUBSCRIBER_HPP
+#define __SUBSCRIBER_HPP
 
 #include <zenoh.hxx>
 
 #include "metadata.hpp"
 #include "node/node.hpp"
 
-class Subscriber : public Node {
+class __Subscriber : public Node {
 public:
-    typedef std::function<void(void*, size_t)> MessageHandler;
+    __Subscriber() = delete;
+    __Subscriber(const char* topic_name, const char* llocator,
+                 const Domain& domain, size_t pool_size);
+    ~__Subscriber();
 
-    Subscriber() = delete;
-    Subscriber(const char* topic_name, const char* llocator,
-               const Domain& domain, size_t pool_size);
-    ~Subscriber();
-
-    void sub(MessageHandler handler);
-
-private:
+protected:
     zenoh::Session z_session;
     zenoh::Subscriber z_subscriber;
 };
 
-#endif  // SUBSCRIBER_HPP
+#endif  // __SUBSCRIBER_HPP

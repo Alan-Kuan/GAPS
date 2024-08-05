@@ -10,7 +10,7 @@
 #include <zenoh.hxx>
 
 #include "metadata.hpp"
-#include "node/publisher.hpp"
+#include "node/cpp_iface/publisher.hpp"
 
 using namespace std;
 using namespace cv;

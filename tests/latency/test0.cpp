@@ -10,8 +10,8 @@
 #include <zenoh.hxx>
 
 #include "helpers.hpp"
-#include "node/publisher.hpp"
-#include "node/subscriber.hpp"
+#include "node/cpp_iface/publisher.hpp"
+#include "node/cpp_iface/subscriber.hpp"
 
 using namespace std;
 using namespace hlp;
