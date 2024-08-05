@@ -50,5 +50,18 @@ target_sources(error
     PRIVATE
     error.cpp)
 
+# TODO: try reusing built libraries
 nanobind_add_module(pyshoz
-    pyshoz.cpp)
+    pyshoz.cpp
+    node/node.cpp
+    node/publisher.cpp
+    node/subscriber.cpp
+    allocator/allocator.cpp
+    allocator/shareable.cu
+    alloc_algo/tlsf.cpp
+    error.cpp)
+target_link_libraries(pyshoz
+    PRIVATE
+    CUDA::cuda_driver
+    zenohcxx::zenohpico
+    ticket_lock)
