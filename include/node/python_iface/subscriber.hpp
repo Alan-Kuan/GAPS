@@ -3,12 +3,19 @@
 
 #include <functional>
 
+#include <nanobind/ndarray.h>
+#include <nanobind/stl/function.h>
+
 #include "metadata.hpp"
 #include "node/subscriber.hpp"
 
+namespace nb = nanobind;
+
 class Subscriber : public __Subscriber {
 public:
-    typedef std::function<void(void*, size_t)> MessageHandler;
+    typedef std::function<void(
+        const nb::ndarray<nb::pytorch, nb::device::cuda>&)>
+        MessageHandler;
 
     Subscriber() = delete;
     Subscriber(const char* topic_name, const char* llocator,

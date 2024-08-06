@@ -4,7 +4,6 @@
 #include <sstream>
 
 #include <nanobind/nanobind.h>
-#include <nanobind/stl/function.h>
 #include <nanobind/stl/string.h>
 
 #include "metadata.hpp"

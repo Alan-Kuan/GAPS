@@ -3,8 +3,12 @@
 
 #include <cstddef>
 
+#include <nanobind/ndarray.h>
+
 #include "metadata.hpp"
 #include "node/publisher.hpp"
+
+namespace nb = nanobind;
 
 class Publisher : public __Publisher {
 public:
@@ -12,7 +16,7 @@ public:
     Publisher(const char* topic_name, const char* llocator,
               const Domain& domain, size_t pool_size);
 
-    void put(void* payload, size_t size);
+    void put(const nb::ndarray<>& tensor);
 };
 
 #endif  // PUBLISHER_HPP
