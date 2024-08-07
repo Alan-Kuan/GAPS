@@ -19,6 +19,7 @@ struct MsgBuf {
     nb::dlpack::dtype dtype;
     int32_t ndim;
     int64_t shape[3];
+    int64_t strides[3];
 };
 
 Subscriber::Subscriber(const char* topic_name, const char* llocator,
@@ -46,9 +47,11 @@ void Subscriber::sub(MessageHandler handler) {
 
         {
             nb::gil_scoped_acquire acq;
+            const int64_t* strides =
+                msg_buf->strides[0] ? msg_buf->strides : nullptr;
             nb::ndarray<nb::pytorch, nb::device::cuda> tensor(
                 data, msg_buf->ndim, (const size_t*) msg_buf->shape,
-                nb::handle(), nullptr, msg_buf->dtype, nb::device::cuda::value);
+                nb::handle(), strides, msg_buf->dtype, nb::device::cuda::value);
             handler(tensor);
         }
 

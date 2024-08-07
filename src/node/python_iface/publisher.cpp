@@ -18,6 +18,7 @@ struct MsgBuf {
     nb::dlpack::dtype dtype;
     int32_t ndim;
     int64_t shape[3];
+    int64_t strides[3];
 };
 
 Publisher::Publisher(const char* topic_name, const char* llocator,
@@ -25,6 +26,10 @@ Publisher::Publisher(const char* topic_name, const char* llocator,
         : __Publisher(topic_name, llocator, domain, pool_size) {}
 
 void Publisher::put(const nb::ndarray<>& tensor) {
+    if (tensor.ndim() > 3) {
+        throwError("Tensor with dimension greater than 3 is not supported");
+    }
+
     size_t size = tensor.nbytes();
     if (size == 0) return;
 
@@ -33,6 +38,13 @@ void Publisher::put(const nb::ndarray<>& tensor) {
     msg_buf.ndim = tensor.ndim();
     for (int i = 0; i < msg_buf.ndim; i++) {
         msg_buf.shape[i] = tensor.shape(i);
+    }
+    if (tensor.stride_ptr()) {
+        for (int i = 0; i < msg_buf.ndim; i++) {
+            msg_buf.strides[i] = tensor.stride(i);
+        }
+    } else {
+        msg_buf.strides[0] = 0;
     }
 
     size_t offset = this->allocator->malloc(size);
