@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <iostream>
 
 #include <nanobind/ndarray.h>
 #include <zenoh.hxx>
