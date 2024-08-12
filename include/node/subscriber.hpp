@@ -1,21 +1,39 @@
-#ifndef __SUBSCRIBER_HPP
-#define __SUBSCRIBER_HPP
+#ifndef SUBSCRIBER_HPP
+#define SUBSCRIBER_HPP
 
+#include <functional>
+
+#ifdef BUILD_PYSHOZ
+#include <nanobind/ndarray.h>
+#include <nanobind/stl/function.h>
+
+namespace nb = nanobind;
+#endif
 #include <zenoh.hxx>
 
 #include "metadata.hpp"
 #include "node/node.hpp"
 
-class __Subscriber : public Node {
+class Subscriber : public Node {
 public:
-    __Subscriber() = delete;
-    __Subscriber(const char* topic_name, const char* llocator,
-                 const Domain& domain, size_t pool_size);
-    ~__Subscriber();
+#ifdef BUILD_PYSHOZ
+    typedef std::function<void(
+        const nb::ndarray<nb::pytorch, nb::device::cuda>&)>
+        MessageHandler;
+#else
+    typedef std::function<void(void*, size_t)> MessageHandler;
+#endif
+
+    Subscriber() = delete;
+    Subscriber(const char* topic_name, const char* llocator,
+               const Domain& domain, size_t pool_size);
+    ~Subscriber();
+
+    void sub(MessageHandler handler);
 
 protected:
     zenoh::Session z_session;
     zenoh::Subscriber z_subscriber;
 };
 
-#endif  // __SUBSCRIBER_HPP
+#endif  // SUBSCRIBER_HPP

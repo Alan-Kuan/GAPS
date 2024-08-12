@@ -9,7 +9,7 @@
 #include <zenoh.hxx>
 
 #include "metadata.hpp"
-#include "node/cpp_iface/subscriber.hpp"
+#include "node/subscriber.hpp"
 
 using namespace std;
 using namespace cv;

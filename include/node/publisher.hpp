@@ -1,22 +1,32 @@
-#ifndef __PUBLISHER_HPP
-#define __PUBLISHER_HPP
+#ifndef PUBLISHER_HPP
+#define PUBLISHER_HPP
 
 #include <cstddef>
 
+#ifdef BUILD_PYSHOZ
+#include <nanobind/ndarray.h>
+namespace nb = nanobind;
+#endif
 #include <zenoh.hxx>
 
 #include "metadata.hpp"
 #include "node/node.hpp"
 
-class __Publisher : public Node {
+class Publisher : public Node {
 public:
-    __Publisher() = delete;
-    __Publisher(const char* topic_name, const char* llocator,
-                const Domain& domain, size_t pool_size);
+    Publisher() = delete;
+    Publisher(const char* topic_name, const char* llocator,
+              const Domain& domain, size_t pool_size);
+
+#ifdef BUILD_PYSHOZ
+    void put(const nb::ndarray<>& tensor);
+#else
+    void put(void* payload, size_t size);
+#endif
 
 protected:
     zenoh::Session z_session;
     zenoh::Publisher z_publisher;
 };
 
-#endif  // __PUBLISHER_HPP
+#endif  // PUBLISHER_HPP
