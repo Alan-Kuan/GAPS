@@ -1,5 +1,7 @@
 build
+.envrc
 *.mp4
+*.jpg
 *.csv
 # clangd
 .cache
