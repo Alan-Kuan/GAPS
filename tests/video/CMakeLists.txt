@@ -8,24 +8,14 @@ set(common_libs
     opencv_videoio
     node)
 
-add_executable(video_reader)
-target_sources(video_reader
-    PRIVATE
-    video_reader.cpp)
-target_include_directories(video_reader
-    PRIVATE
-    ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(video_reader
-    PRIVATE
-    ${common_libs})
+shoz_add_target(video_reader
+    IS_EXE
+    SRCS video_reader.cpp
+    INCS ${OpenCV_INCLUDE_DIRS}
+    LIBS ${common_libs})
 
-add_executable(blur)
-target_sources(blur
-    PRIVATE
-    blur.cu)
-target_include_directories(blur
-    PRIVATE
-    ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(blur
-    PRIVATE
-    ${common_libs})
+shoz_add_target(blur
+    IS_EXE
+    SRCS blur.cu
+    INCS ${OpenCV_INCLUDE_DIRS}
+    LIBS ${common_libs})

@@ -1,70 +1,42 @@
-add_library(node STATIC)
-target_sources(node
-    PRIVATE
-    node/node.cpp
-    node/publisher.cpp
-    node/subscriber.cpp)
-target_link_libraries(node
-    PRIVATE
-    CUDA::cuda_driver
-    zenohcxx::zenohpico
-    allocator
-    ticket_lock
-    error)
+# Shoz
+shoz_add_target(node
+    SRCS node/node.cpp node/publisher.cpp node/subscriber.cpp
+    LIBS CUDA::cuda_driver zenohcxx::zenohpico allocator ticket_lock error)
+shoz_add_target(allocator
+    SRCS allocator/allocator.cpp allocator/shareable.cu
+    LIBS CUDA::cuda_driver alloc_algo error
+    PIC)
+shoz_add_target(alloc_algo
+    SRCS alloc_algo/tlsf.cpp
+    LIBS ticket_lock
+    PIC)
+shoz_add_target(ticket_lock
+    SRCS ticket_lock.cpp
+    PIC)
+shoz_add_target(error
+    SRCS error.cpp
+    PIC)
 
-add_library(allocator STATIC)
-target_sources(allocator
-    PRIVATE
-    allocator/allocator.cpp
-    allocator/shareable.cu)
-target_link_libraries(allocator
-    PRIVATE
-    CUDA::cuda_driver
-    alloc_algo
-    error)
+# Memory Manager
+shoz_add_target(mem_manager
+    IS_EXE
+    SRCS mem_manager.cpp
+    LIBS CUDA::cuda_driver error)
 
-add_library(alloc_algo STATIC)
-target_sources(alloc_algo
-    PRIVATE
-    alloc_algo/tlsf.cpp)
-target_link_libraries(alloc_algo
-    PRIVATE
-    ticket_lock)
-
-add_library(ticket_lock STATIC)
-target_sources(ticket_lock
-    PRIVATE
-    ticket_lock.cpp)
-
-add_executable(mem_manager)
-target_sources(mem_manager
-    PRIVATE
-    mem_manager.cpp)
-target_link_libraries(mem_manager
-    PRIVATE
-    CUDA::cuda_driver
-    error)
-
-add_library(error STATIC)
-target_sources(error
-    PRIVATE
-    error.cpp)
-
-# TODO: try reusing built libraries
+# Pyshoz
 nanobind_add_module(pyshoz
     pyshoz.cpp
     node/node.cpp
     node/publisher.cpp
-    node/subscriber.cpp
-    allocator/allocator.cpp
-    allocator/shareable.cu
-    alloc_algo/tlsf.cpp
-    error.cpp)
+    node/subscriber.cpp)
+target_compile_definitions(pyshoz
+    PRIVATE
+    BUILD_PYSHOZ)
 target_link_libraries(pyshoz
     PRIVATE
     CUDA::cuda_driver
     zenohcxx::zenohpico
-    ticket_lock)
-target_compile_definitions(pyshoz
-    PRIVATE
-    BUILD_PYSHOZ)
+    allocator
+    alloc_algo
+    ticket_lock
+    error)

@@ -16,6 +16,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "")
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+# Dependencies
 find_package(CUDAToolkit REQUIRED)
 find_package(Python 3.12 REQUIRED COMPONENTS Interpreter Development.Module)
 
@@ -30,6 +31,36 @@ FetchContent_declare(zenohpico GIT_REPOSITORY "https://github.com/eclipse-zenoh/
 FetchContent_MakeAvailable(zenohpico)
 FetchContent_declare(zenohcpp GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp" GIT_TAG 0.11.0.3)
 FetchContent_MakeAvailable(zenohcpp)
+
+# Utility Function
+function(shoz_add_target targetName)
+    set(flags IS_EXE PIC)
+    set(listArgs SRCS INCS LIBS)
+    cmake_parse_arguments(ARG "${flags}" "" "${listArgs}" ${ARGN})
+
+    if (NOT ARG_SRCS)
+        message(FATAL_ERROR "[shoz_add_target]: missing required argument SRCS")
+    endif()
+
+    if (ARG_IS_EXE)
+        add_executable(${targetName})
+    else()
+        add_library(${targetName} STATIC)
+    endif()
+
+    target_sources(${targetName} PRIVATE ${ARG_SRCS})
+
+    if (ARG_INCS)
+        target_include_directories(${targetName} PRIVATE ${ARG_INCS})
+    endif()
+    if (ARG_LIBS)
+        target_link_libraries(${targetName} PRIVATE ${ARG_LIBS})
+    endif()
+
+    if (ARG_PIC)
+        set_target_properties(${targetName} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    endif()
+endfunction()
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
