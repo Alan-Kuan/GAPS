@@ -1,5 +1,5 @@
-#ifndef TYPES_HPP
-#define TYPES_HPP
+#ifndef METADATA_HPP
+#define METADATA_HPP
 
 #include <cstddef>
 #include <cstdint>
@@ -68,4 +68,4 @@ inline MessageQueueEntry* getMessageQueueEntry(MessageQueueHeader* mq_header,
                                  idx * sizeof(MessageQueueEntry));
 }
 
-#endif  // TYPES_HPP
+#endif  // METADATA_HPP

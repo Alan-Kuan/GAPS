@@ -80,7 +80,7 @@ void Node::detachShm(size_t size) {
     throwOnError(munmap(this->shm_base, size));
 }
 
-// NOTE: sizes of the pools of all types of memory domains should be the same,
+// NOTE: sizes of the pools of all kinds of memory domains should be the same,
 //       so this function should be called every time
 size_t Node::getPaddedSize(const size_t size) const {
     CUmemAllocationProp prop = {};
