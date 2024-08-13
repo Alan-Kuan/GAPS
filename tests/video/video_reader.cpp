@@ -9,7 +9,6 @@
 #include <opencv2/videoio.hpp>
 #include <zenoh.hxx>
 
-#include "metadata.hpp"
 #include "node/publisher.hpp"
 
 using namespace std;
@@ -52,8 +51,7 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        Domain domain{DeviceType::kGPU, 0};
-        Publisher pub(kTopicName, kDftLLocator, domain, kPoolSize);
+        Publisher pub(kTopicName, kDftLLocator, kPoolSize);
         Mat frame;
         vector<uchar> frame_vec;
 

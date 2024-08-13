@@ -60,13 +60,12 @@ void pubTest(size_t tsize, size_t times) {
     cout << "times: " << times << endl;
 
     Timer timer(10000);
-    Domain domain = {DeviceType::kGPU, 0};
     size_t arr_size = tsize;
     size_t count = arr_size / sizeof(int);
 
     try {
         timer.setPoint();
-        Publisher pub(kTopic, kDftLLocator, domain, kPoolSize);
+        Publisher pub(kTopic, kDftLLocator, kPoolSize);
         timer.setPoint();
 
         int* arr = new int[count];
@@ -92,11 +91,10 @@ void pubTest(size_t tsize, size_t times) {
 
 void subTest() {
     Timer timer(10000);
-    Domain domain = {DeviceType::kGPU, 0};
 
     try {
         timer.setPoint();
-        Subscriber sub(kTopic, kDftLLocator, domain, kPoolSize);
+        Subscriber sub(kTopic, kDftLLocator, kPoolSize);
         timer.setPoint();
 
         auto handler = [&timer](void* msg, size_t size) { timer.setPoint(); };

@@ -14,8 +14,7 @@ def main():
         print(f"Usage: {sys.argv[0]} <image path>")
         exit(1)
 
-    domain = pyshoz.Domain(pyshoz.DeviceType.kGPU, 0)
-    publisher = pyshoz.Publisher("cross_process_torch", LLOCATOR, domain, POOL_SIZE)
+    publisher = pyshoz.Publisher("cross_process_torch", LLOCATOR, POOL_SIZE)
 
     img = cv2.imread(sys.argv[1])
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

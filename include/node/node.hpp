@@ -9,7 +9,7 @@
 class Node {
 public:
     Node() = delete;
-    Node(const char* topic_name, size_t pool_size, uint16_t domain_id);
+    Node(const char* topic_name, size_t pool_size);
     ~Node();
     // prevent the node from being copied, since it may cause problem when the
     // copy destructs
@@ -18,13 +18,11 @@ public:
 
 protected:
     static const int kMaxTopicNameLen = 31;
-    static const int kMaxDomainNum = 2;
     static const size_t kMaxMessageNum = 128;  // NOTE: it must be power of 2
 
     void* shm_base = nullptr;
     size_t shm_size = 0;
     Allocator* allocator = nullptr;
-    uint16_t domain_idx;
 
 private:
     void attachShm(const char* shm_name, size_t size);

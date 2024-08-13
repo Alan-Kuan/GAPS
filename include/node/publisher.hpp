@@ -9,14 +9,12 @@ namespace nb = nanobind;
 #endif
 #include <zenoh.hxx>
 
-#include "metadata.hpp"
 #include "node/node.hpp"
 
 class Publisher : public Node {
 public:
     Publisher() = delete;
-    Publisher(const char* topic_name, const char* llocator,
-              const Domain& domain, size_t pool_size);
+    Publisher(const char* topic_name, const char* llocator, size_t pool_size);
 
 #ifdef BUILD_PYSHOZ
     void put(const nb::ndarray<>& tensor);

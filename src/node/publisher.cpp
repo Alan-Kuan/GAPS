@@ -28,8 +28,8 @@ struct MsgBuf {
 #endif
 
 Publisher::Publisher(const char* topic_name, const char* llocator,
-                     const Domain& domain, size_t pool_size)
-        : Node(topic_name, pool_size, domain.getId()),
+                     size_t pool_size)
+        : Node(topic_name, pool_size),
           z_session(nullptr),
           z_publisher(nullptr) {
     zenoh::Config config;
@@ -43,12 +43,8 @@ Publisher::Publisher(const char* topic_name, const char* llocator,
     this->z_publisher = zenoh::expect<zenoh::Publisher>(
         z_session.declare_publisher(z_topic_name));
 
-    switch (domain.dev_type) {
-    case DeviceType::kGPU:
-        this->allocator =
-            (Allocator*) new ShareableAllocator((TopicHeader*) this->shm_base);
-        break;
-    }
+    this->allocator =
+        (Allocator*) new ShareableAllocator((TopicHeader*) this->shm_base);
 }
 
 #ifdef BUILD_PYSHOZ
@@ -90,8 +86,8 @@ void Publisher::put(void* payload, size_t size) {
 #endif
 
     // get next available index as message id
-    MessageQueueHeader* mq_header = getMessageQueueHeader(
-        getDomainMap(getTlsfHeader(getTopicHeader(this->shm_base))));
+    MessageQueueHeader* mq_header =
+        getMessageQueueHeader(getTlsfHeader(getTopicHeader(this->shm_base)));
 #ifdef BUILD_PYSHOZ
     msg_buf.msg_id =
         std::atomic_ref<size_t>(mq_header->next).fetch_add(1) % kMaxMessageNum;
@@ -104,16 +100,17 @@ void Publisher::put(void* payload, size_t size) {
 #endif
 
     // free the payload's space if it hasn't been freed
-    if (mq_entry->avail) {
+    // NOTE: since `offset` from the allocator is always even,
+    // we use its first bit to determine if the space is freed
+    if (mq_entry->offset & 1) {
         this->allocator->free(mq_entry->offset);
     }
 
     // NOTE: though `taken_num` and `avail` should be atomic referenced, it's
     // okay because no other process will access these variables at this moment
     mq_entry->taken_num = 0;
-    mq_entry->offset = offset;
+    mq_entry->offset = offset | 1;
     mq_entry->size = size;
-    mq_entry->avail = 1 << this->domain_idx;
 
 #ifdef BUILD_PYSHOZ
     // notify subscribers with the message ID & tensor info

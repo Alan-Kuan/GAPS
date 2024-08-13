@@ -8,7 +8,6 @@
 #include <opencv2/videoio.hpp>
 #include <zenoh.hxx>
 
-#include "metadata.hpp"
 #include "node/subscriber.hpp"
 
 using namespace std;
@@ -50,8 +49,7 @@ int main(int argc, char* argv[]) {
         VideoWriter writer(output_path, VideoWriter::fourcc('m', 'p', '4', 'v'),
                            25, Size(600, 316));
 
-        Domain domain{DeviceType::kGPU, 0};
-        Subscriber sub(kTopicName, kDftLLocator, domain, kPoolSize);
+        Subscriber sub(kTopicName, kDftLLocator, kPoolSize);
         size_t frame_size = 600 * 316 * 3;
         uchar* frame_blurred_d;
         cudaMalloc(&frame_blurred_d, frame_size);

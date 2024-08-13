@@ -28,8 +28,8 @@ struct MsgBuf {
 #endif
 
 Subscriber::Subscriber(const char* topic_name, const char* llocator,
-                       const Domain& domain, size_t pool_size)
-        : Node(topic_name, pool_size, domain.getId()),
+                       size_t pool_size)
+        : Node(topic_name, pool_size),
           z_session(nullptr),
           z_subscriber(nullptr) {
     zenoh::Config config;
@@ -38,12 +38,8 @@ Subscriber::Subscriber(const char* topic_name, const char* llocator,
     this->z_session =
         zenoh::expect<zenoh::Session>(zenoh::open(std::move(config)));
 
-    switch (domain.dev_type) {
-    case DeviceType::kGPU:
-        this->allocator = (Allocator*) new ShareableAllocator(
-            (TopicHeader*) this->shm_base, true);
-        break;
-    }
+    this->allocator = (Allocator*) new ShareableAllocator(
+        (TopicHeader*) this->shm_base, true);
 }
 
 Subscriber::~Subscriber() {
@@ -56,7 +52,7 @@ void Subscriber::sub(MessageHandler handler) {
     std::atomic_ref<uint32_t>(topic_header->sub_count)++;
 
     MessageQueueHeader* mq_header =
-        getMessageQueueHeader(getDomainMap(getTlsfHeader(topic_header)));
+        getMessageQueueHeader(getTlsfHeader(topic_header));
 
     auto callback = [=, this](const zenoh::Sample& sample) {
         zenoh::BytesView msg = sample.get_payload();
@@ -70,9 +66,7 @@ void Subscriber::sub(MessageHandler handler) {
         MessageQueueEntry* mq_entry = getMessageQueueEntry(mq_header, msg_id);
 #endif
 
-        size_t offset = mq_entry->offset;
-        // TODO: check availability; if not available, copy valid ones to this
-        // domain
+        size_t offset = mq_entry->offset ^ 1;
         void* data =
             (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
 
@@ -94,7 +88,7 @@ void Subscriber::sub(MessageHandler handler) {
         if (std::atomic_ref<uint32_t>(mq_entry->taken_num).fetch_add(1) ==
             topic_header->sub_count - 1) {
             this->allocator->free(offset);
-            mq_entry->avail = 0;
+            mq_entry->offset ^= 1;
         }
     };
 

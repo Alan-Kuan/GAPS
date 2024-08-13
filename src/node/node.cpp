@@ -15,7 +15,7 @@
 #include "error.hpp"
 #include "metadata.hpp"
 
-Node::Node(const char* topic_name, size_t pool_size, uint16_t domain_id) {
+Node::Node(const char* topic_name, size_t pool_size) {
     if (strlen(topic_name) > kMaxTopicNameLen) throwError();
 
     throwOnErrorCuda(cuInit(0));
@@ -29,14 +29,12 @@ Node::Node(const char* topic_name, size_t pool_size, uint16_t domain_id) {
     size_t mq_size =
         sizeof(MessageQueueHeader) + kMaxMessageNum * sizeof(MessageQueueEntry);
 
-    this->shm_size =
-        sizeof(TopicHeader) + tlsf_size + sizeof(DomainMap) + mq_size;
+    this->shm_size = sizeof(TopicHeader) + tlsf_size + mq_size;
     this->attachShm(topic_name, this->shm_size);
 
     TopicHeader* topic_header = getTopicHeader(this->shm_base);
     Tlsf::Header* tlsf_header = getTlsfHeader(topic_header);
-    DomainMap* domain_map = getDomainMap(tlsf_header);
-    MessageQueueHeader* mq_header = getMessageQueueHeader(domain_map);
+    MessageQueueHeader* mq_header = getMessageQueueHeader(tlsf_header);
 
     // init the header if this is a newly created topic
     if (topic_header->topic_name[0] == '\0') {
@@ -51,25 +49,6 @@ Node::Node(const char* topic_name, size_t pool_size, uint16_t domain_id) {
     tlsf_header->block_count = block_count;
 
     mq_header->capacity = kMaxMessageNum;
-
-    // map unique ID of its domain to an index
-    int i = 0;
-    domain_map->lock.lock();
-    for (; i < 32 && domain_map->map[i] > 0; i++) {
-        if (domain_map->map[i] == domain_id) {
-            domain_map->lock.unlock();
-            this->domain_idx = i;
-            return;
-        }
-    }
-    // only supports 32 different domains currently
-    if (i == 32) {
-        domain_map->lock.unlock();
-        throwError("Too many different domains (supports only 32)");
-    }
-    domain_map->map[i] = domain_id;
-    domain_map->lock.unlock();
-    this->domain_idx = i;
 }
 
 Node::~Node() {

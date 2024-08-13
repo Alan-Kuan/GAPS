@@ -24,7 +24,6 @@ const char kTopic[] = "topic 0";
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
 const size_t kPoolSize = 65536;
 
-Domain domain = {DeviceType::kGPU, 0};
 sem_t* sem_ready;
 size_t transmit_size = 0;
 size_t asize = 0;
@@ -60,7 +59,7 @@ void pubTest(const char* llocator, size_t pool_size) {
 
     try {
         timer.setPoint();
-        Publisher pub(kTopic, llocator, domain, pool_size);
+        Publisher pub(kTopic, llocator, pool_size);
         timer.setPoint();
 
         int* arr = new int[asize];
@@ -92,7 +91,7 @@ void subTest(const char* llocator, size_t pool_size) {
 
     try {
         timer.setPoint();
-        Subscriber sub(kTopic, llocator, domain, pool_size);
+        Subscriber sub(kTopic, llocator, pool_size);
         timer.setPoint();
 
         auto handler = [&sem_subend, &timer](void* msg, size_t size) {

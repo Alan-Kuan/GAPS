@@ -9,7 +9,6 @@
 
 #include <zenoh.hxx>
 
-#include "metadata.hpp"
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
 #include "vector_arithmetic.hpp"
@@ -105,8 +104,7 @@ void runAsPublisher(const char* llocator, int n) {
     srand(time(nullptr) + getpid());
 
     try {
-        Domain domain = {DeviceType::kGPU, 0};
-        Publisher publisher(kTopicName, llocator, domain, kPoolSize);
+        Publisher publisher(kTopicName, llocator, kPoolSize);
         int arr[128];
 
         for (int T = 0; T < n; T++) {
@@ -144,8 +142,7 @@ void runAsSubscriber(const char* llocator, int job) {
     }
 
     try {
-        Domain domain = {DeviceType::kGPU, 0};
-        Subscriber subscriber(kTopicName, llocator, domain, kPoolSize);
+        Subscriber subscriber(kTopicName, llocator, kPoolSize);
         Subscriber::MessageHandler handler;
 
         switch (job) {

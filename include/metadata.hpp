@@ -5,7 +5,6 @@
 #include <cstdint>
 
 #include "alloc_algo/tlsf.hpp"
-#include "ticket_lock.hpp"
 
 enum DeviceType { kHost, kGPU };
 
@@ -24,28 +23,22 @@ struct TopicHeader {
     uint32_t sub_count;
 };
 
-struct DomainMap {
-    // this is a spin lock; keep the critical section tiny
-    TicketLock lock;
-    // index: domain_idx, value: domain_id
-    uint16_t map[32];
-};
-
 struct MessageQueueHeader {
     size_t capacity;
-    // indicates the next index available to put the message (should be atomic referenced)
+    // indicates the next index available to put the message (should be atomic
+    // referenced)
     size_t next;
 };
 
 struct MessageQueueEntry {
-    // number of subscribers that have taken the payload (should be atomic referenced)
+    // number of subscribers that have taken the payload (should be atomic
+    // referenced)
     uint32_t taken_num;
     // address offset of the allocated space for the payload
+    // (its first bit is used to determine if the relevant space is freed)
     size_t offset;
     // size of the payload
     size_t size;
-    // a bitmap indicates whether the payload exists in the corresponding domain (should be atomic referenced)
-    uint32_t avail;
 };
 
 inline uint16_t Domain::getId() const {
@@ -61,16 +54,18 @@ inline Tlsf::Header* getTlsfHeader(TopicHeader* topic_header) {
     return (Tlsf::Header*) ((uintptr_t) topic_header + sizeof(TopicHeader));
 }
 
-inline DomainMap* getDomainMap(Tlsf::Header* tlsf_header) {
-    return (DomainMap*) ((uintptr_t) tlsf_header + sizeof(Tlsf::Header) + tlsf_header->block_count * sizeof(Tlsf::BlockMetadata));
+inline MessageQueueHeader* getMessageQueueHeader(Tlsf::Header* tlsf_header) {
+    return (MessageQueueHeader*) ((uintptr_t) tlsf_header +
+                                  sizeof(Tlsf::Header) +
+                                  tlsf_header->block_count *
+                                      sizeof(Tlsf::BlockMetadata));
 }
 
-inline MessageQueueHeader* getMessageQueueHeader(DomainMap* domain_map) {
-    return (MessageQueueHeader*) ((uintptr_t) domain_map + sizeof(DomainMap));
-}
-
-inline MessageQueueEntry* getMessageQueueEntry(MessageQueueHeader* mq_header, size_t idx) {
-    return (MessageQueueEntry*) ((uintptr_t) mq_header + sizeof(MessageQueueHeader) + idx * sizeof(MessageQueueEntry));
+inline MessageQueueEntry* getMessageQueueEntry(MessageQueueHeader* mq_header,
+                                               size_t idx) {
+    return (MessageQueueEntry*) ((uintptr_t) mq_header +
+                                 sizeof(MessageQueueHeader) +
+                                 idx * sizeof(MessageQueueEntry));
 }
 
 #endif  // TYPES_HPP

@@ -11,7 +11,6 @@ namespace nb = nanobind;
 #endif
 #include <zenoh.hxx>
 
-#include "metadata.hpp"
 #include "node/node.hpp"
 
 class Subscriber : public Node {
@@ -25,8 +24,7 @@ public:
 #endif
 
     Subscriber() = delete;
-    Subscriber(const char* topic_name, const char* llocator,
-               const Domain& domain, size_t pool_size);
+    Subscriber(const char* topic_name, const char* llocator, size_t pool_size);
     ~Subscriber();
 
     void sub(MessageHandler handler);
