@@ -19,9 +19,11 @@ Tlsf::Tlsf(Header* tlsf_header) : tlsf_header(tlsf_header) {
 }
 
 size_t Tlsf::malloc(size_t size) {
-    if (size == 0 || size > this->tlsf_header->aligned_pool_size) return -1;
+    if (size == 0) return -1;
 
     size = this->alignSize(size);
+    if (size > this->tlsf_header->aligned_pool_size) return -1;
+
     int fidx, sidx;
     this->mapping(size, &fidx, &sidx);
 
