@@ -6,7 +6,7 @@
 
 #include "alloc_algo/tlsf.hpp"
 
-enum DeviceType { kHost, kGPU };
+enum class DeviceType : uint8_t { kHost, kGPU };
 
 struct Domain {
     uint16_t getId() const;
