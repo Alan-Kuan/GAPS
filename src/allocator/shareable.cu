@@ -21,10 +21,9 @@ ShareableAllocator::ShareableAllocator(TopicHeader* topic_header,
                                        bool read_only,
                                        const std::string& sock_file_dir)
         : Allocator(topic_header, read_only), sock_file_dir(sock_file_dir) {
+    std::filesystem::create_directory(sock_file_dir);
     this->createPool(topic_header->pool_size);
     this->allocator = new Tlsf(getTlsfHeader(topic_header));
-
-    std::filesystem::create_directory(sock_file_dir);
 }
 
 ShareableAllocator::~ShareableAllocator() { this->removePool(); }
