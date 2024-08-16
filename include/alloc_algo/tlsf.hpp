@@ -44,7 +44,7 @@ public:
         uint32_t first_lvl;
         // indicate if any block exists in the list indexed by `fidx` and `sidx`
         uint32_t second_lvl[kFstLvlCnt];
-        // free lists of blocks (saved in the form of their indices)
+        // free lists of blocks (saved in the form of "block_idx + 1")
         size_t free_lists[kFstLvlCnt][kSndLvlCnt];
     };
 

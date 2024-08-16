@@ -87,7 +87,7 @@ size_t Tlsf::findSuitableBlock(size_t size, int* fidx, int* sidx) {
     }
 
     *sidx = __builtin_ffs(non_empty_lists) - 1;
-    return this->tlsf_header->free_lists[*fidx][*sidx];
+    return this->tlsf_header->free_lists[*fidx][*sidx] - 1;
 }
 
 size_t Tlsf::splitBlock(size_t block_idx, size_t size) {
@@ -134,11 +134,11 @@ void Tlsf::insertBlock(size_t block_idx) {
     this->tlsf_header->first_lvl |= 1 << fidx;
     this->tlsf_header->second_lvl[fidx] |= 1 << sidx;
 
-    size_t head_idx = this->tlsf_header->free_lists[fidx][sidx];
+    size_t head_idx = this->tlsf_header->free_lists[fidx][sidx] - 1;
     if (head_idx != -1) this->blocks[head_idx].prev_free_idx = block_idx;
     block->prev_free_idx = -1;
     block->next_free_idx = head_idx;
-    this->tlsf_header->free_lists[fidx][sidx] = block_idx;
+    this->tlsf_header->free_lists[fidx][sidx] = block_idx + 1;
     this->tlsf_header->lock.unlock();
 }
 
@@ -160,8 +160,8 @@ void Tlsf::removeBlock(size_t block_idx, int fidx, int sidx) {
     if (prev_idx != -1) this->blocks[prev_idx].next_free_idx = next_idx;
     if (next_idx != -1) this->blocks[next_idx].prev_free_idx = prev_idx;
 
-    if (this->tlsf_header->free_lists[fidx][sidx] == block_idx) {
-        this->tlsf_header->free_lists[fidx][sidx] = next_idx;
+    if (this->tlsf_header->free_lists[fidx][sidx] - 1 == block_idx) {
+        this->tlsf_header->free_lists[fidx][sidx] = next_idx + 1;
 
         if (next_idx == -1) {
             this->tlsf_header->second_lvl[fidx] &= ~(1U << sidx);
