@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
 
@@ -17,9 +18,9 @@ using namespace std;
 using namespace hlp;
 
 void pubTest(size_t size, size_t times);
-void subTest();
+void subTest(size_t size, size_t times);
 
-const char kTopic[] = "test0-p2p";
+const char kTopic[] = "latency-test";
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
 const size_t kPoolSize = 65536;
 
@@ -39,13 +40,15 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
     int node_type = stoi(argv[1]);
+    size_t size = stoul(argv[2]);
+    size_t times = stoul(argv[3]);
 
     switch (node_type) {
     case 0:
-        pubTest(stoul(argv[2]), stoul(argv[3]));
+        pubTest(size, times);
         break;
     case 1:
-        subTest();
+        subTest(size, times);
         break;
     default:
         cerr << "Unknown type" << endl;
@@ -84,10 +87,12 @@ void pubTest(size_t size, size_t times) {
         exit(1);
     }
 
-    timer.dump("pub-log-test1.csv");
+    char filename[64];
+    sprintf(filename, "pub-log-%lu-%lu.csv", size, times);
+    timer.dump(filename);
 }
 
-void subTest() {
+void subTest(size_t size, size_t times) {
     Timer timer(10000);
 
     try {
@@ -111,5 +116,7 @@ void subTest() {
         exit(1);
     }
 
-    timer.dump("sub-log-test1.csv");
+    char filename[64];
+    sprintf(filename, "sub-log-%lu-%lu.csv", size, times);
+    timer.dump(filename);
 }
