@@ -88,7 +88,8 @@ void Subscriber::sub(MessageHandler handler) {
         if (std::atomic_ref<uint32_t>(mq_entry->taken_num).fetch_add(1) ==
             topic_header->sub_count - 1) {
             this->allocator->free(offset);
-            mq_entry->offset ^= 1;
+            // remove the label that indicates the payload is not freed
+            mq_entry->offset = offset;
         }
     };
 
