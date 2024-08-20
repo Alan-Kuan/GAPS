@@ -89,13 +89,13 @@ void Publisher::put(void* payload, size_t size) {
     MessageQueueHeader* mq_header =
         getMessageQueueHeader(getTlsfHeader(getTopicHeader(this->shm_base)));
 #ifdef BUILD_PYSHOZ
-    msg_buf.msg_id =
-        std::atomic_ref<size_t>(mq_header->next).fetch_add(1) % kMaxMessageNum;
+    msg_buf.msg_id = std::atomic_ref<size_t>(mq_header->next).fetch_add(1) %
+                     mq_header->capacity;
     MessageQueueEntry* mq_entry =
         getMessageQueueEntry(mq_header, msg_buf.msg_id);
 #else
-    size_t msg_id =
-        std::atomic_ref<size_t>(mq_header->next).fetch_add(1) % kMaxMessageNum;
+    size_t msg_id = std::atomic_ref<size_t>(mq_header->next).fetch_add(1) %
+                    mq_header->capacity;
     MessageQueueEntry* mq_entry = getMessageQueueEntry(mq_header, msg_id);
 #endif
 
