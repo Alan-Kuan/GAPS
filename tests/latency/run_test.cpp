@@ -65,9 +65,7 @@ void pubTest(size_t size, size_t times) {
     Timer timer(10000);
 
     try {
-        timer.setPoint();
         Publisher pub(kTopic, kDftLLocator, kPoolSize);
-        timer.setPoint();
 
         char* arr = new char[size];
         for (int i = 0; i < size; i++) arr[i] = rand() % 10;
@@ -75,7 +73,6 @@ void pubTest(size_t size, size_t times) {
         for (int i = 0; i < times; i++) {
             timer.setPoint();
             pub.put(arr, size);
-            timer.setPoint();
         }
 
         delete[] arr;
@@ -96,15 +93,11 @@ void subTest(size_t size, size_t times) {
     Timer timer(10000);
 
     try {
-        timer.setPoint();
         Subscriber sub(kTopic, kDftLLocator, kPoolSize);
-        timer.setPoint();
 
         auto handler = [&timer](void* msg, size_t size) { timer.setPoint(); };
 
-        timer.setPoint();
         sub.sub(handler);
-        timer.setPoint();
 
         cout << "Type enter to leave" << endl;
         cin.get();
