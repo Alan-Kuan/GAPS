@@ -16,7 +16,7 @@
 using namespace std;
 using namespace hlp;
 
-void pubTest(size_t tsize, size_t times);
+void pubTest(size_t size, size_t times);
 void subTest();
 
 const char kTopic[] = "test0-p2p";
@@ -55,25 +55,23 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void pubTest(size_t tsize, size_t times) {
-    cout << "size: " << tsize << endl;
+void pubTest(size_t size, size_t times) {
+    cout << "size: " << size << endl;
     cout << "times: " << times << endl;
 
     Timer timer(10000);
-    size_t arr_size = tsize;
-    size_t count = arr_size / sizeof(int);
 
     try {
         timer.setPoint();
         Publisher pub(kTopic, kDftLLocator, kPoolSize);
         timer.setPoint();
 
-        int* arr = new int[count];
-        for (int i = 0; i < count; i++) arr[i] = rand() % 10;
+        char* arr = new char[size];
+        for (int i = 0; i < size; i++) arr[i] = rand() % 10;
 
         for (int i = 0; i < times; i++) {
             timer.setPoint();
-            pub.put(arr, arr_size);
+            pub.put(arr, size);
             timer.setPoint();
         }
 
