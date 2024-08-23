@@ -71,10 +71,10 @@ size_t Tlsf::alignSize(size_t size) const {
 }
 
 size_t Tlsf::findSuitableBlock(size_t size, int* fidx, int* sidx) {
-    // non-empty lists indexed by `*fidx` and second-level indices not less than
+    // non-empty lists indexed by `*fidx` and second-level indices larger than
     // `*sidx`
     uint32_t non_empty_lists =
-        this->tlsf_header->second_lvl[*fidx] & (~0U << *sidx);
+        this->tlsf_header->second_lvl[*fidx] & (~0U << (*sidx + 1));
 
     if (!non_empty_lists) {
         // let's look for larger blocks in first level
