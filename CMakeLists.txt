@@ -27,9 +27,9 @@ find_package(nanobind CONFIG REQUIRED)
 
 include(FetchContent)
 
-FetchContent_declare(zenohpico GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-pico" GIT_TAG 0.11.0.3)
+FetchContent_declare(zenohpico GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-pico" GIT_TAG 0.11.0)
 FetchContent_MakeAvailable(zenohpico)
-FetchContent_declare(zenohcpp GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp" GIT_TAG 0.11.0.3)
+FetchContent_declare(zenohcpp GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp" GIT_TAG 0.11.0)
 FetchContent_MakeAvailable(zenohcpp)
 
 # Utility Function
