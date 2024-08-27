@@ -1,5 +1,7 @@
 #include "alloc_algo/tlsf.hpp"
 
+#include <semaphore.h>
+
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
@@ -28,14 +30,14 @@ size_t Tlsf::malloc(size_t size) {
     this->mapping(size, &fidx, &sidx);
 
     // prevent the found block from being removed in mergeBlock()
-    this->tlsf_header->lock.lock();
+    sem_wait(&this->tlsf_header->lock);
     size_t block_idx = findSuitableBlock(size, &fidx, &sidx);
     if (block_idx == -1) {
-        this->tlsf_header->lock.unlock();
+        sem_post(&this->tlsf_header->lock);
         return -1;
     }
     this->removeBlock(block_idx, fidx, sidx);
-    this->tlsf_header->lock.unlock();
+    sem_post(&this->tlsf_header->lock);
 
     if (this->blocks[block_idx].getSize() > size) {
         size_t rest_block_idx = this->splitBlock(block_idx, size);
@@ -108,7 +110,7 @@ size_t Tlsf::mergeBlock(size_t block_idx) {
 
     // prevent next block or previous block chosen by findSuitableBlock() before
     // removeBlock() is called
-    this->tlsf_header->lock.lock();
+    sem_wait(&this->tlsf_header->lock);
     if (block_idx < this->tlsf_header->block_count - 1 &&
         (next->header & kBlockFreeFlag)) {
         block->header += next->getSize();
@@ -119,7 +121,7 @@ size_t Tlsf::mergeBlock(size_t block_idx) {
         this->removeBlock(block_idx);
         new_block_idx = block_idx - 1;
     }
-    this->tlsf_header->lock.unlock();
+    sem_post(&this->tlsf_header->lock);
 
     return new_block_idx;
 }
@@ -130,7 +132,7 @@ void Tlsf::insertBlock(size_t block_idx) {
     int fidx, sidx;
     this->mapping(block->getSize(), &fidx, &sidx);
 
-    this->tlsf_header->lock.lock();
+    sem_wait(&this->tlsf_header->lock);
     this->tlsf_header->first_lvl |= 1 << fidx;
     this->tlsf_header->second_lvl[fidx] |= 1 << sidx;
 
@@ -139,7 +141,7 @@ void Tlsf::insertBlock(size_t block_idx) {
     block->prev_free_idx = -1;
     block->next_free_idx = head_idx;
     this->tlsf_header->free_lists[fidx][sidx] = block_idx + 1;
-    this->tlsf_header->lock.unlock();
+    sem_post(&this->tlsf_header->lock);
 }
 
 // remove the block from the list

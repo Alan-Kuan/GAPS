@@ -1,17 +1,13 @@
 # Shoz
 shoz_add_target(node
     SRCS node/node.cpp node/publisher.cpp node/subscriber.cpp
-    LIBS CUDA::cuda_driver zenohcxx::zenohpico allocator ticket_lock error)
+    LIBS CUDA::cuda_driver zenohcxx::zenohpico allocator error)
 shoz_add_target(allocator
     SRCS allocator/allocator.cpp allocator/shareable.cu
     LIBS CUDA::cuda_driver alloc_algo error
     PIC)
 shoz_add_target(alloc_algo
     SRCS alloc_algo/tlsf.cpp
-    LIBS ticket_lock
-    PIC)
-shoz_add_target(ticket_lock
-    SRCS ticket_lock.cpp
     PIC)
 shoz_add_target(error
     SRCS error.cpp
@@ -38,5 +34,4 @@ target_link_libraries(pyshoz
     zenohcxx::zenohpico
     allocator
     alloc_algo
-    ticket_lock
     error)

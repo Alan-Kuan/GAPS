@@ -1,10 +1,10 @@
 #ifndef TLSF_HPP
 #define TLSF_HPP
 
+#include <semaphore.h>
+
 #include <cstddef>
 #include <cstdint>
-
-#include "ticket_lock.hpp"
 
 class Tlsf {
 public:
@@ -32,8 +32,7 @@ public:
     };
 
     struct Header {
-        // this is a spin lock; keep the critical section tiny
-        TicketLock lock;
+        sem_t lock;
         // whether the pool has been initialized (should be atomic referenced)
         bool inited;
         // aligned to a multiple of the minimum block size

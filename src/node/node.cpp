@@ -1,6 +1,7 @@
 #include "node/node.hpp"
 
 #include <fcntl.h>
+#include <semaphore.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -47,6 +48,7 @@ Node::Node(const char* topic_name, size_t pool_size) {
     // space will be wasted
     tlsf_header->aligned_pool_size = block_count * Tlsf::kBlockMinSize;
     tlsf_header->block_count = block_count;
+    throwOnError(sem_init(&tlsf_header->lock, 1, 1));
 
     mq_header->capacity = kMaxMessageNum;
 }
