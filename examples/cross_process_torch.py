@@ -4,7 +4,7 @@ import torch
 import pyshoz
 
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
-POOL_SIZE = 3 * 1024 * 1024;  # 3 MiB
+POOL_SIZE = 4 * 1024 * 1024;  # 4 MiB
 
 def main():
     parser = argparse.ArgumentParser()

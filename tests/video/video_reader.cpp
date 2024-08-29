@@ -16,7 +16,7 @@ using namespace cv;
 
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
 const char kTopicName[] = "video";
-constexpr size_t kPoolSize = 3 * 1024 * 1024;  // 3 MiB
+constexpr size_t kPoolSize = 4 * 1024 * 1024;  // 4 MiB
 
 void printUsageAndExit(char* program_name);
 void matToVec(Mat& m, vector<uchar>& v);

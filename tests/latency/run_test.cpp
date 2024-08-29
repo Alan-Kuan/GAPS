@@ -22,7 +22,7 @@ void subTest(size_t size, size_t times);
 
 const char kTopic[] = "latency-test";
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
-const size_t kPoolSize = 65536;
+constexpr size_t kPoolSize = 2 * 1024 * 1024;  // 2 MiB
 
 int main(int argc, char* argv[]) {
     if (argc < 2 || (stoi(argv[1]) == 0 && argc < 4)) {

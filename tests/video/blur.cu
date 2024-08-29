@@ -15,7 +15,7 @@ using namespace cv;
 
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
 const char kTopicName[] = "video";
-constexpr size_t kPoolSize = 3 * 1024 * 1024;  // 3 MiB
+constexpr size_t kPoolSize = 4 * 1024 * 1024;  // 4 MiB
 
 __global__ void conv(uchar* frame_in, uchar* frame_out, size_t frame_width,
                      size_t frame_height, double* kernel, size_t kernel_width);
