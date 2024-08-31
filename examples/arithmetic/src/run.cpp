@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <string>
 
+#include <cuda_runtime.h>
 #include <zenoh.hxx>
 
 #include "node/publisher.hpp"
