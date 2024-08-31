@@ -1,7 +1,6 @@
 find_package(OpenCV REQUIRED)
 
 set(common_libs
-    CUDA::cuda_driver
     zenohcxx::zenohpico
     opencv_core
     opencv_imgproc
