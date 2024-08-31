@@ -16,7 +16,7 @@ public:
     static const int kFstLvlCnt = 32;
     static const int kSndLvlIdx = 4;
     static constexpr int kSndLvlCnt = 1 << kSndLvlIdx;
-    static constexpr size_t kBlockMinSize = 1 << kSndLvlIdx;
+    static const size_t kBlockMinSize = 16;
 
     class BlockMetadata {
     public:
