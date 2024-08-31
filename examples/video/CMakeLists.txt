@@ -16,5 +16,5 @@ shoi_add_target(pub_preproc
 shoi_add_target(sub_blur
     IS_EXE
     SRCS sub_blur.cpp blur.cu
-    INCS ${OpenCV_INCLUDE_DIRS}
-    LIBS ${common_libs} CUDA::cudart)
+    INCS ${OpenCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/..
+    LIBS ${common_libs} CUDA::cudart helpers)

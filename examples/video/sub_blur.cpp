@@ -6,11 +6,11 @@
 #include <stdexcept>
 
 #include <cuda_runtime.h>
-#include <iceoryx_hoofs/posix_wrapper/signal_watcher.hpp>
 #include <iceoryx_posh/runtime/posh_runtime.hpp>
 #include <opencv2/videoio.hpp>
 
 #include "blur.hpp"
+#include "helpers.hpp"
 #include "node/subscriber.hpp"
 
 using namespace std;
@@ -84,8 +84,8 @@ int main(int argc, char* argv[]) {
         };
         Subscriber sub(kTopicName, kPoolSize, handler);
 
-        cout << "Ctrl+C to leave" << endl;
-        iox::posix::waitForTerminationRequest();
+        cout << "Ctrl+C to continue" << endl;
+        hlp::waitForSigInt();
 
         cudaFree(filter_d);
         cudaFree(frame_blurred_d);

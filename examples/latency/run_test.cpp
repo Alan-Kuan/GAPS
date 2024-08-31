@@ -7,7 +7,6 @@
 #include <stdexcept>
 #include <string>
 
-#include <iceoryx_hoofs/posix_wrapper/signal_watcher.hpp>
 #include <iceoryx_posh/runtime/posh_runtime.hpp>
 
 #include "helpers.hpp"
@@ -102,7 +101,7 @@ void subTest(const char* output_name) {
         Subscriber sub(kTopic, kPoolSize, handler);
 
         cout << "Ctrl+C to leave" << endl;
-        iox::posix::waitForTerminationRequest();
+        hlp::waitForSigInt();
     } catch (runtime_error& err) {
         cerr << "Subscriber: " << err.what() << endl;
         exit(1);

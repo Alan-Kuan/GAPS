@@ -7,9 +7,9 @@
 #include <stdexcept>
 
 #include <cuda_runtime.h>
-#include <iceoryx_hoofs/posix_wrapper/signal_watcher.hpp>
 #include <iceoryx_posh/runtime/posh_runtime.hpp>
 
+#include "helpers.hpp"
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
 #include "vector_arithmetic.hpp"
@@ -190,8 +190,8 @@ void runAsSubscriber(int job) {
         }
         Subscriber subscriber(kTopicName, kPoolSize, handler);
 
-        cout << "Ctrl+C to stop" << endl;
-        iox::posix::waitForTerminationRequest();
+        cout << "Ctrl+C to leave" << endl;
+        hlp::waitForSigInt();
     } catch (runtime_error& err) {
         cerr << "Subscriber: " << err.what() << endl;
         exit(1);

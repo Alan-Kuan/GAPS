@@ -54,4 +54,7 @@ private:
     uint16_t* labels;
 };
 
+// block until Ctrl+C is sent
+void waitForSigInt();
+
 }  // namespace hlp
