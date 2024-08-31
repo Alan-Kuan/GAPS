@@ -20,7 +20,7 @@ void runAsPublisher(const char* llocator, int n);
 void runAsSubscriber(const char* llocator, int job);
 
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
-const char kTopicName[] = "cross_process";
+const char kTopicName[] = "arithmetic";
 const size_t kPoolSize = 2 * 1024 * 1024;  // 2 MiB
 
 extern char* optarg;
