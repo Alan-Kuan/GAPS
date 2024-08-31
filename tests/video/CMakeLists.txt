@@ -7,14 +7,14 @@ set(common_libs
     opencv_videoio
     node)
 
-shoz_add_target(video_reader
+shoz_add_target(pub_preproc
     IS_EXE
-    SRCS video_reader.cpp
+    SRCS pub_preproc.cpp
     INCS ${OpenCV_INCLUDE_DIRS}
     LIBS ${common_libs})
 
-shoz_add_target(blur
+shoz_add_target(sub_blur
     IS_EXE
-    SRCS blur.cu
+    SRCS sub_blur.cpp blur.cu
     INCS ${OpenCV_INCLUDE_DIRS}
-    LIBS ${common_libs})
+    LIBS ${common_libs} CUDA::cudart)
