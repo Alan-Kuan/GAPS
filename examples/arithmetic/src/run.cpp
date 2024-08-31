@@ -10,6 +10,7 @@
 #include <cuda_runtime.h>
 #include <zenoh.hxx>
 
+#include "helpers.hpp"
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
 #include "vector_arithmetic.hpp"
@@ -198,8 +199,8 @@ void runAsSubscriber(const char* llocator, int job) {
         }
         subscriber.sub(handler);
 
-        cout << "Type enter to continue..." << endl;
-        cin.get();
+        cout << "Ctrl+C to leave" << endl;
+        hlp::waitForSigInt();
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);

@@ -105,8 +105,8 @@ void subTest(const char* output_name) {
 
         sub.sub(handler);
 
-        cout << "Type enter to leave" << endl;
-        cin.get();
+        cout << "Ctrl+C to leave" << endl;
+        hlp::waitForSigInt();
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);

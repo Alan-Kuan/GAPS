@@ -1,4 +1,5 @@
-include_directories(.)
+shoz_add_target(helpers
+    SRCS helpers.cpp)
 
 add_subdirectory(arithmetic)
 add_subdirectory(latency)

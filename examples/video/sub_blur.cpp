@@ -10,6 +10,7 @@
 #include <zenoh.hxx>
 
 #include "blur.hpp"
+#include "helpers.hpp"
 #include "node/subscriber.hpp"
 
 using namespace std;
@@ -83,8 +84,8 @@ int main(int argc, char* argv[]) {
             writer.write(Mat(316, 600, CV_8UC3, frame_blurred));
         });
 
-        cout << "Type enter to continue" << endl;
-        cin.get();
+        cout << "Ctrl+C to continue" << endl;
+        hlp::waitForSigInt();
 
         cudaFree(filter_d);
         cudaFree(frame_blurred_d);
