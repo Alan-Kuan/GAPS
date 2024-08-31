@@ -4,42 +4,35 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-
-#include <zenoh-pico/config.h>
-#include <zenoh.hxx>
+#include <iceoryx_posh/capro/service_description.hpp>
+#include <iceoryx_posh/popo/subscriber.hpp>
 
 #include "allocator/allocator.hpp"
 #include "allocator/shareable.hpp"
 #include "error.hpp"
 #include "metadata.hpp"
 
-#ifdef BUILD_PYSHOZ
-#include <nanobind/ndarray.h>
-
-namespace nb = nanobind;
-
-struct MsgBuf {
-    size_t msg_id;
-    nb::dlpack::dtype dtype;
-    int32_t ndim;
-    int64_t shape[3];
-    int64_t strides[3];
-};
-#endif
-
-Subscriber::Subscriber(const char* topic_name, const char* llocator,
-                       size_t pool_size)
+Subscriber::Subscriber(const char* topic_name, size_t pool_size,
+                       MessageHandler handler)
         : Node(topic_name, pool_size),
-          z_session(nullptr),
-          z_subscriber(nullptr) {
-    zenoh::Config config;
-    config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
-    config.insert(Z_CONFIG_LISTEN_KEY, llocator);
-    this->z_session =
-        zenoh::expect<zenoh::Session>(zenoh::open(std::move(config)));
+          iox_subscriber({"", "shoi",
+                          iox::capro::IdString_t(iox::cxx::TruncateToCapacity,
+                                                 topic_name)}),
+          handler(handler) {
+    TopicHeader* topic_header = getTopicHeader(this->shm_base);
+    std::atomic_ref<uint32_t>(topic_header->sub_count)++;
+    this->mq_header = getMessageQueueHeader(getTlsfHeader(topic_header));
 
     this->allocator = (Allocator*) new ShareableAllocator(
         (TopicHeader*) this->shm_base, true);
+
+    this->iox_listener
+        .attachEvent(this->iox_subscriber,
+                     iox::popo::SubscriberEvent::DATA_RECEIVED,
+                     iox::popo::createNotificationCallback(
+                         this->onSampleReceived, *this))
+        .or_else(
+            [](auto) { throwError("Failed to register message handler"); });
 }
 
 Subscriber::~Subscriber() {
@@ -47,60 +40,25 @@ Subscriber::~Subscriber() {
     std::atomic_ref<uint32_t>(topic_header->sub_count)--;
 }
 
-void Subscriber::sub(MessageHandler handler) {
-    TopicHeader* topic_header = getTopicHeader(this->shm_base);
-    std::atomic_ref<uint32_t>(topic_header->sub_count)++;
-
-    MessageQueueHeader* mq_header =
-        getMessageQueueHeader(getTlsfHeader(topic_header));
-
-    auto callback = [=, this](const zenoh::Sample& sample) {
-        zenoh::BytesView msg = sample.get_payload();
-
-#ifdef BUILD_PYSHOZ
-        auto msg_buf = (MsgBuf*) msg.as_string_view().data();
+void Subscriber::onSampleReceived(iox::popo::Subscriber<size_t>* iox_subscriber,
+                                  Subscriber* self) {
+    iox_subscriber->take().and_then([iox_subscriber, self](auto& msg_id) {
+        TopicHeader* topic_header = getTopicHeader(self->shm_base);
         MessageQueueEntry* mq_entry =
-            getMessageQueueEntry(mq_header, msg_buf->msg_id);
-#else
-        size_t msg_id = *((size_t*) msg.as_string_view().data());
-        MessageQueueEntry* mq_entry = getMessageQueueEntry(mq_header, msg_id);
-#endif
+            getMessageQueueEntry(self->mq_header, *msg_id);
 
         size_t offset = mq_entry->offset ^ 1;
         void* data =
-            (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
+            (void*) ((uintptr_t) self->allocator->getPoolBase() + offset);
 
-#ifdef BUILD_PYSHOZ
-        {
-            nb::gil_scoped_acquire acq;
-            const int64_t* strides =
-                msg_buf->strides[0] ? msg_buf->strides : nullptr;
-            nb::ndarray<nb::pytorch, nb::device::cuda> tensor(
-                data, msg_buf->ndim, (const size_t*) msg_buf->shape,
-                nb::handle(), strides, msg_buf->dtype, nb::device::cuda::value);
-            handler(tensor);
-        }
-#else
-        handler(data, mq_entry->size);
-#endif
+        self->handler(data, mq_entry->size);
 
         // last subscriber reading the message should free the allocation
         if (std::atomic_ref<uint32_t>(mq_entry->taken_num).fetch_add(1) ==
             topic_header->sub_count - 1) {
-            this->allocator->free(offset);
+            self->allocator->free(offset);
             // remove the label that indicates the payload is not freed
             mq_entry->offset = offset;
         }
-    };
-
-    try {
-        char z_topic_name[kMaxTopicNameLen + 6];
-        char* topic_name = (char*) this->shm_base;
-        sprintf(z_topic_name, "shoz/%s", topic_name);
-        this->z_subscriber =
-            zenoh::expect<zenoh::Subscriber>(this->z_session.declare_subscriber(
-                z_topic_name, std::move(callback)));
-    } catch (zenoh::ErrorMessage& err) {
-        throwError(err.as_string_view().data());
-    }
+    });
 }

@@ -1,37 +1,30 @@
 #ifndef SUBSCRIBER_HPP
 #define SUBSCRIBER_HPP
 
+#include <cstddef>
 #include <functional>
-
-#ifdef BUILD_PYSHOZ
-#include <nanobind/ndarray.h>
-#include <nanobind/stl/function.h>
-
-namespace nb = nanobind;
-#endif
-#include <zenoh.hxx>
+#include <iceoryx_posh/popo/listener.hpp>
+#include <iceoryx_posh/popo/subscriber.hpp>
 
 #include "node/node.hpp"
 
 class Subscriber : public Node {
 public:
-#ifdef BUILD_PYSHOZ
-    typedef std::function<void(
-        const nb::ndarray<nb::pytorch, nb::device::cuda>&)>
-        MessageHandler;
-#else
     typedef std::function<void(void*, size_t)> MessageHandler;
-#endif
 
     Subscriber() = delete;
-    Subscriber(const char* topic_name, const char* llocator, size_t pool_size);
+    Subscriber(const char* topic_name, size_t pool_size,
+               MessageHandler handler);
     ~Subscriber();
 
-    void sub(MessageHandler handler);
-
 protected:
-    zenoh::Session z_session;
-    zenoh::Subscriber z_subscriber;
+    iox::popo::Subscriber<size_t> iox_subscriber;
+    iox::popo::Listener iox_listener;
+    MessageHandler handler;
+    MessageQueueHeader* mq_header;
+
+    static void onSampleReceived(iox::popo::Subscriber<size_t>* iox_subscriber,
+                                 Subscriber* self);
 };
 
 #endif  // SUBSCRIBER_HPP

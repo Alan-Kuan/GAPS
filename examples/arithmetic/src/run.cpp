@@ -3,12 +3,12 @@
 #include <cstddef>
 #include <cstdlib>
 #include <ctime>
+#include <iceoryx_hoofs/posix_wrapper/signal_watcher.hpp>
+#include <iceoryx_posh/runtime/posh_runtime.hpp>
 #include <iostream>
 #include <stdexcept>
-#include <string>
 
 #include <cuda_runtime.h>
-#include <zenoh.hxx>
 
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
@@ -17,10 +17,9 @@
 using namespace std;
 
 void printUsageAndExit(char* program_name);
-void runAsPublisher(const char* llocator, int n);
-void runAsSubscriber(const char* llocator, int job);
+void runAsPublisher(int n);
+void runAsSubscriber(int job);
 
-const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
 const char kTopicName[] = "arithmetic";
 const size_t kPoolSize = 2 * 1024 * 1024;  // 2 MiB
 
@@ -74,18 +73,17 @@ int main(int argc, char* argv[]) {
     }
     if (n <= 0 || job < 1 || job > 3) printUsageAndExit(argv[0]);
 
-    const char* llocator = optind < argc ? argv[optind] : kDftLLocator;
     if (run_as_pub) {
-        runAsPublisher(llocator, n);
+        runAsPublisher(n);
     } else {
-        runAsSubscriber(llocator, job);
+        runAsSubscriber(job);
     }
 
     return 0;
 }
 
 void printUsageAndExit(char* program_name) {
-    cerr << "Usage: " << program_name << " OPTIONS L_LOCATOR" << endl << endl;
+    cerr << "Usage: " << program_name << " OPTIONS" << endl << endl;
     cerr << "OPTIONS:" << endl;
     cerr << "  -p N     run as a publisher" << endl;
     cerr << "     N     number of messages to publish" << endl;
@@ -93,19 +91,16 @@ void printUsageAndExit(char* program_name) {
     cerr << "     JOB=1 element-wise addition for 2 vectors" << endl;
     cerr << "     JOB=2 element-wise multiplication for 2 vectors" << endl;
     cerr << "     JOB=3 modify shared readonly memory" << endl << endl;
-    cerr << "L_LOCATOR:" << endl;
-    cerr << "  listening locator string for p2p mode (Default: "
-            "udp/224.0.0.123:7447#iface=lo)"
-         << endl;
     exit(1);
 }
 
-void runAsPublisher(const char* llocator, int n) {
+void runAsPublisher(int n) {
     cout << "Run as a publisher" << endl;
     srand(time(nullptr) + getpid());
 
     try {
-        Publisher publisher(kTopicName, llocator, kPoolSize);
+        iox::runtime::PoshRuntime::initRuntime("cross_process_publisher");
+        Publisher publisher(kTopicName, kPoolSize);
         int arr[128];
 
         for (int T = 0; T < n; T++) {
@@ -119,16 +114,13 @@ void runAsPublisher(const char* llocator, int n) {
 
             publisher.put(arr, sizeof(int) * 128);
         }
-    } catch (zenoh::ErrorMessage& err) {
-        cerr << "Zenoh: " << err.as_string_view() << endl;
-        exit(1);
     } catch (runtime_error& err) {
         cerr << "Publisher: " << err.what() << endl;
         exit(1);
     }
 }
 
-void runAsSubscriber(const char* llocator, int job) {
+void runAsSubscriber(int job) {
     switch (job) {
     case 1:
         cout << "Run as a subscriber (element-wise addition)" << endl;
@@ -143,7 +135,7 @@ void runAsSubscriber(const char* llocator, int job) {
     }
 
     try {
-        Subscriber subscriber(kTopicName, llocator, kPoolSize);
+        iox::runtime::PoshRuntime::initRuntime("cross_process_subscriber");
         Subscriber::MessageHandler handler;
 
         switch (job) {
@@ -196,13 +188,10 @@ void runAsSubscriber(const char* llocator, int job) {
             };
             break;
         }
-        subscriber.sub(handler);
+        Subscriber subscriber(kTopicName, kPoolSize, handler);
 
-        cout << "Type enter to continue..." << endl;
-        cin.get();
-    } catch (zenoh::ErrorMessage& err) {
-        cerr << "Zenoh: " << err.as_string_view() << endl;
-        exit(1);
+        cout << "Ctrl+C to stop" << endl;
+        iox::posix::waitForTerminationRequest();
     } catch (runtime_error& err) {
         cerr << "Subscriber: " << err.what() << endl;
         exit(1);
