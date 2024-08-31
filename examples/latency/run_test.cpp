@@ -73,6 +73,9 @@ void pubTest(size_t size, size_t times) {
         for (int i = 0; i < times; i++) {
             timer.setPoint();
             pub.put(arr, size);
+            // NOTE: iceoryx subscriber may miss messages if publishes too
+            // frequently
+            usleep(50000);  // 50ms
         }
 
         delete[] arr;
