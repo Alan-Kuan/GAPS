@@ -10,8 +10,9 @@ class Tlsf {
 public:
     static constexpr int kWidthMinusOne = (sizeof(size_t) << 3) - 1;
 
-    static const size_t kBlockFlagBits = 0b1;
-    static const size_t kBlockFreeFlag = 0b1;
+    static const size_t kBlockFlagBits = 0b11;
+    static const size_t kBlockFreeFlag = 0b01;
+    static const size_t kBlockLastFlag = 0b10;
 
     static const int kFstLvlCnt = 32;
     static const int kSndLvlIdx = 4;
@@ -27,6 +28,7 @@ public:
     private:
         // block size and free bit (LSB is used as free bit)
         size_t header;
+        size_t phys_prev_idx;
         size_t prev_free_idx;
         size_t next_free_idx;
     };

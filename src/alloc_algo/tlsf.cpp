@@ -15,7 +15,8 @@ Tlsf::Tlsf(Header* tlsf_header) : tlsf_header(tlsf_header) {
         std::atomic_ref<bool>(tlsf_header->inited).exchange(true);
     if (!pool_inited) {
         this->blocks[0].header =
-            tlsf_header->aligned_pool_size | kBlockFreeFlag;
+            tlsf_header->aligned_pool_size | kBlockFreeFlag | kBlockLastFlag;
+        this->blocks[0].phys_prev_idx = -1;
         this->insertBlock(0);
     }
 }
@@ -29,7 +30,6 @@ size_t Tlsf::malloc(size_t size) {
     int fidx, sidx;
     this->mapping(size, &fidx, &sidx);
 
-    // prevent the found block from being removed in mergeBlock()
     sem_wait(&this->tlsf_header->lock);
     size_t block_idx = findSuitableBlock(size, &fidx, &sidx);
     if (block_idx == -1) {
@@ -37,23 +37,28 @@ size_t Tlsf::malloc(size_t size) {
         return -1;
     }
     this->removeBlock(block_idx, fidx, sidx);
-    sem_post(&this->tlsf_header->lock);
 
     if (this->blocks[block_idx].getSize() > size) {
         size_t rest_block_idx = this->splitBlock(block_idx, size);
         this->insertBlock(rest_block_idx);
     }
 
+    sem_post(&this->tlsf_header->lock);
     return block_idx * kBlockMinSize;
 }
 
 void Tlsf::free(size_t offset) {
     if (offset == -1) return;
     size_t block_idx = offset / kBlockMinSize;
-    if (this->blocks[block_idx].header & kBlockFreeFlag) return;
+    sem_wait(&this->tlsf_header->lock);
+    if (this->blocks[block_idx].header & kBlockFreeFlag) {
+        sem_post(&this->tlsf_header->lock);
+        return;
+    }
     block_idx = this->mergeBlock(block_idx);
     this->blocks[block_idx].header |= kBlockFreeFlag;
     this->insertBlock(block_idx);
+    sem_post(&this->tlsf_header->lock);
 }
 
 size_t Tlsf::BlockMetadata::getSize() const {
@@ -73,7 +78,7 @@ size_t Tlsf::alignSize(size_t size) const {
 }
 
 size_t Tlsf::findSuitableBlock(size_t size, int* fidx, int* sidx) {
-    // non-empty lists indexed by `*fidx` and second-level indices larger than
+    // non-empty lists indexed by `*fidx` and second-level indices greater than
     // `*sidx`
     uint32_t non_empty_lists =
         this->tlsf_header->second_lvl[*fidx] & (~0U << (*sidx + 1));
@@ -98,30 +103,50 @@ size_t Tlsf::splitBlock(size_t block_idx, size_t size) {
     BlockMetadata* rest_block = this->blocks + rest_block_idx;
 
     rest_block->header = (block->getSize() - size) | kBlockFreeFlag;
+    rest_block->phys_prev_idx = block_idx;
     block->header = size | (block->header & kBlockFlagBits);
+    if (block->header & kBlockLastFlag) {
+        block->header ^= kBlockLastFlag;
+        rest_block->header |= kBlockLastFlag;
+    } else {
+        (rest_block + rest_block->getSize() / kBlockMinSize)->phys_prev_idx =
+            rest_block_idx;
+    }
+
     return rest_block_idx;
 }
 
 size_t Tlsf::mergeBlock(size_t block_idx) {
     BlockMetadata* block = this->blocks + block_idx;
-    BlockMetadata* prev = block - 1;
-    BlockMetadata* next = block + 1;
-    size_t new_block_idx = block_idx;
 
-    // prevent next block or previous block chosen by findSuitableBlock() before
-    // removeBlock() is called
-    sem_wait(&this->tlsf_header->lock);
-    if (block_idx < this->tlsf_header->block_count - 1 &&
-        (next->header & kBlockFreeFlag)) {
+    size_t prev_idx = block->phys_prev_idx;
+    size_t next_idx = block_idx + block->getSize() / kBlockMinSize;
+    BlockMetadata* prev = this->blocks + prev_idx;
+    BlockMetadata* next = this->blocks + next_idx;
+
+    size_t new_block_idx = block_idx;
+    bool block_is_last = block->header & kBlockLastFlag;
+
+    if (!block_is_last && (next->header & kBlockFreeFlag)) {
+        // IMPORTANT: remove block should be done before the size transfer
+        this->removeBlock(next_idx);
         block->header += next->getSize();
-        this->removeBlock(block_idx + 1);
+        block_is_last = next->header & kBlockLastFlag;
     }
-    if (block_idx > 0 && (prev->header & kBlockFreeFlag)) {
+    if (prev_idx != -1 && (prev->header & kBlockFreeFlag)) {
+        // IMPORTANT: remove block should be done before the size transfer
+        this->removeBlock(prev_idx);
         prev->header += block->getSize();
-        this->removeBlock(block_idx);
-        new_block_idx = block_idx - 1;
+        new_block_idx = prev_idx;
     }
-    sem_post(&this->tlsf_header->lock);
+
+    BlockMetadata* new_block = this->blocks + new_block_idx;
+    if (block_is_last) {
+        new_block->header |= kBlockLastFlag;
+    } else {
+        (new_block + new_block->getSize() / kBlockMinSize)->phys_prev_idx =
+            new_block_idx;
+    }
 
     return new_block_idx;
 }
@@ -132,7 +157,6 @@ void Tlsf::insertBlock(size_t block_idx) {
     int fidx, sidx;
     this->mapping(block->getSize(), &fidx, &sidx);
 
-    sem_wait(&this->tlsf_header->lock);
     this->tlsf_header->first_lvl |= 1 << fidx;
     this->tlsf_header->second_lvl[fidx] |= 1 << sidx;
 
@@ -141,7 +165,6 @@ void Tlsf::insertBlock(size_t block_idx) {
     block->prev_free_idx = -1;
     block->next_free_idx = head_idx;
     this->tlsf_header->free_lists[fidx][sidx] = block_idx + 1;
-    sem_post(&this->tlsf_header->lock);
 }
 
 // remove the block from the list
@@ -152,10 +175,6 @@ void Tlsf::removeBlock(size_t block_idx) {
 }
 
 void Tlsf::removeBlock(size_t block_idx, int fidx, int sidx) {
-    // NOTE: Why the following 5 lines should be included in the critical
-    // section is because when neighoring blocks are removed at the same time,
-    // the list may break into 2 parts. E.g., 2 & 3 are removed:
-    // [1]<->[2]<->[3]<->[4] => [1]<->[3] [2]<->[4]
     size_t prev_idx = this->blocks[block_idx].prev_free_idx;
     size_t next_idx = this->blocks[block_idx].next_free_idx;
 
