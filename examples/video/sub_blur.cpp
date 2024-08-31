@@ -6,8 +6,9 @@
 #include <stdexcept>
 
 #include <cuda_runtime.h>
+#include <iceoryx_hoofs/posix_wrapper/signal_watcher.hpp>
+#include <iceoryx_posh/runtime/posh_runtime.hpp>
 #include <opencv2/videoio.hpp>
-#include <zenoh.hxx>
 
 #include "blur.hpp"
 #include "node/subscriber.hpp"
@@ -15,7 +16,6 @@
 using namespace std;
 using namespace cv;
 
-const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
 const char kTopicName[] = "video";
 constexpr size_t kPoolSize = 4 * 1024 * 1024;  // 4 MiB
 
@@ -48,7 +48,6 @@ int main(int argc, char* argv[]) {
         VideoWriter writer(output_path, VideoWriter::fourcc('m', 'p', '4', 'v'),
                            25, Size(600, 316));
 
-        Subscriber sub(kTopicName, kDftLLocator, kPoolSize);
         size_t frame_size = 600 * 316 * 3;
         uchar* frame_blurred_d;
         cudaMalloc(&frame_blurred_d, frame_size);
@@ -68,8 +67,9 @@ int main(int argc, char* argv[]) {
         ofstream out;
         if (dump_hash) out.open("recv.out");
 
-        sub.sub([dump_hash, frame_blurred_d, frame_blurred, filter_d, &out,
-                 &writer](void* data_d, size_t size) {
+        iox::runtime::PoshRuntime::initRuntime("video_subscriber");
+        auto handler = [dump_hash, frame_blurred_d, frame_blurred, filter_d,
+                        &out, &writer](void* data_d, size_t size) {
             if (dump_hash) {
                 cudaMemcpy(frame_blurred, data_d, size, cudaMemcpyDeviceToHost);
                 dump(out, frame_blurred, size);
@@ -81,10 +81,11 @@ int main(int argc, char* argv[]) {
                        cudaMemcpyDeviceToHost);
 
             writer.write(Mat(316, 600, CV_8UC3, frame_blurred));
-        });
+        };
+        Subscriber sub(kTopicName, kPoolSize, handler);
 
-        cout << "Type enter to continue" << endl;
-        cin.get();
+        cout << "Ctrl+C to leave" << endl;
+        iox::posix::waitForTerminationRequest();
 
         cudaFree(filter_d);
         cudaFree(frame_blurred_d);
@@ -92,8 +93,6 @@ int main(int argc, char* argv[]) {
         writer.release();
     } catch (runtime_error& err) {
         cerr << err.what() << endl;
-    } catch (zenoh::ErrorMessage& err) {
-        cerr << err.as_string_view() << endl;
     }
 
     return 0;

@@ -5,16 +5,15 @@
 #include <stdexcept>
 #include <vector>
 
+#include <iceoryx_posh/runtime/posh_runtime.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/videoio.hpp>
-#include <zenoh.hxx>
 
 #include "node/publisher.hpp"
 
 using namespace std;
 using namespace cv;
 
-const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
 const char kTopicName[] = "video";
 constexpr size_t kPoolSize = 4 * 1024 * 1024;  // 4 MiB
 
@@ -51,7 +50,8 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        Publisher pub(kTopicName, kDftLLocator, kPoolSize);
+        iox::runtime::PoshRuntime::initRuntime("video_publisher");
+        Publisher pub(kTopicName, kPoolSize);
         Mat frame;
         vector<uchar> frame_vec;
 
@@ -69,8 +69,6 @@ int main(int argc, char* argv[]) {
         cout << "Done" << endl;
     } catch (runtime_error& err) {
         cerr << err.what() << endl;
-    } catch (zenoh::ErrorMessage& err) {
-        cerr << err.as_string_view() << endl;
     }
 
     cap.release();

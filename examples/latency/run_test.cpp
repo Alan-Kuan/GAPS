@@ -8,7 +8,8 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <zenoh.hxx>
+#include <iceoryx_hoofs/posix_wrapper/signal_watcher.hpp>
+#include <iceoryx_posh/runtime/posh_runtime.hpp>
 
 #include "helpers.hpp"
 #include "node/publisher.hpp"
@@ -21,7 +22,6 @@ void pubTest(size_t size, size_t times);
 void subTest(size_t size, size_t times);
 
 const char kTopic[] = "latency-test";
-const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
 constexpr size_t kPoolSize = 2 * 1024 * 1024;  // 2 MiB
 
 int main(int argc, char* argv[]) {
@@ -65,7 +65,8 @@ void pubTest(size_t size, size_t times) {
     Timer timer(10000);
 
     try {
-        Publisher pub(kTopic, kDftLLocator, kPoolSize);
+        iox::runtime::PoshRuntime::initRuntime("latency_test_publisher");
+        Publisher pub(kTopic, kPoolSize);
 
         char* arr = new char[size];
         for (int i = 0; i < size; i++) arr[i] = rand() % 10;
@@ -79,9 +80,6 @@ void pubTest(size_t size, size_t times) {
         }
 
         delete[] arr;
-    } catch (zenoh::ErrorMessage& err) {
-        cerr << "Zenoh: " << err.as_string_view() << endl;
-        exit(1);
     } catch (runtime_error& err) {
         cerr << "Publisher: " << err.what() << endl;
         exit(1);
@@ -96,17 +94,12 @@ void subTest(size_t size, size_t times) {
     Timer timer(10000);
 
     try {
-        Subscriber sub(kTopic, kDftLLocator, kPoolSize);
-
+        iox::runtime::PoshRuntime::initRuntime("cross_process_subscriber");
         auto handler = [&timer](void* msg, size_t size) { timer.setPoint(); };
+        Subscriber sub(kTopic, kPoolSize, handler);
 
-        sub.sub(handler);
-
-        cout << "Type enter to leave" << endl;
-        cin.get();
-    } catch (zenoh::ErrorMessage& err) {
-        cerr << "Zenoh: " << err.as_string_view() << endl;
-        exit(1);
+        cout << "Ctrl+C to leave" << endl;
+        iox::posix::waitForTerminationRequest();
     } catch (runtime_error& err) {
         cerr << "Subscriber: " << err.what() << endl;
         exit(1);

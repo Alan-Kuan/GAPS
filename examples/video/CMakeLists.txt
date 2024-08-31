@@ -1,19 +1,19 @@
 find_package(OpenCV REQUIRED)
 
 set(common_libs
-    zenohcxx::zenohpico
+    iceoryx_posh::iceoryx_posh
     opencv_core
     opencv_imgproc
     opencv_videoio
     node)
 
-shoz_add_target(pub_preproc
+shoi_add_target(pub_preproc
     IS_EXE
     SRCS pub_preproc.cpp
     INCS ${OpenCV_INCLUDE_DIRS}
     LIBS ${common_libs})
 
-shoz_add_target(sub_blur
+shoi_add_target(sub_blur
     IS_EXE
     SRCS sub_blur.cpp blur.cu
     INCS ${OpenCV_INCLUDE_DIRS}
