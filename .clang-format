@@ -87,7 +87,11 @@ IncludeCategories:
     Priority:        3
     SortPriority:    0
     CaseSensitive:   false
-  - Regex:           '^<zenoh.*\.h(xx)?>'
+  - Regex:           '^<iceoryx.*\.h(pp)?>'
+    Priority:        3
+    SortPriority:    0
+    CaseSensitive:   false
+  - Regex:           '^<iox.*\.h(pp)?>'
     Priority:        3
     SortPriority:    0
     CaseSensitive:   false
