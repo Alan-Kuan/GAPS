@@ -20,18 +20,21 @@ shoi_add_target(mem_manager
     LIBS CUDA::cuda_driver error)
 
 # Pyshoz
-# nanobind_add_module(pyshoz
-#     pyshoz.cpp
-#     node/node.cpp
-#     node/publisher.cpp
-#     node/subscriber.cpp)
-# target_compile_definitions(pyshoz
-#     PRIVATE
-#     BUILD_PYSHOZ)
-# target_link_libraries(pyshoz
-#     PRIVATE
-#     CUDA::cuda_driver
-#     zenohcxx::zenohpico
-#     allocator
-#     alloc_algo
-#     error)
+# TODO: port shoi
+if(BUILD_TORCH_SUPPORT)
+    nanobind_add_module(pyshoz
+        pyshoz.cpp
+        node/node.cpp
+        node/publisher.cpp
+        node/subscriber.cpp)
+    target_compile_definitions(pyshoz
+        PRIVATE
+        BUILD_PYSHOZ)
+    target_link_libraries(pyshoz
+        PRIVATE
+        CUDA::cuda_driver
+        zenohcxx::zenohpico
+        allocator
+        alloc_algo
+        error)
+endif()

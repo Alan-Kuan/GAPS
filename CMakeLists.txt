@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.25.2)
 project(shoi LANGUAGES CXX CUDA)
 
 option(BUILD_EXAMPLES "Build example programs" ON)
+option(BUILD_TORCH_SUPPORT "Build a Python module with PyTorch support" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CUDA_STANDARD 20)
@@ -14,6 +15,14 @@ endif()
 
 find_package(CUDAToolkit REQUIRED)
 find_package(iceoryx_posh CONFIG REQUIRED)
+if(BUILD_TORCH_SUPPORT)
+    find_package(Python 3.12 REQUIRED COMPONENTS Interpreter Development.Module)
+
+    execute_process(
+    COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+    OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_ROOT)
+    find_package(nanobind CONFIG REQUIRED)
+endif()
 
 # Utility Function
 function(shoi_add_target targetName)
