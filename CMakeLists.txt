@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.25.2)
 project(shoz LANGUAGES C CXX CUDA)
 
-option(BUILD_STATIC_LIBS "Build the static library" ON)
-option(BUILD_SHARED_LIBS "Build the shared library" ON)
+option(BUILD_STATIC_LIBS "Build the static library" ON)  # zenoh-pico's option
+option(BUILD_SHARED_LIBS "Build the shared library" ON)  # zenoh-pico's option
 option(BUILD_EXAMPLES "Build example programs" ON)
+option(BUILD_TORCH_SUPPORT "Build a Python module with PyTorch support" OFF)
 
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 20)
@@ -17,12 +18,14 @@ endif()
 
 # Dependencies
 find_package(CUDAToolkit REQUIRED)
-find_package(Python 3.12 REQUIRED COMPONENTS Interpreter Development.Module)
+if(BUILD_TORCH_SUPPORT)
+    find_package(Python 3.12 REQUIRED COMPONENTS Interpreter Development.Module)
 
-execute_process(
-  COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
-  OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_ROOT)
-find_package(nanobind CONFIG REQUIRED)
+    execute_process(
+    COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+    OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_ROOT)
+    find_package(nanobind CONFIG REQUIRED)
+endif()
 
 include(FetchContent)
 
