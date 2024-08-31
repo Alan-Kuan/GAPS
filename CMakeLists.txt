@@ -8,6 +8,10 @@ set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_ARCHITECTURES 70)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if(CMAKE_BUILD_TYPE STREQUAL "")
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
 find_package(CUDAToolkit REQUIRED)
 find_package(iceoryx_posh CONFIG REQUIRED)
 
