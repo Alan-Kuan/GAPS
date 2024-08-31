@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <functional>
+
 #include <iceoryx_posh/popo/listener.hpp>
 #include <iceoryx_posh/popo/subscriber.hpp>
 

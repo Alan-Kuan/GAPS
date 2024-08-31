@@ -3,12 +3,12 @@
 #include <cstddef>
 #include <cstdlib>
 #include <ctime>
-#include <iceoryx_hoofs/posix_wrapper/signal_watcher.hpp>
-#include <iceoryx_posh/runtime/posh_runtime.hpp>
 #include <iostream>
 #include <stdexcept>
 
 #include <cuda_runtime.h>
+#include <iceoryx_hoofs/posix_wrapper/signal_watcher.hpp>
+#include <iceoryx_posh/runtime/posh_runtime.hpp>
 
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"

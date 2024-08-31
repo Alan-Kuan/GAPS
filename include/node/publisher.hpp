@@ -2,6 +2,7 @@
 #define PUBLISHER_HPP
 
 #include <cstddef>
+
 #include <iceoryx_posh/popo/publisher.hpp>
 
 #include "node/node.hpp"

@@ -4,9 +4,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <sstream>
+
 #include <iceoryx_posh/capro/service_description.hpp>
 #include <iceoryx_posh/popo/publisher.hpp>
-#include <sstream>
 
 #include "allocator/allocator.hpp"
 #include "allocator/shareable.hpp"
