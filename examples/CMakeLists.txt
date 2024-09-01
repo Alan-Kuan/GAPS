@@ -1,4 +1,4 @@
-shoz_add_target(helpers
+shoi_add_target(helpers
     SRCS helpers.cpp)
 
 add_subdirectory(arithmetic)
