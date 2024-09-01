@@ -1,4 +1,3 @@
-#include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -10,7 +9,6 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include <cuda_runtime.h>
 #include <iceoryx_posh/runtime/posh_runtime.hpp>
@@ -123,13 +121,11 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
 }
 
 void subTest(int nproc, const char* output_name) {
-    vector<pid_t> pids;
     pid_t pid = -1;
     int p = 1;
 
     for (; p < nproc; p++) {
         pid = fork();
-        pids.push_back(pid);
         if (pid < 0) {
             cerr << "Failed to fork" << endl;
             exit(1);
@@ -166,8 +162,6 @@ void subTest(int nproc, const char* output_name) {
         cerr << "Subscriber: " << err.what() << endl;
         exit(1);
     }
-
-    for (pid_t child_pid : pids) kill(child_pid, SIGINT);
 
     stringstream ss;
     ss << "sub-" << output_name << '-' << p << ".csv";
