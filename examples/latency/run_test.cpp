@@ -92,8 +92,7 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
         sprintf(runtime_name, "latency_test_publisher_%d", p);
         iox::runtime::PoshRuntime::initRuntime(runtime_name);
         Publisher pub(kTopic, kPoolSize);
-        int count = size / sizeof(int);
-        int* arr = new int[count];
+        int* arr = (int*) malloc(size);
 
         for (int t = 0; t < times; t++) {
             int tag = (p - 1) * times + t;
@@ -109,7 +108,7 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
             usleep(50000);  // 50ms
         }
 
-        delete[] arr;
+        free(arr);
     } catch (runtime_error& err) {
         cerr << "Publisher: " << err.what() << endl;
         exit(1);
