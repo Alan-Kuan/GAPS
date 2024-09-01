@@ -3,6 +3,7 @@
 
 #include <csignal>
 #include <cstddef>
+#include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -87,7 +88,9 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
     Timer timer(times);
 
     try {
-        iox::runtime::PoshRuntime::initRuntime("latency_test_publisher");
+        char runtime_name[32];
+        sprintf(runtime_name, "latency_test_publisher_%d", p);
+        iox::runtime::PoshRuntime::initRuntime(runtime_name);
         Publisher pub(kTopic, kPoolSize);
         int count = size / sizeof(int);
         int* arr = new int[count];
@@ -137,7 +140,9 @@ void subTest(int nproc, const char* output_name) {
     Timer timer(10000);
 
     try {
-        iox::runtime::PoshRuntime::initRuntime("cross_process_subscriber");
+        char runtime_name[32];
+        sprintf(runtime_name, "latency_test_subscriber_%d", p);
+        iox::runtime::PoshRuntime::initRuntime(runtime_name);
         auto handler = [&timer](void* msg, size_t size) {
             // upon received, get the current time point
             auto now = timer.now();
