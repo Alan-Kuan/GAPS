@@ -21,12 +21,16 @@ public:
 
     inline void reset() { this->size = 0; }
 
+    inline clock::time_point now() { return clock::now(); }
     inline void setPoint(uint16_t label = 0) {
+        this->setPoint(this->now(), label);
+    }
+    inline void setPoint(clock::time_point&& time_point, uint16_t label = 0) {
         if (this->size >= capacity) {
-            std::cerr << "timer's capacity overflow" << std::endl;
+            std::cerr << "timer's storage overflows" << std::endl;
             exit(1);
         }
-        this->time_points[size] = clock::now();
+        this->time_points[size] = time_point;
         this->labels[size] = label;
         size++;
     }
