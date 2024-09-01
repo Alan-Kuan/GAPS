@@ -89,8 +89,7 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
 
     try {
         Publisher pub(kTopic, kDftLLocator, kPoolSize);
-        int count = size / sizeof(int);
-        int* arr = new int[count];
+        int* arr = (int*) malloc(size);
 
         for (int t = 0; t < times; t++) {
             int tag = (p - 1) * times + t;
@@ -106,7 +105,7 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
             usleep(50000);  // 50ms
         }
 
-        delete[] arr;
+        free(arr);
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);
