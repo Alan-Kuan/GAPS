@@ -15,16 +15,7 @@
 
 #ifdef BUILD_PYSHOZ
 #include <nanobind/ndarray.h>
-
 namespace nb = nanobind;
-
-struct MsgBuf {
-    size_t msg_id;
-    nb::dlpack::dtype dtype;
-    int32_t ndim;
-    int64_t shape[3];
-    int64_t strides[3];
-};
 #endif
 
 Publisher::Publisher(const char* topic_name, const char* llocator,
