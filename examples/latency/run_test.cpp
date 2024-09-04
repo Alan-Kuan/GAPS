@@ -38,8 +38,8 @@ int main(int argc, char* argv[]) {
              << "OUTPUT:\n"
              << "  name of the output csv\n"
              << "SIZE:\n"
-             << "  size of the message to publish in bytes (only required "
-                "when TYPE=0)\n"
+             << "  size of the message to publish in bytes (only required when "
+                "TYPE=0)\n"
              << "TIMES:\n"
              << "  number of times to publish a message (only required when "
                 "TYPE=0)"
@@ -100,11 +100,12 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
             pub.put(arr, size);
             // another time point is set at the subscriber-end
 
-            // NOTE: iceoryx subscriber may miss messages if publishes too
-            // frequently
-            usleep(50000);  // 50ms
+            // control the publishing frequency
+            usleep(500000);  // 500ms
         }
 
+        if (pid != 0) cout << "Ctrl+C to leave" << endl;
+        hlp::waitForSigInt();
         free(arr);
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
@@ -141,20 +142,18 @@ void subTest(int nproc, const char* output_name) {
     try {
         Subscriber sub(kTopic, kDftLLocator, kPoolSize);
         auto handler = [&timer](void* msg, size_t size) {
-            // upon received, get the current time point
+            // NOTE: Although the data have been written to the buffer
+            // synchronously before publishing the notification, for some
+            // reason, we should wait a while before reading from subscriber
+            // side. Otherwise, the data may be old value in the buffer.
+            usleep(500);
+            // get the current time point, when the data is ready
             auto now = timer.now();
 
-            // NOTE: though the tag has been copied to the memory synchronously
-            // before publishing, for some reason, if we read it too quickly, we
-            // will read old data
-            usleep(1000);
-
             // find the tag from the message
-            int* buf = (int*) malloc(size);
-            cudaMemcpy(buf, msg, size, cudaMemcpyDeviceToHost);
-            timer.setPoint(std::move(now), buf[0]);
-            cout << "Saved point " << buf[0] << endl;
-            free(buf);
+            int tag;
+            cudaMemcpy(&tag, msg, sizeof(int), cudaMemcpyDeviceToHost);
+            timer.setPoint(std::move(now), tag);
         };
         sub.sub(handler);
 
