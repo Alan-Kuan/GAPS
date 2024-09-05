@@ -1,4 +1,4 @@
-#include "allocator/shareable.hpp"
+#include "allocator.hpp"
 
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -13,30 +13,32 @@
 #include <cuda.h>
 
 #include "alloc_algo/tlsf.hpp"
-#include "allocator/allocator.hpp"
 #include "error.hpp"
 #include "metadata.hpp"
 
-ShareableAllocator::ShareableAllocator(TopicHeader* topic_header,
-                                       bool read_only,
-                                       const std::string& sock_file_dir)
-        : Allocator(topic_header, read_only), sock_file_dir(sock_file_dir) {
+Allocator::Allocator(TopicHeader* topic_header, bool read_only,
+                     const std::string& sock_file_dir)
+        : topic_header(topic_header),
+          read_only(read_only),
+          sock_file_dir(sock_file_dir) {
     std::filesystem::create_directory(sock_file_dir);
     this->createPool(topic_header->pool_size);
     this->allocator = new Tlsf(getTlsfHeader(topic_header));
 }
 
-ShareableAllocator::~ShareableAllocator() { this->removePool(); }
+Allocator::~Allocator() { this->removePool(); }
 
-void ShareableAllocator::copyTo(void* dst, void* src, size_t size) {
-    cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice);
+size_t Allocator::malloc(size_t size) {
+    if (!this->allocator) throwError("No allocator");
+    return this->allocator->malloc(size);
 }
 
-void ShareableAllocator::copyFrom(void* dst, void* src, size_t size) {
-    cudaMemcpy(dst, src, size, cudaMemcpyDeviceToHost);
+void Allocator::free(size_t offset) {
+    if (!this->allocator) throwError("No allocator");
+    this->allocator->free(offset);
 }
 
-void ShareableAllocator::createPool(size_t size) {
+void Allocator::createPool(size_t size) {
     this->recvHandle();
 
     CUdeviceptr dptr;
@@ -53,7 +55,7 @@ void ShareableAllocator::createPool(size_t size) {
     this->pool_base = (void*) dptr;
 }
 
-void ShareableAllocator::removePool() {
+void Allocator::removePool() {
     if (!this->handle_is_valid) return;
     throwOnErrorCuda(cuMemRelease(this->handle));
     throwOnErrorCuda(cuMemUnmap((CUdeviceptr) this->pool_base,
@@ -62,7 +64,7 @@ void ShareableAllocator::removePool() {
                                       this->topic_header->pool_size));
 }
 
-void ShareableAllocator::recvHandle() {
+void Allocator::recvHandle() {
     // setup UNIX Domain Socket client
     int sockfd = throwOnError(socket(AF_UNIX, SOCK_STREAM, 0));
 

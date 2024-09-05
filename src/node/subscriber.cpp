@@ -8,8 +8,7 @@
 #include <iceoryx_posh/capro/service_description.hpp>
 #include <iceoryx_posh/popo/subscriber.hpp>
 
-#include "allocator/allocator.hpp"
-#include "allocator/shareable.hpp"
+#include "allocator.hpp"
 #include "error.hpp"
 #include "metadata.hpp"
 
@@ -24,8 +23,7 @@ Subscriber::Subscriber(const char* topic_name, size_t pool_size,
     std::atomic_ref<uint32_t>(topic_header->sub_count)++;
     this->mq_header = getMessageQueueHeader(getTlsfHeader(topic_header));
 
-    this->allocator = (Allocator*) new ShareableAllocator(
-        (TopicHeader*) this->shm_base, true);
+    this->allocator = new Allocator((TopicHeader*) this->shm_base, true);
 
     this->iox_listener
         .attachEvent(this->iox_subscriber,

@@ -9,8 +9,7 @@
 #include <iceoryx_posh/capro/service_description.hpp>
 #include <iceoryx_posh/popo/publisher.hpp>
 
-#include "allocator/allocator.hpp"
-#include "allocator/shareable.hpp"
+#include "allocator.hpp"
 #include "error.hpp"
 #include "metadata.hpp"
 
@@ -19,20 +18,21 @@ Publisher::Publisher(const char* topic_name, size_t pool_size)
           iox_publisher({"", "shoi",
                          iox::capro::IdString_t(iox::cxx::TruncateToCapacity,
                                                 topic_name)}) {
-    this->allocator =
-        (Allocator*) new ShareableAllocator((TopicHeader*) this->shm_base);
+    this->allocator = new Allocator((TopicHeader*) this->shm_base);
+}
+
+void* Publisher::malloc(size_t size) {
+    size_t offset = this->allocator->malloc(size);
+    if (offset == -1) return nullptr;
+    return (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
 }
 
 void Publisher::put(void* payload, size_t size) {
     if (!payload) throwError("Payload was not provided");
     if (size == 0) return;
 
-    size_t offset = this->allocator->malloc(size);
-    if (offset == -1) throwError("No free space in the pool");
-    void* addr = (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
-
-    this->allocator->copyTo(addr, payload, size);
-
+    size_t offset =
+        (uintptr_t) payload - (uintptr_t) this->allocator->getPoolBase();
     // get next available index as message id
     MessageQueueHeader* mq_header =
         getMessageQueueHeader(getTlsfHeader(getTopicHeader(this->shm_base)));

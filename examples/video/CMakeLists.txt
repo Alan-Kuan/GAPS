@@ -9,7 +9,7 @@ set(common_libs
 
 shoi_add_target(pub_preproc
     IS_EXE
-    SRCS pub_preproc.cpp
+    SRCS pub_preproc.cu
     INCS ${OpenCV_INCLUDE_DIRS}
     LIBS ${common_libs})
 

@@ -12,6 +12,7 @@ public:
     Publisher() = delete;
     Publisher(const char* topic_name, size_t pool_size);
 
+    void* malloc(size_t size);
     void put(void* payload, size_t size);
 
 protected:

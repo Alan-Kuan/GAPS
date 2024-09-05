@@ -3,7 +3,7 @@ shoi_add_target(node
     SRCS node/node.cpp node/publisher.cpp node/subscriber.cpp
     LIBS CUDA::cuda_driver iceoryx_posh::iceoryx_posh allocator error)
 shoi_add_target(allocator
-    SRCS allocator/allocator.cpp allocator/shareable.cu
+    SRCS allocator.cpp
     LIBS CUDA::cuda_driver alloc_algo error
     PIC)
 shoi_add_target(alloc_algo

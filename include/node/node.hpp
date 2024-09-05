@@ -2,9 +2,8 @@
 #define NODE_HPP
 
 #include <cstddef>
-#include <cstdint>
 
-#include "allocator/allocator.hpp"
+#include "allocator.hpp"
 
 class Node {
 public:

@@ -15,6 +15,7 @@
 #include <iceoryx_posh/runtime/posh_runtime.hpp>
 
 #include "helpers.hpp"
+#include "init.hpp"
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
 
@@ -38,8 +39,8 @@ int main(int argc, char* argv[]) {
              << "OUTPUT:\n"
              << "  name of the output csv\n"
              << "SIZE:\n"
-             << "  size of the message to publish in bytes (only required "
-                "when TYPE=0)\n"
+             << "  size of the message to publish in bytes (only required when "
+                "TYPE=0)\n"
              << "TIMES:\n"
              << "  number of times to publish a message (only required when "
                 "TYPE=0)"
@@ -92,23 +93,22 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
         sprintf(runtime_name, "latency_test_publisher_%d", p);
         iox::runtime::PoshRuntime::initRuntime(runtime_name);
         Publisher pub(kTopic, kPoolSize);
-        int* arr = (int*) malloc(size);
 
         for (int t = 0; t < times; t++) {
             int tag = (p - 1) * times + t;
-            memset(arr, rand() % 256, size);
-            arr[0] = tag;
+            int* buf_d = (int*) pub.malloc(size);
+            init_data(buf_d, size / sizeof(int), tag);
 
             timer.setPoint(tag);
-            pub.put(arr, size);
+            pub.put(buf_d, size);
             // another time point is set at the subscriber-end
 
-            // NOTE: iceoryx subscriber may miss messages if publishes too
-            // frequently
-            usleep(50000);  // 50ms
+            // control the publishing frequency
+            usleep(500000);  // 500ms
         }
 
-        free(arr);
+        if (pid != 0) cout << "Ctrl+C to leave" << endl;
+        hlp::waitForSigInt();
     } catch (runtime_error& err) {
         cerr << "Publisher: " << err.what() << endl;
         exit(1);
@@ -143,20 +143,18 @@ void subTest(int nproc, const char* output_name) {
         sprintf(runtime_name, "latency_test_subscriber_%d", p);
         iox::runtime::PoshRuntime::initRuntime(runtime_name);
         auto handler = [&timer](void* msg, size_t size) {
-            // upon received, get the current time point
+            // NOTE: Although the data have been written to the buffer
+            // synchronously before publishing the notification, for some
+            // reason, we should wait a while before reading from subscriber
+            // side. Otherwise, the data may be old value in the buffer.
+            usleep(500);
+            // get the current time point, when the data is ready
             auto now = timer.now();
 
-            // NOTE: though the tag has been copied to the memory synchronously
-            // before publishing, for some reason, if we read it too quickly, we
-            // will read old data
-            usleep(1000);
-
             // find the tag from the message
-            int* buf = (int*) malloc(size);
-            cudaMemcpy(buf, msg, size, cudaMemcpyDeviceToHost);
-            timer.setPoint(std::move(now), buf[0]);
-            cout << "Saved point " << buf[0] << endl;
-            free(buf);
+            int tag;
+            cudaMemcpy(&tag, msg, sizeof(int), cudaMemcpyDeviceToHost);
+            timer.setPoint(std::move(now), tag);
         };
         Subscriber sub(kTopic, kPoolSize, handler);
 

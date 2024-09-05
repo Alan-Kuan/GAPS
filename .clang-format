@@ -83,7 +83,7 @@ IfMacros:
   - KJ_IF_MAYBE
 IncludeBlocks:   Regroup
 IncludeCategories:
-  - Regex:           '^<cuda.*\.h>'
+  - Regex:           '^<cu(da).*\.h>'
     Priority:        3
     SortPriority:    0
     CaseSensitive:   false
