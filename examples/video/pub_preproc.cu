@@ -62,7 +62,10 @@ int main(int argc, char* argv[]) {
             cap >> frame;
             if (frame.empty()) break;
             matToVec(frame, frame_vec);
-            pub.put(frame_vec.data(), frame_vec.size());
+            uchar* buf_d = (uchar*) pub.malloc(frame_vec.size());
+            cudaMemcpy(buf_d, frame_vec.data(), frame_vec.size(),
+                       cudaMemcpyHostToDevice);
+            pub.put(buf_d, frame_vec.size());
             if (dump_hash) dump(out, frame_vec);
             usleep(10000);
         }

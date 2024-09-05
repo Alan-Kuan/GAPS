@@ -14,6 +14,7 @@
 #include <zenoh.hxx>
 
 #include "helpers.hpp"
+#include "init.hpp"
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
 
@@ -89,15 +90,13 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
 
     try {
         Publisher pub(kTopic, kDftLLocator, kPoolSize);
-        int* arr = (int*) malloc(size);
-
         for (int t = 0; t < times; t++) {
             int tag = (p - 1) * times + t;
-            memset(arr, rand() % 256, size);
-            arr[0] = tag;
+            int* buf_d = (int*) pub.malloc(size);
+            init_data(buf_d, size / sizeof(int), tag);
 
             timer.setPoint(tag);
-            pub.put(arr, size);
+            pub.put(buf_d, size);
             // another time point is set at the subscriber-end
 
             // control the publishing frequency
@@ -106,7 +105,6 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
 
         if (pid != 0) cout << "Ctrl+C to leave" << endl;
         hlp::waitForSigInt();
-        free(arr);
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;
         exit(1);

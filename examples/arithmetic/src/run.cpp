@@ -1,3 +1,4 @@
+#include <curand.h>
 #include <unistd.h>
 
 #include <cstddef>
@@ -11,6 +12,7 @@
 #include <zenoh.hxx>
 
 #include "helpers.hpp"
+#include "init.hpp"
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
 #include "vector_arithmetic.hpp"
@@ -24,6 +26,9 @@ void runAsSubscriber(const char* llocator, int job);
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
 const char kTopicName[] = "arithmetic";
 const size_t kPoolSize = 2 * 1024 * 1024;  // 2 MiB
+const size_t kArrCount = 64;
+constexpr size_t kBufCount = kArrCount * 2;
+const int kRandSeed = 1234;
 
 extern char* optarg;
 extern int optind;
@@ -107,18 +112,28 @@ void runAsPublisher(const char* llocator, int n) {
 
     try {
         Publisher publisher(kTopicName, llocator, kPoolSize);
-        int arr[128];
+
+        curandState* states;
+        cudaMalloc(&states, sizeof(curandState) * kBufCount);
+        setup_rand_states(states, kBufCount, kRandSeed);
+
+        int arr[kBufCount];
+        size_t buf_size = kBufCount * sizeof(int);
 
         for (int T = 0; T < n; T++) {
-            cout << '#' << (T + 1) << ":" << endl;
-            for (int i = 0; i < 128; i++) arr[i] = rand() % 10;
-            cout << "  A: ";
-            for (int i = 0; i < 64; i++) cout << arr[i] << ' ';
-            cout << endl << "  B: ";
-            for (int i = 64; i < 128; i++) cout << arr[i] << ' ';
-            cout << endl;
+            int* buf_d = (int*) publisher.malloc(buf_size);
+            // generate random data
+            init_data(states, buf_d, kBufCount);
+            publisher.put(buf_d, buf_size);
 
-            publisher.put(arr, sizeof(int) * 128);
+            // show the content
+            cudaMemcpy(arr, buf_d, buf_size, cudaMemcpyDeviceToHost);
+            cout << '#' << (T + 1) << ":" << endl;
+            cout << "  A: ";
+            for (int i = 0; i < kArrCount; i++) cout << arr[i] << ' ';
+            cout << endl << "  B: ";
+            for (int i = kArrCount; i < kBufCount; i++) cout << arr[i] << ' ';
+            cout << endl;
         }
     } catch (zenoh::ErrorMessage& err) {
         cerr << "Zenoh: " << err.as_string_view() << endl;

@@ -8,8 +8,7 @@
 #include <zenoh-pico/config.h>
 #include <zenoh.hxx>
 
-#include "allocator/allocator.hpp"
-#include "allocator/shareable.hpp"
+#include "allocator.hpp"
 #include "error.hpp"
 #include "metadata.hpp"
 
@@ -34,9 +33,17 @@ Publisher::Publisher(const char* topic_name, const char* llocator,
     this->z_publisher = zenoh::expect<zenoh::Publisher>(
         z_session.declare_publisher(z_topic_name));
 
-    this->allocator =
-        (Allocator*) new ShareableAllocator((TopicHeader*) this->shm_base);
+    this->allocator = new Allocator((TopicHeader*) this->shm_base);
 }
+
+#ifdef BUILD_PYSHOZ
+#else
+void* Publisher::malloc(size_t size) {
+    size_t offset = this->allocator->malloc(size);
+    if (offset == -1) return nullptr;
+    return (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
+}
+#endif
 
 #ifdef BUILD_PYSHOZ
 void Publisher::put(const nb::ndarray<>& tensor) {
@@ -60,22 +67,16 @@ void Publisher::put(const nb::ndarray<>& tensor) {
     } else {
         msg_buf.strides[0] = 0;
     }
+
+    size_t offset =
+        (uintptr_t) tensor.data() - (uintptr_t) this->allocator->getPoolBase();
 #else
 void Publisher::put(void* payload, size_t size) {
     if (!payload) throwError("Payload was not provided");
     if (size == 0) return;
+    size_t offset =
+        (uintptr_t) payload - (uintptr_t) this->allocator->getPoolBase();
 #endif
-
-    size_t offset = this->allocator->malloc(size);
-    if (offset == -1) throwError("No free space in the pool");
-    void* addr = (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
-
-#ifdef BUILD_PYSHOZ
-    this->allocator->copyTo(addr, (void*) tensor.data(), size);
-#else
-    this->allocator->copyTo(addr, payload, size);
-#endif
-
     // get next available index as message id
     MessageQueueHeader* mq_header =
         getMessageQueueHeader(getTlsfHeader(getTopicHeader(this->shm_base)));

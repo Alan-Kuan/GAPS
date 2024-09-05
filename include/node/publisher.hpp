@@ -19,6 +19,7 @@ public:
 #ifdef BUILD_PYSHOZ
     void put(const nb::ndarray<>& tensor);
 #else
+    void* malloc(size_t size);
     void put(void* payload, size_t size);
 #endif
 

@@ -3,7 +3,7 @@ shoz_add_target(node
     SRCS node/node.cpp node/publisher.cpp node/subscriber.cpp
     LIBS CUDA::cuda_driver zenohcxx::zenohpico allocator error)
 shoz_add_target(allocator
-    SRCS allocator/allocator.cpp allocator/shareable.cu
+    SRCS allocator.cpp
     LIBS CUDA::cuda_driver alloc_algo error
     PIC)
 shoz_add_target(alloc_algo

@@ -8,8 +8,7 @@
 #include <zenoh-pico/config.h>
 #include <zenoh.hxx>
 
-#include "allocator/allocator.hpp"
-#include "allocator/shareable.hpp"
+#include "allocator.hpp"
 #include "error.hpp"
 #include "metadata.hpp"
 
@@ -29,8 +28,7 @@ Subscriber::Subscriber(const char* topic_name, const char* llocator,
     this->z_session =
         zenoh::expect<zenoh::Session>(zenoh::open(std::move(config)));
 
-    this->allocator = (Allocator*) new ShareableAllocator(
-        (TopicHeader*) this->shm_base, true);
+    this->allocator = new Allocator((TopicHeader*) this->shm_base, true);
 }
 
 Subscriber::~Subscriber() {
