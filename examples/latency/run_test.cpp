@@ -143,12 +143,7 @@ void subTest(int nproc, const char* output_name) {
         sprintf(runtime_name, "latency_test_subscriber_%d", p);
         iox::runtime::PoshRuntime::initRuntime(runtime_name);
         auto handler = [&timer](void* msg, size_t size) {
-            // NOTE: Although the data have been written to the buffer
-            // synchronously before publishing the notification, for some
-            // reason, we should wait a while before reading from subscriber
-            // side. Otherwise, the data may be old value in the buffer.
-            usleep(500);
-            // get the current time point, when the data is ready
+            // upon received, get the current time point
             auto now = timer.now();
 
             // find the tag from the message

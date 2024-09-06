@@ -21,6 +21,7 @@ void setup_rand_states(curandState* states, size_t count, unsigned long seed) {
         block_dim = 1024;
     }
     __setup_rand_states<<<grid_dim, block_dim>>>(states, seed);
+    cudaDeviceSynchronize();
 }
 
 void init_data(curandState* states, int* arr, size_t count) {
@@ -31,4 +32,5 @@ void init_data(curandState* states, int* arr, size_t count) {
         block_dim = 1024;
     }
     __init_data<<<grid_dim, block_dim>>>(states, arr);
+    cudaDeviceSynchronize();
 }
