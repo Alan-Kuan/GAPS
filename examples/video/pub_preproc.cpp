@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include <cuda_runtime.h>
 #include <iceoryx_posh/runtime/posh_runtime.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/videoio.hpp>
