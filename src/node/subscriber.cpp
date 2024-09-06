@@ -17,7 +17,8 @@ Subscriber::Subscriber(const char* topic_name, size_t pool_size,
         : Node(topic_name, pool_size),
           iox_subscriber({"", "shoi",
                           iox::capro::IdString_t(iox::cxx::TruncateToCapacity,
-                                                 topic_name)}),
+                                                 topic_name)},
+                         {.queueCapacity = 256}),
           handler(handler) {
     TopicHeader* topic_header = getTopicHeader(this->shm_base);
     std::atomic_ref<uint32_t>(topic_header->sub_count)++;
