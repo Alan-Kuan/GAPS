@@ -13,4 +13,5 @@ void init_data(int* arr, size_t count, int tag) {
         block_dim = 1024;
     }
     __init_data<<<grid_dim, block_dim>>>(arr, tag);
+    cudaDeviceSynchronize();
 }
