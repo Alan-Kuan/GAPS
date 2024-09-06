@@ -96,7 +96,10 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
 
         for (int t = 0; t < times; t++) {
             int tag = (p - 1) * times + t;
-            int* buf_d = (int*) pub.malloc(size);
+            int* buf_d;
+            do {
+                buf_d = (int*) pub.malloc(size);
+            } while (!buf_d);
             init_data(buf_d, size / sizeof(int), tag);
 
             timer.setPoint(tag);
