@@ -19,9 +19,21 @@ def main():
     model.eval()
 
     def handler(input):
-        outputs = model(torch.unsqueeze(input, 0))
-        preds = torch.argmax(outputs)
-        print(preds)
+        labels = [
+            'airplanes',
+            'cars',
+            'birds',
+            'cats',
+            'deer',
+            'dogs',
+            'frogs',
+            'horses',
+            'ships',
+            'trucks',
+        ]
+        output = model(torch.unsqueeze(input, 0))
+        pred = torch.argmax(output).item()
+        print(f'Prediction: {labels[pred]}')
 
     subscriber.sub(handler)
     input("Type enter to continue\n")
