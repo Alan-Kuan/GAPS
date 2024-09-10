@@ -91,7 +91,7 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
     try {
         Publisher pub(kTopic, kDftLLocator, kPoolSize);
         for (int t = 0; t < times; t++) {
-            int tag = (p - 1) * times + t;
+            int tag = (p - 1) * times + t + 1;
             int* buf_d;
             do {
                 buf_d = (int*) pub.malloc(size);
@@ -99,7 +99,9 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
             init_data(buf_d, size / sizeof(int), tag);
 
             timer.setPoint(tag);
-            pub.put(buf_d, size);
+            // since we won't use the data from the subscriber side, it's ok to
+            // exploit the size field to send the tag
+            pub.put(buf_d, (size_t) tag);
             // another time point is set at the subscriber-end
 
             // control the publishing frequency
@@ -142,14 +144,9 @@ void subTest(int nproc, const char* output_name) {
 
     try {
         Subscriber sub(kTopic, kDftLLocator, kPoolSize);
-        auto handler = [&timer](void* msg, size_t size) {
-            // upon received, get the current time point
-            auto now = timer.now();
-
-            // find the tag from the message
-            int tag;
-            cudaMemcpy(&tag, msg, sizeof(int), cudaMemcpyDeviceToHost);
-            timer.setPoint(std::move(now), tag);
+        auto handler = [&timer](void* msg, size_t tag) {
+            // upon received, set the current time point
+            timer.setPoint((int) tag);
         };
         sub.sub(handler);
 
