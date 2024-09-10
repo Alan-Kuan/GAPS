@@ -8,6 +8,8 @@
 #include <nanobind/stl/function.h>
 
 namespace nb = nanobind;
+
+typedef nb::ndarray<nb::pytorch, nb::device::cuda> DeviceTensor;
 #endif
 #include <zenoh.hxx>
 
@@ -16,9 +18,7 @@ namespace nb = nanobind;
 class Subscriber : public Node {
 public:
 #ifdef BUILD_PYSHOZ
-    typedef std::function<void(
-        const nb::ndarray<nb::pytorch, nb::device::cuda>&)>
-        MessageHandler;
+    typedef std::function<void(const DeviceTensor&)> MessageHandler;
 #else
     typedef std::function<void(void*, size_t)> MessageHandler;
 #endif

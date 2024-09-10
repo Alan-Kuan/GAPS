@@ -64,7 +64,7 @@ void Subscriber::sub(MessageHandler handler) {
             nb::gil_scoped_acquire acq;
             const int64_t* strides =
                 msg_buf->strides[0] ? msg_buf->strides : nullptr;
-            nb::ndarray<nb::pytorch, nb::device::cuda> tensor(
+            DeviceTensor tensor(
                 data, msg_buf->ndim, (const size_t*) msg_buf->shape,
                 nb::handle(), strides, msg_buf->dtype, nb::device::cuda::value);
             handler(tensor);

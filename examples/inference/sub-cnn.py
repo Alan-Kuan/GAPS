@@ -9,7 +9,7 @@ LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
 POOL_SIZE = 8 * 1024 * 1024;  # 8 MiB
 
 def main():
-    subscriber = pyshoz.Subscriber("cross_process_torch", LLOCATOR, POOL_SIZE)
+    subscriber = pyshoz.Subscriber("inference", LLOCATOR, POOL_SIZE)
 
     weights_path = pathlib.Path(__file__).parent.resolve().joinpath("cifar_net.pth")
 

@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cstring>
 
+#include <cuda_runtime.h>
 #include <zenoh-pico/config.h>
 #include <zenoh.hxx>
 
@@ -37,6 +38,45 @@ Publisher::Publisher(const char* topic_name, const char* llocator,
 }
 
 #ifdef BUILD_PYSHOZ
+void Publisher::copyTensor(DeviceTensor& dst, const DeviceTensor& src) {
+    auto kind = src.device_type() == nb::device::cpu::value
+                    ? cudaMemcpyHostToDevice
+                    : cudaMemcpyDeviceToDevice;
+    cudaMemcpy(dst.data(), src.data(), src.nbytes(), kind);
+}
+
+DeviceTensor Publisher::malloc(size_t ndim, nb::tuple shape,
+                               nb::tuple dtype_tup, bool clean) {
+    if (ndim != shape.size()) {
+        throwError("'ndim' does not match the size of 'shape'");
+    }
+    if (ndim > 3) {
+        throwError("Currently supports only at most 3 dimensions");
+    }
+
+    uint8_t code = nb::cast<uint8_t>(dtype_tup[0]);
+    uint8_t bits = nb::cast<uint8_t>(dtype_tup[1]);
+    uint16_t lanes = nb::cast<uint16_t>(dtype_tup[2]);
+    nb::dlpack::dtype dtype = {.code = code, .bits = bits, .lanes = lanes};
+
+    size_t shape_buf[3];
+    size_t size = (bits / 8) * ndim;
+    int i = 0;
+    for (auto it = shape.begin(); it != shape.end(); it++) {
+        size_t val = nb::cast<size_t>(*it);
+        size *= val;
+        shape_buf[i++] = val;
+    }
+
+    size_t offset = this->allocator->malloc(size);
+    if (offset == -1) throwError("no available space");
+    auto addr = (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
+
+    if (clean) cudaMemset(addr, 0, size);
+
+    return DeviceTensor(addr, ndim, shape_buf, nb::handle(), nullptr, dtype,
+                        nb::device::cuda::value);
+}
 #else
 void* Publisher::malloc(size_t size) {
     size_t offset = this->allocator->malloc(size);
@@ -46,7 +86,7 @@ void* Publisher::malloc(size_t size) {
 #endif
 
 #ifdef BUILD_PYSHOZ
-void Publisher::put(const nb::ndarray<>& tensor) {
+void Publisher::put(const DeviceTensor& tensor) {
     if (tensor.ndim() > 3) {
         throwError("Tensor with dimension greater than 3 is not supported");
     }

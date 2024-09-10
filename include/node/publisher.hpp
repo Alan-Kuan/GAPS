@@ -5,7 +5,10 @@
 
 #ifdef BUILD_PYSHOZ
 #include <nanobind/ndarray.h>
+
 namespace nb = nanobind;
+
+typedef nb::ndarray<nb::pytorch, nb::device::cuda> DeviceTensor;
 #endif
 #include <zenoh.hxx>
 
@@ -17,7 +20,10 @@ public:
     Publisher(const char* topic_name, const char* llocator, size_t pool_size);
 
 #ifdef BUILD_PYSHOZ
-    void put(const nb::ndarray<>& tensor);
+    void copyTensor(DeviceTensor& dst, const DeviceTensor& src);
+    DeviceTensor malloc(size_t ndim, nb::tuple shape, nb::tuple dtype_tup,
+                        bool clean);
+    void put(const DeviceTensor& tensor);
 #else
     void* malloc(size_t size);
     void put(void* payload, size_t size);

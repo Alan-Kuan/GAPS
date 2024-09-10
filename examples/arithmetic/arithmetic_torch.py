@@ -1,5 +1,4 @@
 import argparse
-import torch
 
 import pyshoz
 
@@ -23,11 +22,19 @@ def main():
 def run_as_publisher():
     publisher = pyshoz.Publisher("arithmetic_torch", LLOCATOR, POOL_SIZE)
 
-    t = torch.tensor(range(64), dtype=torch.int)
+    # int[64]
+    t = publisher.malloc(1, (64, ), (0, 32, 1))
+    for i in range(64):
+        t[i] = i
     publisher.put(t)
 
-    t = torch.tensor(range(16), dtype=torch.float)
+    # double[16]
+    t = publisher.malloc(1, (16, ), (2, 32, 1))
+    for i in range(16):
+        t[i] = i
     publisher.put(t)
+
+    input('Type enter to continue\n')
 
 def run_as_subscriber():
     subscriber = pyshoz.Subscriber("arithmetic_torch", LLOCATOR, POOL_SIZE)
