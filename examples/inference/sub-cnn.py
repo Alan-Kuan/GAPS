@@ -23,20 +23,20 @@ def main():
 
     def handler(input):
         labels = [
-            'airplanes',
-            'cars',
-            'birds',
-            'cats',
-            'deer',
-            'dogs',
-            'frogs',
-            'horses',
-            'ships',
-            'trucks',
+            "airplanes",
+            "cars",
+            "birds",
+            "cats",
+            "deer",
+            "dogs",
+            "frogs",
+            "horses",
+            "ships",
+            "trucks",
         ]
         output = model(torch.unsqueeze(input, 0))
         pred = torch.argmax(output).item()
-        print(f'Prediction: {labels[pred]}')
+        print(f"Prediction: {labels[pred]}")
 
     subscriber.sub(handler)
     print("Ctrl+C to leave")
