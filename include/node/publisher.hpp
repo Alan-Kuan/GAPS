@@ -20,7 +20,7 @@ public:
     Publisher(const char* topic_name, const char* llocator, size_t pool_size);
 
 #ifdef BUILD_PYSHOZ
-    void copyTensor(DeviceTensor& dst, const DeviceTensor& src);
+    void copyTensor(DeviceTensor& dst, const nb::ndarray<nb::pytorch>& src);
     DeviceTensor malloc(size_t ndim, nb::tuple shape, nb::tuple dtype_tup,
                         bool clean);
     void put(const DeviceTensor& tensor);

@@ -38,7 +38,8 @@ Publisher::Publisher(const char* topic_name, const char* llocator,
 }
 
 #ifdef BUILD_PYSHOZ
-void Publisher::copyTensor(DeviceTensor& dst, const DeviceTensor& src) {
+void Publisher::copyTensor(DeviceTensor& dst,
+                           const nb::ndarray<nb::pytorch>& src) {
     auto kind = src.device_type() == nb::device::cpu::value
                     ? cudaMemcpyHostToDevice
                     : cudaMemcpyDeviceToDevice;
