@@ -1,4 +1,5 @@
 import argparse
+import signal
 
 import pyshoz
 
@@ -11,6 +12,8 @@ def main():
                         action="store_true",
                         help="be a publisher or not (if not specify, it becomes a subscriber)")
     args = parser.parse_args()
+
+    signal.signal(signal.SIGINT, lambda sig, frame: print('Stopped'))
 
     if args.p:
         print("Publisher Mode")
@@ -34,7 +37,8 @@ def run_as_publisher():
         t[i] = i
     publisher.put(t)
 
-    input('Type enter to continue\n')
+    print("Ctrl+C to leave")
+    signal.pause()
 
 def run_as_subscriber():
     subscriber = pyshoz.Subscriber("arithmetic_torch", LLOCATOR, POOL_SIZE)
@@ -42,7 +46,9 @@ def run_as_subscriber():
     def msg_handler(tensor):
         print(tensor * 2)
     subscriber.sub(msg_handler)
-    input("Type enter to continue\n")
+
+    print("Ctrl+C to leave")
+    signal.pause()
 
 if __name__ == "__main__":
     main()

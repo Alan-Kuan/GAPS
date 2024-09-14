@@ -1,4 +1,5 @@
 import pathlib
+import signal
 
 import torch
 from torch import nn
@@ -9,6 +10,8 @@ LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
 POOL_SIZE = 8 * 1024 * 1024;  # 8 MiB
 
 def main():
+    signal.signal(signal.SIGINT, lambda sig, frame: print("Stopped"))
+
     subscriber = pyshoz.Subscriber("inference", LLOCATOR, POOL_SIZE)
 
     weights_path = pathlib.Path(__file__).parent.resolve().joinpath("cifar_net.pth")
@@ -36,7 +39,7 @@ def main():
         print(f'Prediction: {labels[pred]}')
 
     subscriber.sub(handler)
-    input("Type enter to continue\n")
+    print("Ctrl+C to leave")
 
 class Conv2dBlock(nn.Module):
     def __init__(self, inc, outc, ksize, **kwargs):
