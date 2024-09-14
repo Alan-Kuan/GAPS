@@ -42,23 +42,30 @@ Subscriber::~Subscriber() {
 
 void Subscriber::onSampleReceived(iox::popo::Subscriber<size_t>* iox_subscriber,
                                   Subscriber* self) {
-    iox_subscriber->take().and_then([iox_subscriber, self](auto& msg_id) {
-        TopicHeader* topic_header = getTopicHeader(self->shm_base);
-        MessageQueueEntry* mq_entry =
-            getMessageQueueEntry(self->mq_header, *msg_id);
+    bool keep = true;
+    for (int i = 0; i < 10 && keep; i++) {
+        iox_subscriber->take()
+            .and_then([iox_subscriber, self](auto& msg_id) {
+                TopicHeader* topic_header = getTopicHeader(self->shm_base);
+                MessageQueueEntry* mq_entry =
+                    getMessageQueueEntry(self->mq_header, *msg_id);
 
-        size_t offset = mq_entry->offset ^ 1;
-        void* data =
-            (void*) ((uintptr_t) self->allocator->getPoolBase() + offset);
+                size_t offset = mq_entry->offset ^ 1;
+                void* data =
+                    (void*) ((uintptr_t) self->allocator->getPoolBase() +
+                             offset);
 
-        self->handler(data, mq_entry->size);
+                self->handler(data, mq_entry->size);
 
-        // last subscriber reading the message should free the allocation
-        if (std::atomic_ref<uint32_t>(mq_entry->taken_num).fetch_add(1) ==
-            topic_header->sub_count - 1) {
-            self->allocator->free(offset);
-            // remove the label that indicates the payload is not freed
-            mq_entry->offset = offset;
-        }
-    });
+                // last subscriber reading the message should free the
+                // allocation
+                if (std::atomic_ref<uint32_t>(mq_entry->taken_num)
+                        .fetch_add(1) == topic_header->sub_count - 1) {
+                    self->allocator->free(offset);
+                    // remove the label that indicates the payload is not freed
+                    mq_entry->offset = offset;
+                }
+            })
+            .or_else([&keep](auto& result) { keep = false; });
+    }
 }
