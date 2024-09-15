@@ -21,7 +21,7 @@ def main():
     sents = read_sentences(sys.argv[1])
 
     print("Publisher is ready")
-    print("Starting sending...")
+    print("Start sending...")
 
     beg_time = time.time()
     for i in range(0, len(sents), 2):

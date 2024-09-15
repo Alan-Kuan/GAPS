@@ -25,7 +25,13 @@ def main():
     device = "cuda"
     model_name = "microsoft/Phi-3.5-mini-instruct"
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    model = AutoModelForCausalLM.from_pretrained(model_name, device_map=device, trust_remote_code=True)
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+        torch_dtype="auto",
+        device_map=device,
+        trust_remote_code=True,
+        attn_implementation="flash_attention_2",
+    )
 
     template_prefix = """<|system|>
 你是精通多國語言的翻譯官，能夠以最接近原意的方式翻譯使用者提供的文句。
@@ -51,6 +57,7 @@ English: """
         prompt_token_num = input_tokens.shape[1]
         outputs = model.generate(
             input_ids=input_tokens,
+            attention_mask=torch.ones(input_tokens.shape, device=device),
             max_new_tokens=128,
             do_sample=True,
         )
