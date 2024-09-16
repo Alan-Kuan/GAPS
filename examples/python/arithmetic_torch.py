@@ -14,7 +14,7 @@ def main():
                         help="be a publisher or not (if not specify, it becomes a subscriber)")
     args = parser.parse_args()
 
-    signal.signal(signal.SIGINT, lambda sig, frame: print('Stopped'))
+    signal.signal(signal.SIGINT, lambda sig, frame: print("Stopped"))
 
     if args.p:
         print("Publisher Mode")

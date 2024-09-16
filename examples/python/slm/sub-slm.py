@@ -17,7 +17,7 @@ def main():
         print(f"Usage: {sys.argv[0]} <random seed>")
         exit(1)
 
-    signal.signal(signal.SIGINT, lambda sig, frame: print('Stopped'))
+    signal.signal(signal.SIGINT, lambda sig, frame: print("Stopped"))
 
     seed = int(sys.argv[1])
     torch.random.manual_seed(seed)
