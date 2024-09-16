@@ -3,6 +3,7 @@ import signal
 
 import pyshoz
 
+TOPIC = "arithmetic_python"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
 POOL_SIZE = 4 * 1024 * 1024;  # 4 MiB
 
@@ -23,7 +24,7 @@ def main():
         run_as_subscriber()
 
 def run_as_publisher():
-    publisher = pyshoz.Publisher("arithmetic_torch", LLOCATOR, POOL_SIZE)
+    publisher = pyshoz.Publisher(TOPIC, LLOCATOR, POOL_SIZE)
 
     # int[64]
     t = publisher.malloc(1, (64, ), (0, 32, 1))
@@ -41,7 +42,7 @@ def run_as_publisher():
     signal.pause()
 
 def run_as_subscriber():
-    subscriber = pyshoz.Subscriber("arithmetic_torch", LLOCATOR, POOL_SIZE)
+    subscriber = pyshoz.Subscriber(TOPIC, LLOCATOR, POOL_SIZE)
 
     def msg_handler(tensor):
         print(tensor * 2)
