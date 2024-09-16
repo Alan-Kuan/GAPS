@@ -58,7 +58,7 @@ DeviceTensor Publisher::malloc(size_t ndim, nb::tuple shape,
     uint8_t code = nb::cast<uint8_t>(dtype_tup[0]);
     uint8_t bits = nb::cast<uint8_t>(dtype_tup[1]);
     uint16_t lanes = nb::cast<uint16_t>(dtype_tup[2]);
-    nb::dlpack::dtype dtype = {.code = code, .bits = bits, .lanes = lanes};
+    nb::dlpack::dtype dtype{.code = code, .bits = bits, .lanes = lanes};
 
     size_t shape_buf[3];
     size_t size = (bits / 8) * ndim;
