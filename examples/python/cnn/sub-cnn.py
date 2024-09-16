@@ -41,6 +41,7 @@ def main():
 
     subscriber.sub(handler)
     print("Ctrl+C to leave")
+    signal.pause()
 
 class Conv2dBlock(nn.Module):
     def __init__(self, inc, outc, ksize, **kwargs):
