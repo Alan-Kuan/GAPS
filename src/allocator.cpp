@@ -64,7 +64,7 @@ void Allocator::removePool() {
                                       this->topic_header->pool_size));
 }
 
-void Allocator::recvHandle() {
+int Allocator::connectServer() {
     // setup UNIX Domain Socket client
     int sockfd = throwOnError(socket(AF_UNIX, SOCK_STREAM, 0));
 
@@ -91,6 +91,21 @@ void Allocator::recvHandle() {
     }
     throwOnError(
         connect(sockfd, (struct sockaddr*) &server_addr, sizeof(server_addr)));
+
+    return sockfd;
+}
+
+void Allocator::disconnectServer(int sockfd) {
+    char client_sock_path[108];
+    throwOnError(sprintf(client_sock_path, "%s/%s-client-%d-%d.sock",
+                         this->sock_file_dir.c_str(),
+                         this->topic_header->topic_name, getpid(), gettid()));
+    throwOnError(close(sockfd));
+    throwOnError(unlink(client_sock_path));
+}
+
+void Allocator::recvHandle() {
+    int sockfd = this->connectServer();
 
     // send a request for the handle of a memory pool
     struct {
@@ -121,8 +136,7 @@ void Allocator::recvHandle() {
 
     throwOnError(recvmsg(sockfd, &msg, 0));
 
-    throwOnError(close(sockfd));
-    throwOnError(unlink(cli_addr.sun_path));
+    this->disconnectServer(sockfd);
 
     // import the shareable handle into a generic handle
     struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);

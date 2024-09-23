@@ -24,6 +24,8 @@ public:
 private:
     void createPool(size_t size);
     void removePool();
+    int connectServer();
+    void disconnectServer(int sockfd);
     void recvHandle();
 
     void* pool_base = nullptr;
