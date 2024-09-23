@@ -26,7 +26,7 @@ Allocator::Allocator(TopicHeader* topic_header, bool read_only,
     this->allocator = new Tlsf(getTlsfHeader(topic_header));
 }
 
-Allocator::~Allocator() { this->removePool(); }
+Allocator::~Allocator() { this->detachPool(); }
 
 size_t Allocator::malloc(size_t size) {
     if (!this->allocator) throwError("No allocator");
@@ -55,13 +55,28 @@ void Allocator::createPool(size_t size) {
     this->pool_base = (void*) dptr;
 }
 
-void Allocator::removePool() {
+void Allocator::detachPool() {
     if (!this->handle_is_valid) return;
     throwOnErrorCuda(cuMemRelease(this->handle));
     throwOnErrorCuda(cuMemUnmap((CUdeviceptr) this->pool_base,
                                 this->topic_header->pool_size));
     throwOnErrorCuda(cuMemAddressFree((CUdeviceptr) this->pool_base,
                                       this->topic_header->pool_size));
+}
+
+void Allocator::removePool() {
+    int sockfd = this->connectServer();
+    struct {
+        size_t pool_size;
+        char topic_name[32];
+    } buf_req;
+
+    buf_req.pool_size =
+        0;  // pool size of 0 is seen as a request to remove the pool
+    strcpy(buf_req.topic_name, this->topic_header->topic_name);
+
+    throwOnError(send(sockfd, &buf_req, sizeof(buf_req), 0));
+    this->disconnectServer(sockfd);
 }
 
 int Allocator::connectServer() {

@@ -100,18 +100,26 @@ MemManager::~MemManager() {
         // receive request
         throwOnError(recv(cli_fd, &buf_req, sizeof(buf_req), 0));
 
-        if (!this->pools.count(buf_req.topic_name)) {
-            this->createPool(buf_req.topic_name, buf_req.pool_size);
+        // pool size of 0 is seen as a request to remove the pool
+        if (buf_req.pool_size == 0) {
+            if (this->pools.contains(buf_req.topic_name)) {
+                this->removePool(buf_req.topic_name);
+            }
+        } else {
+            if (!this->pools.contains(buf_req.topic_name)) {
+                this->createPool(buf_req.topic_name, buf_req.pool_size);
+            }
+
+            // export the handle to a shareable handle
+            int sh_handle;
+            throwOnErrorCuda(cuMemExportToShareableHandle(
+                (void*) &sh_handle, this->pools[buf_req.topic_name].handle,
+                CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR, 0));
+            *((int*) CMSG_DATA(cmsg)) = sh_handle;
+
+            throwOnError(sendmsg(cli_fd, &msg, 0));
         }
 
-        // export the handle to a shareable handle
-        int sh_handle;
-        throwOnErrorCuda(cuMemExportToShareableHandle(
-            (void*) &sh_handle, this->pools[buf_req.topic_name].handle,
-            CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR, 0));
-        *((int*) CMSG_DATA(cmsg)) = sh_handle;
-
-        throwOnError(sendmsg(cli_fd, &msg, 0));
         throwOnError(close(cli_fd));
     }
 }
@@ -127,9 +135,12 @@ void MemManager::createPool(const char* name, size_t size) {
     throwOnErrorCuda(cuMemCreate(&pool.handle, size, &prop, 0));
     pool.size = size;
     this->pools[name] = pool;
+    std::cout << "Created the pool of topic '" << name << "' (" << size
+              << " bytes)" << std::endl;
 }
 
 void MemManager::removePool(const char* name) {
     throwOnErrorCuda(cuMemRelease(this->pools[name].handle));
     this->pools.erase(name);
+    std::cout << "Removed the pool of topic '" << name << "'" << std::endl;
 }
