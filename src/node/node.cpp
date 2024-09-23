@@ -60,6 +60,7 @@ Node::~Node() {
     if (std::atomic_ref<uint32_t>(topic_header->interest_count).fetch_sub(1) ==
         1) {
         throwOnError(shm_unlink(topic_header->topic_name));
+        this->allocator->removePool();
     }
 
     // the allocator is constructed in the derived class

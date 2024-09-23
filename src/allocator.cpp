@@ -26,7 +26,7 @@ Allocator::Allocator(TopicHeader* topic_header, bool read_only,
     this->allocator = new Tlsf(getTlsfHeader(topic_header));
 }
 
-Allocator::~Allocator() { this->removePool(); }
+Allocator::~Allocator() { this->detachPool(); }
 
 size_t Allocator::malloc(size_t size) {
     if (!this->allocator) throwError("No allocator");
@@ -55,7 +55,7 @@ void Allocator::createPool(size_t size) {
     this->pool_base = (void*) dptr;
 }
 
-void Allocator::removePool() {
+void Allocator::detachPool() {
     if (!this->handle_is_valid) return;
     throwOnErrorCuda(cuMemRelease(this->handle));
     throwOnErrorCuda(cuMemUnmap((CUdeviceptr) this->pool_base,
@@ -64,7 +64,22 @@ void Allocator::removePool() {
                                       this->topic_header->pool_size));
 }
 
-void Allocator::recvHandle() {
+void Allocator::removePool() {
+    int sockfd = this->connectServer();
+    struct {
+        size_t pool_size;
+        char topic_name[32];
+    } buf_req;
+
+    buf_req.pool_size =
+        0;  // pool size of 0 is seen as a request to remove the pool
+    strcpy(buf_req.topic_name, this->topic_header->topic_name);
+
+    throwOnError(send(sockfd, &buf_req, sizeof(buf_req), 0));
+    this->disconnectServer(sockfd);
+}
+
+int Allocator::connectServer() {
     // setup UNIX Domain Socket client
     int sockfd = throwOnError(socket(AF_UNIX, SOCK_STREAM, 0));
 
@@ -91,6 +106,21 @@ void Allocator::recvHandle() {
     }
     throwOnError(
         connect(sockfd, (struct sockaddr*) &server_addr, sizeof(server_addr)));
+
+    return sockfd;
+}
+
+void Allocator::disconnectServer(int sockfd) {
+    char client_sock_path[108];
+    throwOnError(sprintf(client_sock_path, "%s/%s-client-%d-%d.sock",
+                         this->sock_file_dir.c_str(),
+                         this->topic_header->topic_name, getpid(), gettid()));
+    throwOnError(close(sockfd));
+    throwOnError(unlink(client_sock_path));
+}
+
+void Allocator::recvHandle() {
+    int sockfd = this->connectServer();
 
     // send a request for the handle of a memory pool
     struct {
@@ -121,8 +151,7 @@ void Allocator::recvHandle() {
 
     throwOnError(recvmsg(sockfd, &msg, 0));
 
-    throwOnError(close(sockfd));
-    throwOnError(unlink(cli_addr.sun_path));
+    this->disconnectServer(sockfd);
 
     // import the shareable handle into a generic handle
     struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);

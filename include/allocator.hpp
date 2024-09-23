@@ -11,6 +11,8 @@
 
 class Allocator {
 public:
+    friend class Node;
+
     Allocator() = delete;
     Allocator(TopicHeader* topic_header, bool read_only = false,
               const std::string& sock_file_dir = "/tmp/shoz");
@@ -23,7 +25,10 @@ public:
 
 private:
     void createPool(size_t size);
+    void detachPool();
     void removePool();
+    int connectServer();
+    void disconnectServer(int sockfd);
     void recvHandle();
 
     void* pool_base = nullptr;

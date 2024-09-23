@@ -6,6 +6,7 @@ from torchvision.transforms import v2
 
 import pyshoz
 
+TOPIC = "cnn"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
 POOL_SIZE = 8 * 1024 * 1024;  # 8 MiB
 
@@ -14,7 +15,7 @@ def main():
         print(f"Usage: {sys.argv[0]} <image path>")
         exit(1)
 
-    publisher = pyshoz.Publisher("inference", LLOCATOR, POOL_SIZE)
+    publisher = pyshoz.Publisher(TOPIC, LLOCATOR, POOL_SIZE)
 
     img = cv2.imread(sys.argv[1])
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
