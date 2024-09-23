@@ -32,6 +32,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Starting shareable GPU memory manager" << std::endl;
     try {
         if (cuInit(0) != CUDA_SUCCESS) throwError();
+        std::cout << "Ctrl+C to stop" << std::endl;
         manager->start();
     } catch (std::runtime_error& err) {
         std::cerr << "Memory Manager: " << err.what() << std::endl;
