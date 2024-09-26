@@ -24,7 +24,8 @@ max_img_count = int(sys.argv[2])
 # Start measuring
 beg = time.time()
 
-for file in os.listdir(img_dir_path)[:max_img_count]:
+img_paths = sorted(os.listdir(img_dir_path))
+for file in img_paths[:max_img_count]:
     img_path = img_dir_path / file
     img = cv2.imread(str(img_path))
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
