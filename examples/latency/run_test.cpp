@@ -8,7 +8,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <utility>
 
 #include <cuda_runtime.h>
 #include <zenoh.hxx>
@@ -103,9 +102,6 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
             // exploit the size field to send the tag
             pub.put(buf_d, (size_t) tag);
             // another time point is set at the subscriber-end
-
-            // control the publishing frequency
-            usleep(500000);  // 500ms
         }
 
         if (pid != 0) cout << "Ctrl+C to leave" << endl;
