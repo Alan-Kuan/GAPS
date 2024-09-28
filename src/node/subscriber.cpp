@@ -43,7 +43,7 @@ Subscriber::~Subscriber() {
 void Subscriber::onSampleReceived(iox::popo::Subscriber<size_t>* iox_subscriber,
                                   Subscriber* self) {
     bool keep = true;
-    for (int i = 0; i < 10 && keep; i++) {
+    for (int i = 0; i < 5 && keep; i++) {
         iox_subscriber->take()
             .and_then([iox_subscriber, self](auto& msg_id) {
                 TopicHeader* topic_header = getTopicHeader(self->shm_base);
