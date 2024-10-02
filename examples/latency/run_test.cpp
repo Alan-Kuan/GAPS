@@ -1,6 +1,6 @@
 #include <sys/wait.h>
-#include <unistd.h>
 
+#include <chrono>
 #include <csignal>
 #include <cstddef>
 #include <cstdio>
@@ -9,6 +9,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <thread>
 
 #include <cuda_runtime.h>
 #include <iceoryx_posh/runtime/posh_runtime.hpp>
@@ -20,6 +21,7 @@
 
 using namespace std;
 using namespace hlp;
+using namespace chrono_literals;
 
 void pubTest(int nproc, const char* output_name, size_t size, size_t times);
 void subTest(int nproc, const char* output_name);
@@ -107,8 +109,8 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
             pub.put(buf_d, (size_t) tag);
             // another time point is set at the subscriber-end
 
-            // control the publishing frequency
-            usleep(500000);  // 500ms
+            // control publishing frequency
+            this_thread::sleep_for(1ms);
         }
 
         if (pid != 0) cout << "Ctrl+C to leave" << endl;
