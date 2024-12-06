@@ -53,9 +53,9 @@ int main(int argc, char* argv[]) {
     const char* output_name = argv[3];
     size_t size, times;
 
-#ifdef DEBUG
-    cout << "The code was compiled with DEBUG macro defined, which may contain "
-            "codes that influence time measurement."
+#ifndef NDEBUG
+    cout << "The code was compiled without NDEBUG macro defined, which may "
+            "contain codes that influence time measurement."
          << endl;
 #endif
 
