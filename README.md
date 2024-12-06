@@ -43,6 +43,14 @@ ninja -C build
 
 After building the project, the compiled executables lie in `build/src`.
 
+### CMake Build Options
+- `BUILD_TORCH_SUPPORT=[on|(off)]`: whether to build PyTorch support
+- `BUILD_EXAMPLES=[(on)|off]`: whether to build example codes
+- `CMAKE_BUILD_TYPE=[(Release)|Debug]`: whether to build with debug flags (in our project, we also add some checking codes if build type is not "Release")
+
+> [!Note]
+> The one wrapped with parentheses is the default value
+
 ## Pre-Commit
 Pre-commit is used to setup clang-format pre-commit hooks.
 
