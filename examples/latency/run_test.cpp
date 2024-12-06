@@ -147,7 +147,7 @@ void subTest(int nproc, const char* output_name) {
         Subscriber sub(kTopic, kDftLLocator, kPoolSize);
         auto handler = [&timer](void* msg, size_t tag) {
             // upon received, set the current time point
-            timer.setPoint((int) tag);
+            timer.setPoint(tag);
         };
         sub.sub(handler);
 
