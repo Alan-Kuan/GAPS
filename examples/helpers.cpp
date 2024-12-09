@@ -2,8 +2,7 @@
 
 #include <signal.h>
 
-#include <cstdint>
-#include <cstdlib>
+#include <cstddef>
 #include <ctime>
 #include <fstream>
 
