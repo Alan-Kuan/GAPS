@@ -6,7 +6,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
-#include <iomanip>
 
 hlp::Timer::Timer(size_t capacity) : capacity(capacity), size(0) {
     this->time_points = new struct timespec[capacity];
@@ -24,11 +23,10 @@ hlp::Timer::~Timer() {
 void hlp::Timer::dump(const char* filename) {
     std::ofstream logfile(filename);
 
-    logfile << std::fixed << std::setprecision(6);
     for (size_t i = 0; i < this->size; i++) {
-        double timepoint = this->time_points[i].tv_sec * 1000 +
-                           this->time_points[i].tv_nsec / 1000.0;
-        logfile << this->labels[i] << "," << timepoint << std::endl;
+        auto& time_point = this->time_points[i];
+        logfile << this->labels[i] << ',' << time_point.tv_sec << ','
+                << time_point.tv_nsec << std::endl;
     }
 }
 
