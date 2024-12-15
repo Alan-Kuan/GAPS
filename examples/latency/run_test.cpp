@@ -96,7 +96,12 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
     Timer timer(times);
 
     try {
-        Publisher pub(kTopic, kDftLLocator, kPoolSize);
+        auto config = zenoh::Config::create_default();
+        config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
+        config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
+        auto session = zenoh::Session::open(std::move(config));
+        Publisher pub(session, kTopic, kPoolSize);
+
         for (int t = 0; t < times; t++) {
             int tag = (p - 1) * times + t + 1;
             int* buf_d;
@@ -117,9 +122,6 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
 
         if (pid != 0) cout << "Ctrl+C to leave" << endl;
         hlp::waitForSigInt();
-    } catch (zenoh::ErrorMessage& err) {
-        cerr << "Zenoh: " << err.as_string_view() << endl;
-        exit(1);
     } catch (runtime_error& err) {
         cerr << "Publisher: " << err.what() << endl;
         exit(1);
@@ -150,18 +152,18 @@ void subTest(int nproc, const char* output_name) {
     Timer timer(10000);
 
     try {
-        Subscriber sub(kTopic, kDftLLocator, kPoolSize);
-        auto handler = [&timer](void* msg, size_t tag) {
-            // upon received, set the current time point
-            timer.setPoint(tag);
-        };
-        sub.sub(handler);
+        auto config = zenoh::Config::create_default();
+        config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
+        config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
+        auto session = zenoh::Session::open(std::move(config));
+        Subscriber sub(session, kTopic, kPoolSize,
+                       [&timer](void* msg, size_t tag) {
+                           // upon received, set the current time point
+                           timer.setPoint(tag);
+                       });
 
         if (pid != 0) cout << "Ctrl+C to leave" << endl;
         hlp::waitForSigInt();
-    } catch (zenoh::ErrorMessage& err) {
-        cerr << "Zenoh: " << err.as_string_view() << endl;
-        exit(1);
     } catch (runtime_error& err) {
         cerr << "Subscriber: " << err.what() << endl;
         exit(1);

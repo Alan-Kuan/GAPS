@@ -2,6 +2,7 @@
 #define PUBLISHER_HPP
 
 #include <cstddef>
+#include <string>
 
 #ifdef BUILD_PYSHOZ
 #include <nanobind/ndarray.h>
@@ -17,7 +18,8 @@ typedef nb::ndarray<nb::pytorch, nb::device::cuda> DeviceTensor;
 class Publisher : public Node {
 public:
     Publisher() = delete;
-    Publisher(const char* topic_name, const char* llocator, size_t pool_size);
+    Publisher(const zenoh::Session& z_session, std::string&& topic_name,
+              size_t pool_size);
 
 #ifdef BUILD_PYSHOZ
     void copyTensor(DeviceTensor& dst, const nb::ndarray<nb::pytorch>& src);
@@ -30,7 +32,6 @@ public:
 #endif
 
 protected:
-    zenoh::Session z_session;
     zenoh::Publisher z_publisher;
 };
 

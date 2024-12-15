@@ -2,6 +2,7 @@
 #define SUBSCRIBER_HPP
 
 #include <functional>
+#include <string>
 
 #ifdef BUILD_PYSHOZ
 #include <nanobind/ndarray.h>
@@ -24,14 +25,15 @@ public:
 #endif
 
     Subscriber() = delete;
-    Subscriber(const char* topic_name, const char* llocator, size_t pool_size);
+    Subscriber(const zenoh::Session& z_session, std::string&& topic_name,
+               size_t pool_size, MessageHandler handler);
     ~Subscriber();
 
-    void sub(MessageHandler handler);
-
 protected:
-    zenoh::Session z_session;
-    zenoh::Subscriber z_subscriber;
+    std::function<void(const zenoh::Sample&)> makeCallback(
+        MessageHandler handler);
+
+    zenoh::Subscriber<void> z_subscriber;
 };
 
 #endif  // SUBSCRIBER_HPP

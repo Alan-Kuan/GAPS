@@ -27,12 +27,8 @@ if(BUILD_TORCH_SUPPORT)
     find_package(nanobind CONFIG REQUIRED)
 endif()
 
-include(FetchContent)
-
-FetchContent_declare(zenohpico GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-pico" GIT_TAG 0.11.0)
-FetchContent_MakeAvailable(zenohpico)
-FetchContent_declare(zenohcpp GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp" GIT_TAG 0.11.0)
-FetchContent_MakeAvailable(zenohcpp)
+find_package(zenohpico)
+find_package(zenohcxx)
 
 # Utility Function
 function(shoz_add_target targetName)

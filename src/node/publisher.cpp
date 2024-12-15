@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <string>
+#include <vector>
 
 #include <cuda_runtime.h>
 #include <zenoh-pico/config.h>
@@ -18,22 +20,10 @@
 namespace nb = nanobind;
 #endif
 
-Publisher::Publisher(const char* topic_name, const char* llocator,
+Publisher::Publisher(const zenoh::Session& z_session, std::string&& topic_name,
                      size_t pool_size)
-        : Node(topic_name, pool_size),
-          z_session(nullptr),
-          z_publisher(nullptr) {
-    zenoh::Config config;
-    config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
-    config.insert(Z_CONFIG_LISTEN_KEY, llocator);
-    this->z_session =
-        zenoh::expect<zenoh::Session>(zenoh::open(std::move(config)));
-
-    char z_topic_name[kMaxTopicNameLen + 6];
-    sprintf(z_topic_name, "shoz/%s", topic_name);
-    this->z_publisher = zenoh::expect<zenoh::Publisher>(
-        z_session.declare_publisher(z_topic_name));
-
+        : Node(topic_name.c_str(), pool_size),
+          z_publisher(z_session.declare_publisher("shoz/" + topic_name)) {
     this->allocator = new Allocator((TopicHeader*) this->shm_base);
 }
 
@@ -147,12 +137,13 @@ void Publisher::put(void* payload, size_t size) {
 
 #ifdef BUILD_PYSHOZ
     // notify subscribers with the message ID & tensor info
-    zenoh::BytesView msg((void*) &msg_buf, sizeof(msg_buf));
+    std::vector<uint8_t> byte_arr(sizeof(msg_buf));
+    memcpy(byte_arr.data(), &msg_buf, sizeof(msg_buf));
+    this->z_publisher.put(zenoh::Bytes(byte_arr));
 #else
     // notify subscribers with the message ID
-    zenoh::BytesView msg((void*) &msg_id, sizeof(size_t));
+    std::vector<uint8_t> byte_arr(sizeof(msg_id));
+    memcpy(byte_arr.data(), &msg_id, sizeof(msg_id));
+    this->z_publisher.put(zenoh::Bytes(byte_arr));
 #endif
-    if (!this->z_publisher.put(msg)) {
-        throwError("Zenoh failed to send a message");
-    }
 }

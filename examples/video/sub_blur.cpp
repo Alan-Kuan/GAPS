@@ -49,7 +49,10 @@ int main(int argc, char* argv[]) {
         VideoWriter writer(output_path, VideoWriter::fourcc('m', 'p', '4', 'v'),
                            25, Size(600, 316));
 
-        Subscriber sub(kTopicName, kDftLLocator, kPoolSize);
+        auto config = zenoh::Config::create_default();
+        config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
+        config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
+        auto session = zenoh::Session::open(std::move(config));
         size_t frame_size = 600 * 316 * 3;
         uchar* frame_blurred_d;
         cudaMalloc(&frame_blurred_d, frame_size);
@@ -69,20 +72,22 @@ int main(int argc, char* argv[]) {
         ofstream out;
         if (dump_hash) out.open("recv.out");
 
-        sub.sub([dump_hash, frame_blurred_d, frame_blurred, filter_d, &out,
-                 &writer](void* data_d, size_t size) {
-            if (dump_hash) {
-                cudaMemcpy(frame_blurred, data_d, size, cudaMemcpyDeviceToHost);
-                dump(out, frame_blurred, size);
-            }
+        Subscriber sub(session, kTopicName, kPoolSize,
+                       [dump_hash, frame_blurred_d, frame_blurred, filter_d,
+                        &out, &writer](void* data_d, size_t size) {
+                           if (dump_hash) {
+                               cudaMemcpy(frame_blurred, data_d, size,
+                                          cudaMemcpyDeviceToHost);
+                               dump(out, frame_blurred, size);
+                           }
 
-            blur((uchar*) data_d, (uchar*) frame_blurred_d, 600, 316, filter_d,
-                 5);
-            cudaMemcpy(frame_blurred, frame_blurred_d, size,
-                       cudaMemcpyDeviceToHost);
+                           blur((uchar*) data_d, (uchar*) frame_blurred_d, 600,
+                                316, filter_d, 5);
+                           cudaMemcpy(frame_blurred, frame_blurred_d, size,
+                                      cudaMemcpyDeviceToHost);
 
-            writer.write(Mat(316, 600, CV_8UC3, frame_blurred));
-        });
+                           writer.write(Mat(316, 600, CV_8UC3, frame_blurred));
+                       });
 
         cout << "Ctrl+C to continue" << endl;
         hlp::waitForSigInt();
@@ -93,8 +98,6 @@ int main(int argc, char* argv[]) {
         writer.release();
     } catch (runtime_error& err) {
         cerr << err.what() << endl;
-    } catch (zenoh::ErrorMessage& err) {
-        cerr << err.as_string_view() << endl;
     }
 
     return 0;

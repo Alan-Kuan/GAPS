@@ -111,7 +111,11 @@ void runAsPublisher(const char* llocator, int n) {
     srand(time(nullptr) + getpid());
 
     try {
-        Publisher publisher(kTopicName, llocator, kPoolSize);
+        auto config = zenoh::Config::create_default();
+        config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
+        config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
+        auto session = zenoh::Session::open(std::move(config));
+        Publisher publisher(session, kTopicName, kPoolSize);
 
         curandState* states;
         cudaMalloc(&states, sizeof(curandState) * kBufCount);
@@ -135,9 +139,6 @@ void runAsPublisher(const char* llocator, int n) {
             for (int i = kArrCount; i < kBufCount; i++) cout << arr[i] << ' ';
             cout << endl;
         }
-    } catch (zenoh::ErrorMessage& err) {
-        cerr << "Zenoh: " << err.as_string_view() << endl;
-        exit(1);
     } catch (runtime_error& err) {
         cerr << "Publisher: " << err.what() << endl;
         exit(1);
@@ -159,7 +160,10 @@ void runAsSubscriber(const char* llocator, int job) {
     }
 
     try {
-        Subscriber subscriber(kTopicName, llocator, kPoolSize);
+        auto config = zenoh::Config::create_default();
+        config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
+        config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
+        auto session = zenoh::Session::open(std::move(config));
         Subscriber::MessageHandler handler;
 
         switch (job) {
@@ -212,13 +216,10 @@ void runAsSubscriber(const char* llocator, int job) {
             };
             break;
         }
-        subscriber.sub(handler);
+        Subscriber subscriber(session, kTopicName, kPoolSize, handler);
 
         cout << "Ctrl+C to leave" << endl;
         hlp::waitForSigInt();
-    } catch (zenoh::ErrorMessage& err) {
-        cerr << "Zenoh: " << err.as_string_view() << endl;
-        exit(1);
     } catch (runtime_error& err) {
         cerr << "Subscriber: " << err.what() << endl;
         exit(1);

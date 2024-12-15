@@ -52,7 +52,11 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        Publisher pub(kTopicName, kDftLLocator, kPoolSize);
+        auto config = zenoh::Config::create_default();
+        config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
+        config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
+        auto session = zenoh::Session::open(std::move(config));
+        Publisher pub(session, kTopicName, kPoolSize);
         Mat frame;
         vector<uchar> frame_vec;
 
@@ -73,8 +77,6 @@ int main(int argc, char* argv[]) {
         cout << "Done" << endl;
     } catch (runtime_error& err) {
         cerr << err.what() << endl;
-    } catch (zenoh::ErrorMessage& err) {
-        cerr << err.as_string_view() << endl;
     }
 
     cap.release();

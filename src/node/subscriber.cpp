@@ -4,12 +4,13 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <functional>
+#include <string>
 
 #include <zenoh-pico/config.h>
 #include <zenoh.hxx>
 
 #include "allocator.hpp"
-#include "error.hpp"
 #include "metadata.hpp"
 
 #ifdef BUILD_PYSHOZ
@@ -17,17 +18,13 @@
 namespace nb = nanobind;
 #endif
 
-Subscriber::Subscriber(const char* topic_name, const char* llocator,
-                       size_t pool_size)
-        : Node(topic_name, pool_size),
-          z_session(nullptr),
-          z_subscriber(nullptr) {
-    zenoh::Config config;
-    config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
-    config.insert(Z_CONFIG_LISTEN_KEY, llocator);
-    this->z_session =
-        zenoh::expect<zenoh::Session>(zenoh::open(std::move(config)));
-
+Subscriber::Subscriber(const zenoh::Session& z_session,
+                       std::string&& topic_name, size_t pool_size,
+                       MessageHandler handler)
+        : Node(topic_name.c_str(), pool_size),
+          z_subscriber(z_session.declare_subscriber("shoz/" + topic_name,
+                                                    this->makeCallback(handler),
+                                                    zenoh::closures::none)) {
     this->allocator = new Allocator((TopicHeader*) this->shm_base, true);
 }
 
@@ -36,7 +33,8 @@ Subscriber::~Subscriber() {
     std::atomic_ref<uint32_t>(topic_header->sub_count)--;
 }
 
-void Subscriber::sub(MessageHandler handler) {
+std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
+    MessageHandler handler) {
     TopicHeader* topic_header = getTopicHeader(this->shm_base);
     std::atomic_ref<uint32_t>(topic_header->sub_count)++;
 
@@ -44,14 +42,16 @@ void Subscriber::sub(MessageHandler handler) {
         getMessageQueueHeader(getTlsfHeader(topic_header));
 
     auto callback = [=, this](const zenoh::Sample& sample) {
-        zenoh::BytesView msg = sample.get_payload();
-
 #ifdef BUILD_PYSHOZ
-        auto msg_buf = (MsgBuf*) msg.as_string_view().data();
+        MsgBuf msg_buf;
+        memcpy(&msg_buf, sample.get_payload().as_vector().data(),
+               sizeof(MsgBuf));
         MessageQueueEntry* mq_entry =
             getMessageQueueEntry(mq_header, msg_buf->msg_id);
 #else
-        size_t msg_id = *((size_t*) msg.as_string_view().data());
+        size_t msg_id;
+        memcpy(&msg_id, sample.get_payload().as_vector().data(),
+               sizeof(msg_id));
         MessageQueueEntry* mq_entry = getMessageQueueEntry(mq_header, msg_id);
 #endif
 
@@ -81,15 +81,5 @@ void Subscriber::sub(MessageHandler handler) {
             mq_entry->offset = offset;
         }
     };
-
-    try {
-        char z_topic_name[kMaxTopicNameLen + 6];
-        char* topic_name = (char*) this->shm_base;
-        sprintf(z_topic_name, "shoz/%s", topic_name);
-        this->z_subscriber =
-            zenoh::expect<zenoh::Subscriber>(this->z_session.declare_subscriber(
-                z_topic_name, std::move(callback)));
-    } catch (zenoh::ErrorMessage& err) {
-        throwError(err.as_string_view().data());
-    }
+    return callback;
 }
