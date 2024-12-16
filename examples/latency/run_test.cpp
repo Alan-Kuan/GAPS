@@ -99,7 +99,7 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
         auto config = zenoh::Config::create_default();
         config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
         config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
-        auto session = zenoh::Session::open(std::move(config));
+        zenoh::Session session(std::move(config));
         Publisher pub(session, kTopic, kPoolSize);
 
         for (int t = 0; t < times; t++) {
@@ -155,7 +155,7 @@ void subTest(int nproc, const char* output_name) {
         auto config = zenoh::Config::create_default();
         config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
         config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
-        auto session = zenoh::Session::open(std::move(config));
+        zenoh::Session session(std::move(config));
         Subscriber sub(session, kTopic, kPoolSize,
                        [&timer](void* msg, size_t tag) {
                            // upon received, set the current time point

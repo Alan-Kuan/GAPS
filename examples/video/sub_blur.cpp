@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
         auto config = zenoh::Config::create_default();
         config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
         config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
-        auto session = zenoh::Session::open(std::move(config));
+        zenoh::Session session(std::move(config));
         size_t frame_size = 600 * 316 * 3;
         uchar* frame_blurred_d;
         cudaMalloc(&frame_blurred_d, frame_size);

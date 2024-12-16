@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
         auto config = zenoh::Config::create_default();
         config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
         config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
-        auto session = zenoh::Session::open(std::move(config));
+        zenoh::Session session(std::move(config));
         Publisher pub(session, kTopicName, kPoolSize);
         Mat frame;
         vector<uchar> frame_vec;

@@ -114,7 +114,7 @@ void runAsPublisher(const char* llocator, int n) {
         auto config = zenoh::Config::create_default();
         config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
         config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
-        auto session = zenoh::Session::open(std::move(config));
+        zenoh::Session session(std::move(config));
         Publisher publisher(session, kTopicName, kPoolSize);
 
         curandState* states;
@@ -163,7 +163,7 @@ void runAsSubscriber(const char* llocator, int job) {
         auto config = zenoh::Config::create_default();
         config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
         config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
-        auto session = zenoh::Session::open(std::move(config));
+        zenoh::Session session(std::move(config));
         Subscriber::MessageHandler handler;
 
         switch (job) {
