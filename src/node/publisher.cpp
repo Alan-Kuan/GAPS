@@ -17,13 +17,21 @@
 
 #ifdef BUILD_PYSHOZ
 #include <nanobind/ndarray.h>
+
+#include "zenoh_wrapper.hpp"
+
 namespace nb = nanobind;
 #endif
 
-Publisher::Publisher(const zenoh::Session& z_session, std::string&& topic_name,
+Publisher::Publisher(const session_t& session, std::string&& topic_name,
                      size_t pool_size)
         : Node(topic_name.c_str(), pool_size),
-          z_publisher(z_session.declare_publisher("shoz/" + topic_name)) {
+#ifdef BUILD_PYSHOZ
+          z_publisher(
+              session.getSession().declare_publisher("shoz/" + topic_name)) {
+#else
+          z_publisher(session.declare_publisher("shoz/" + topic_name)) {
+#endif
     this->allocator = new Allocator((TopicHeader*) this->shm_base);
 }
 
@@ -76,6 +84,8 @@ void* Publisher::malloc(size_t size) {
 }
 #endif
 
+// Some parts of Publisher::put is common between C++ version and Python
+// version, so it is written as below.
 #ifdef BUILD_PYSHOZ
 void Publisher::put(const DeviceTensor& tensor) {
     if (tensor.ndim() > 3) {

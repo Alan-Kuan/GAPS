@@ -24,6 +24,9 @@ max_img_count = int(sys.argv[2])
 # Start measuring
 beg = time.time()
 
+session = pyshoz.ZenohSession(LLOCATOR)
+publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE)
+
 img_paths = sorted(os.listdir(img_dir_path))
 for file in img_paths[:max_img_count]:
     img_path = img_dir_path / file
@@ -38,7 +41,6 @@ for file in img_paths[:max_img_count]:
     ])
     proc_tensor = transforms(img_tensor)
 
-    publisher = pyshoz.Publisher(TOPIC, LLOCATOR, POOL_SIZE)
     buf_tensor = publisher.malloc(3, (3, 512, 512), (2, 32, 1), False)
     publisher.copy_tensor(buf_tensor, proc_tensor)
     publisher.put(buf_tensor)

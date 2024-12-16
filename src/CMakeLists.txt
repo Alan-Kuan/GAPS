@@ -25,7 +25,8 @@ if(BUILD_TORCH_SUPPORT)
         pyshoz.cpp
         node/node.cpp
         node/publisher.cpp
-        node/subscriber.cpp)
+        node/subscriber.cpp
+        zenoh_wrapper.cpp)
     target_compile_definitions(pyshoz
         PRIVATE
         BUILD_PYSHOZ)

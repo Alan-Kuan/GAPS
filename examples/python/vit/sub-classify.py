@@ -19,14 +19,13 @@ if len(sys.argv) != 2:
     exit(1)
 expect_img_num = int(sys.argv[1])
 
-signal.signal(signal.SIGINT, lambda sig, frame: print("Stopped"))
+signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
 
 model_name = "apple/mobilevit-small"
 model = MobileViTForImageClassification.from_pretrained(model_name)
 model.to(DEVICE)
 model.eval()
 
-subscriber = pyshoz.Subscriber(TOPIC, LLOCATOR, POOL_SIZE)
 preds = []
 timepoints = []
 
@@ -38,7 +37,9 @@ def handler(inputs):
     timepoints.append(time.time())
     if len(timepoints) == expect_img_num:
         os.kill(os.getpid(), signal.SIGINT)
-subscriber.sub(handler)
+
+session = pyshoz.ZenohSession(LLOCATOR)
+_subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, handler)
 
 print(f"Ready! Expect to receive {expect_img_num} images")
 signal.pause()

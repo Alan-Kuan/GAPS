@@ -11,7 +11,7 @@ LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
 POOL_SIZE = 8 * 1024 * 1024;  # 8 MiB
 
 def main():
-    signal.signal(signal.SIGINT, lambda sig, frame: print("Stopped"))
+    signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
 
     subscriber = pyshoz.Subscriber(TOPIC, LLOCATOR, POOL_SIZE)
 

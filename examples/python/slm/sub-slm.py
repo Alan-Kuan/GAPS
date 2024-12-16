@@ -17,7 +17,7 @@ def main():
         print(f"Usage: {sys.argv[0]} <random seed>")
         exit(1)
 
-    signal.signal(signal.SIGINT, lambda sig, frame: print("Stopped"))
+    signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
 
     seed = int(sys.argv[1])
     torch.random.manual_seed(seed)
@@ -48,7 +48,6 @@ English: """
     prefix_tokens = tokenizer(template_prefix, return_tensors="pt")["input_ids"].to(device)
     suffix_tokens = tokenizer(template_suffix, return_tensors="pt")["input_ids"].to(device)
 
-    subscriber = pyshoz.Subscriber(TOPIC, LLOCATOR, POOL_SIZE)
     timepoints = []
     translation = []
 
@@ -65,7 +64,9 @@ English: """
         translation.append(decoded_output)
         timepoints.append(time.time())
         print(len(translation))
-    subscriber.sub(handler)
+
+    session = pyshoz.ZenohSession(LLOCATOR)
+    _subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, handler)
 
     print("Subscriber is ready")
     print("Ctrl+C to leave")

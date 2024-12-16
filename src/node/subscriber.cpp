@@ -15,16 +15,23 @@
 
 #ifdef BUILD_PYSHOZ
 #include <nanobind/ndarray.h>
+
+#include "zenoh_wrapper.hpp"
+
 namespace nb = nanobind;
 #endif
 
-Subscriber::Subscriber(const zenoh::Session& z_session,
-                       std::string&& topic_name, size_t pool_size,
-                       MessageHandler handler)
+Subscriber::Subscriber(const session_t& session, std::string&& topic_name,
+                       size_t pool_size, MessageHandler handler)
         : Node(topic_name.c_str(), pool_size),
-          z_subscriber(z_session.declare_subscriber("shoz/" + topic_name,
-                                                    this->makeCallback(handler),
-                                                    zenoh::closures::none)) {
+#ifdef BUILD_PYSHOZ
+          z_subscriber(session.getSession().declare_subscriber(
+              "shoz/" + topic_name,
+#else
+          z_subscriber(session.declare_subscriber(
+              "shoz/" + topic_name,
+#endif
+              this->makeCallback(handler), zenoh::closures::none)) {
     this->allocator = new Allocator((TopicHeader*) this->shm_base, true);
 }
 
@@ -47,7 +54,7 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
         memcpy(&msg_buf, sample.get_payload().as_vector().data(),
                sizeof(MsgBuf));
         MessageQueueEntry* mq_entry =
-            getMessageQueueEntry(mq_header, msg_buf->msg_id);
+            getMessageQueueEntry(mq_header, msg_buf.msg_id);
 #else
         size_t msg_id;
         memcpy(&msg_id, sample.get_payload().as_vector().data(),
@@ -63,10 +70,10 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
         {
             nb::gil_scoped_acquire acq;
             const int64_t* strides =
-                msg_buf->strides[0] ? msg_buf->strides : nullptr;
+                msg_buf.strides[0] ? msg_buf.strides : nullptr;
             DeviceTensor tensor(
-                data, msg_buf->ndim, (const size_t*) msg_buf->shape,
-                nb::handle(), strides, msg_buf->dtype, nb::device::cuda::value);
+                data, msg_buf.ndim, (const size_t*) msg_buf.shape, nb::handle(),
+                strides, msg_buf.dtype, nb::device::cuda::value);
             handler(tensor);
         }
 #else
