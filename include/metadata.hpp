@@ -14,6 +14,23 @@ struct Domain {
     uint16_t dev_id;
 };
 
+/**
+ *  Shared Metadata Store:
+ *  ┌──────────────┬──────────────┬───────────────────────┐
+ *  │ Topic Header │ TLSF Section │ Message Queue Section │
+ *  └──────────────┴──────────────┴───────────────────────┘
+ *
+ *  TLSF Section:
+ *  ┌────────┬─────────────────────────┐
+ *  │ Header │ Array of Block Metadata │
+ *  └────────┴─────────────────────────┘
+ *
+ *  Message Queue Section:
+ *  ┌────────┬────────────────────────────────┐
+ *  │ Header │ Array of Message Queue Entries │
+ *  └────────┴────────────────────────────────┘
+ */
+
 struct TopicHeader {
     char topic_name[32];
     size_t pool_size;
