@@ -71,6 +71,8 @@ inline Tlsf::Header* getTlsfHeader(TopicHeader* topic_header) {
     return (Tlsf::Header*) ((uintptr_t) topic_header + sizeof(TopicHeader));
 }
 
+// WARN: this function depends on tlsf_header->block_count, so it should be set
+// before this function is used
 inline MessageQueueHeader* getMessageQueueHeader(Tlsf::Header* tlsf_header) {
     return (MessageQueueHeader*) ((uintptr_t) tlsf_header +
                                   sizeof(Tlsf::Header) +

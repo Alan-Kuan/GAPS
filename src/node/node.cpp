@@ -34,9 +34,6 @@ Node::Node(const char* topic_name, size_t pool_size) {
     this->attachShm(topic_name, this->shm_size);
 
     TopicHeader* topic_header = getTopicHeader(this->shm_base);
-    Tlsf::Header* tlsf_header = getTlsfHeader(topic_header);
-    MessageQueueHeader* mq_header = getMessageQueueHeader(tlsf_header);
-
     // init the header if this is a newly created topic
     if (topic_header->topic_name[0] == '\0') {
         strcpy(topic_header->topic_name, topic_name);
@@ -44,12 +41,14 @@ Node::Node(const char* topic_name, size_t pool_size) {
     }
     std::atomic_ref<uint32_t>(topic_header->interest_count)++;
 
+    Tlsf::Header* tlsf_header = getTlsfHeader(topic_header);
     // NOTE: if `pool_size` is not a multiple of `kBlockMinSize`, the remaining
     // space will be wasted
     tlsf_header->aligned_pool_size = block_count * Tlsf::kBlockMinSize;
     tlsf_header->block_count = block_count;
     throwOnError(sem_init(&tlsf_header->lock, 1, 1));
 
+    MessageQueueHeader* mq_header = getMessageQueueHeader(tlsf_header);
     mq_header->capacity = kMaxMessageNum;
 }
 
