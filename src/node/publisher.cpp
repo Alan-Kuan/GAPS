@@ -59,13 +59,14 @@ DeviceTensor Publisher::malloc(size_t ndim, nb::tuple shape,
     nb::dlpack::dtype dtype{.code = code, .bits = bits, .lanes = lanes};
 
     size_t shape_buf[3];
-    size_t size = (bits / 8) * ndim;
+    size_t size = 1;
     int i = 0;
     for (auto it = shape.begin(); it != shape.end(); it++) {
         size_t val = nb::cast<size_t>(*it);
         size *= val;
         shape_buf[i++] = val;
     }
+    size *= (bits * lanes + 7) / 8;
 
     size_t offset = this->allocator->malloc(size);
     if (offset == -1) throwError("no available space");
