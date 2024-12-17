@@ -13,8 +13,6 @@ POOL_SIZE = 8 * 1024 * 1024;  # 8 MiB
 def main():
     signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
 
-    subscriber = pyshoz.Subscriber(TOPIC, LLOCATOR, POOL_SIZE)
-
     weights_path = pathlib.Path(__file__).parent.resolve().joinpath("cifar_net.pth")
 
     model = Net(3, 10)
@@ -39,7 +37,9 @@ def main():
         pred = torch.argmax(output).item()
         print(f"Prediction: {labels[pred]}")
 
-    subscriber.sub(handler)
+    session = pyshoz.ZenohSession(LLOCATOR)
+    _subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, handler)
+
     print("Ctrl+C to leave")
     signal.pause()
 
