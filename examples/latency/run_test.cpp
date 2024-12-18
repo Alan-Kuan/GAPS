@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <cstdlib>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -27,7 +26,7 @@ void subTest(int nproc, const char* output_name);
 
 const char kTopic[] = "latency-test";
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
-constexpr size_t kPoolSize = 2 * 1024 * 1024;  // 2 MiB
+constexpr size_t kPoolSize = 32 * 1024 * 1024;  // 32 MiB
 
 int main(int argc, char* argv[]) {
     if (argc < 2 || (stoi(argv[1]) == 0 && argc < 4)) {
@@ -117,19 +116,14 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
             // another time point is set at the subscriber-end
 
             // control publishing frequency
-            this_thread::sleep_for(1ms);
+            this_thread::sleep_for(20ms);
         }
-
-        if (pid != 0) cout << "Ctrl+C to leave" << endl;
-        hlp::waitForSigInt();
     } catch (runtime_error& err) {
         cerr << "Publisher: " << err.what() << endl;
         exit(1);
     }
 
-    stringstream ss;
-    ss << "pub-" << output_name << '-' << p << ".csv";
-    timer.dump(ss.str().c_str());
+    timer.dump(output_name);
 
     if (pid == 0) return;
     for (int i = 1; i < nproc; i++) wait(nullptr);
@@ -169,9 +163,7 @@ void subTest(int nproc, const char* output_name) {
         exit(1);
     }
 
-    stringstream ss;
-    ss << "sub-" << output_name << '-' << p << ".csv";
-    timer.dump(ss.str().c_str());
+    timer.dump(output_name);
 
     if (pid == 0) return;
     for (int i = 1; i < nproc; i++) wait(nullptr);
