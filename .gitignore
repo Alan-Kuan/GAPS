@@ -1,4 +1,5 @@
 build
+outputs
 .envrc
 *.mp4
 *.jpg
