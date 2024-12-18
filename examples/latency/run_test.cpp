@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -37,7 +38,7 @@ int main(int argc, char* argv[]) {
              << "NPROC:\n"
              << "  number of publishers / subscribers\n"
              << "OUTPUT:\n"
-             << "  name of the output csv\n"
+             << "  prefix of the output csv (may contain directory)\n"
              << "SIZE:\n"
              << "  size of the message to publish in bytes (only required when "
                 "TYPE=0)\n"
@@ -123,7 +124,9 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
         exit(1);
     }
 
-    timer.dump(output_name);
+    stringstream ss;
+    ss << output_name << "-" << p << ".csv";
+    timer.dump(ss.str().c_str());
 
     if (pid == 0) return;
     for (int i = 1; i < nproc; i++) wait(nullptr);
@@ -163,7 +166,9 @@ void subTest(int nproc, const char* output_name) {
         exit(1);
     }
 
-    timer.dump(output_name);
+    stringstream ss;
+    ss << output_name << "-" << p << ".csv";
+    timer.dump(ss.str().c_str());
 
     if (pid == 0) return;
     for (int i = 1; i < nproc; i++) wait(nullptr);
