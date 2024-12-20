@@ -31,13 +31,13 @@ find_package(zenohpico)
 find_package(zenohcxx)
 
 # Utility Function
-function(shoz_add_target targetName)
+function(prj_add_target targetName)
     set(flags IS_EXE PIC)
     set(listArgs SRCS INCS LIBS)
     cmake_parse_arguments(ARG "${flags}" "" "${listArgs}" ${ARGN})
 
     if (NOT ARG_SRCS)
-        message(FATAL_ERROR "[shoz_add_target]: missing required argument SRCS")
+        message(FATAL_ERROR "[prj_add_target]: missing required argument SRCS")
     endif()
 
     if (ARG_IS_EXE)
