@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.25.2)
 project(shoz LANGUAGES C CXX CUDA)
 
-option(BUILD_STATIC_LIBS "Build the static library" ON)  # zenoh-pico's option
-option(BUILD_SHARED_LIBS "Build the shared library" ON)  # zenoh-pico's option
 option(BUILD_EXAMPLES "Build example programs" ON)
 option(BUILD_TORCH_SUPPORT "Build a Python module with PyTorch support" OFF)
 
