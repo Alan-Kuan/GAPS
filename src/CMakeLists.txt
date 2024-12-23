@@ -1,13 +1,10 @@
 # Shoz
-prj_add_target(node
+prj_add_target(shoz
     SRCS node/node.cpp node/publisher.cpp node/subscriber.cpp
     LIBS CUDA::cuda_driver zenohcxx::zenohpico allocator error)
 prj_add_target(allocator
-    SRCS allocator.cpp
-    LIBS CUDA::cuda_driver alloc_algo error
-    PIC)
-prj_add_target(alloc_algo
-    SRCS alloc_algo/tlsf.cpp
+    SRCS allocator/allocator.cpp allocator/tlsf.cpp
+    LIBS CUDA::cuda_driver error
     PIC)
 prj_add_target(error
     SRCS error.cpp
@@ -36,6 +33,5 @@ if(BUILD_TORCH_SUPPORT)
         CUDA::cuda_driver
         zenohcxx::zenohpico
         allocator
-        alloc_algo
         error)
 endif()

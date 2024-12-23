@@ -1,4 +1,4 @@
-#include "allocator.hpp"
+#include "allocator/allocator.hpp"
 
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -12,7 +12,6 @@
 
 #include <cuda.h>
 
-#include "alloc_algo/tlsf.hpp"
 #include "error.hpp"
 #include "metadata.hpp"
 
@@ -23,20 +22,11 @@ Allocator::Allocator(TopicHeader* topic_header, bool read_only,
           sock_file_dir(sock_file_dir) {
     std::filesystem::create_directory(sock_file_dir);
     this->createPool(topic_header->pool_size);
-    this->allocator = new Tlsf(getTlsfHeader(topic_header));
 }
 
 Allocator::~Allocator() { this->detachPool(); }
 
-size_t Allocator::malloc(size_t size) {
-    if (!this->allocator) throwError("No allocator");
-    return this->allocator->malloc(size);
-}
-
-void Allocator::free(size_t offset) {
-    if (!this->allocator) throwError("No allocator");
-    this->allocator->free(offset);
-}
+void* Allocator::getPoolBase() const { return this->pool_base; }
 
 void Allocator::createPool(size_t size) {
     this->recvHandle();
@@ -71,8 +61,8 @@ void Allocator::removePool() {
         char topic_name[32];
     } buf_req;
 
-    buf_req.pool_size =
-        0;  // pool size of 0 is seen as a request to remove the pool
+    // pool size of 0 is seen as a request to remove the pool
+    buf_req.pool_size = 0;
     strcpy(buf_req.topic_name, this->topic_header->topic_name);
 
     throwOnError(send(sockfd, &buf_req, sizeof(buf_req), 0));

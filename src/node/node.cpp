@@ -12,26 +12,33 @@
 
 #include <cuda.h>
 
-#include "alloc_algo/tlsf.hpp"
 #include "error.hpp"
 #include "metadata.hpp"
 
 Node::Node(const char* topic_name, size_t pool_size) {
     if (strlen(topic_name) > kMaxTopicNameLen) throwError();
 
+    // init CUDA Driver API
     throwOnErrorCuda(cuInit(0));
 
-    // create new / attach existing shared memory
+    /**
+     *  Create a new / attach an existing shared metadata store
+     */
+
     size_t padded_pool_size = this->getPaddedSize(pool_size);
-    size_t block_count = padded_pool_size / Tlsf::kBlockMinSize;
+    size_t block_count = padded_pool_size / kBlockMinSize;
 
     size_t tlsf_size =
-        sizeof(Tlsf::Header) + block_count * sizeof(Tlsf::BlockMetadata);
+        sizeof(TlsfHeader) + block_count * sizeof(TlsfBlockMetadata);
     size_t mq_size =
         sizeof(MessageQueueHeader) + kMaxMessageNum * sizeof(MessageQueueEntry);
 
     this->shm_size = sizeof(TopicHeader) + tlsf_size + mq_size;
     this->attachShm(topic_name, this->shm_size);
+
+    /**
+     *  Init headers
+     */
 
     TopicHeader* topic_header = getTopicHeader(this->shm_base);
     // init the header if this is a newly created topic
@@ -41,10 +48,10 @@ Node::Node(const char* topic_name, size_t pool_size) {
     }
     std::atomic_ref<uint32_t>(topic_header->interest_count)++;
 
-    Tlsf::Header* tlsf_header = getTlsfHeader(topic_header);
+    TlsfHeader* tlsf_header = getTlsfHeader(topic_header);
     // NOTE: if `pool_size` is not a multiple of `kBlockMinSize`, the remaining
     // space will be wasted
-    tlsf_header->aligned_pool_size = block_count * Tlsf::kBlockMinSize;
+    tlsf_header->aligned_pool_size = block_count * kBlockMinSize;
     tlsf_header->block_count = block_count;
     throwOnError(sem_init(&tlsf_header->lock, 1, 1));
 

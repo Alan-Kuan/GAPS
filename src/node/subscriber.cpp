@@ -10,7 +10,7 @@
 #include <zenoh-pico/config.h>
 #include <zenoh.hxx>
 
-#include "allocator.hpp"
+#include "allocator/tlsf.hpp"
 #include "metadata.hpp"
 
 #ifdef BUILD_PYSHOZ
@@ -32,7 +32,7 @@ Subscriber::Subscriber(const session_t& session, std::string&& topic_name,
               "shoz/" + topic_name,
 #endif
               this->makeCallback(handler), zenoh::closures::none)) {
-    this->allocator = new Allocator((TopicHeader*) this->shm_base, true);
+    this->allocator = new TlsfAllocator((TopicHeader*) this->shm_base, true);
 }
 
 Subscriber::~Subscriber() {

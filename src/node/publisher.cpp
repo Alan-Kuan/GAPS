@@ -11,7 +11,7 @@
 #include <zenoh-pico/config.h>
 #include <zenoh.hxx>
 
-#include "allocator.hpp"
+#include "allocator/tlsf.hpp"
 #include "error.hpp"
 #include "metadata.hpp"
 
@@ -32,7 +32,7 @@ Publisher::Publisher(const session_t& session, std::string&& topic_name,
 #else
           z_publisher(session.declare_publisher("shoz/" + topic_name)) {
 #endif
-    this->allocator = new Allocator((TopicHeader*) this->shm_base);
+    this->allocator = new TlsfAllocator((TopicHeader*) this->shm_base);
 }
 
 #ifdef BUILD_PYSHOZ

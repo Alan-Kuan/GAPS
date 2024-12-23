@@ -6,7 +6,6 @@
 
 #include <cuda.h>
 
-#include "alloc_algo/tlsf.hpp"
 #include "metadata.hpp"
 
 class Allocator {
@@ -16,12 +15,12 @@ public:
     Allocator() = delete;
     Allocator(TopicHeader* topic_header, bool read_only = false,
               const std::string& sock_file_dir = "/tmp/shoz");
-    ~Allocator();
+    virtual ~Allocator();
 
-    size_t malloc(size_t size);
-    void free(size_t offset);
+    virtual size_t malloc(size_t size) = 0;
+    virtual void free(size_t offset) = 0;
 
-    void* getPoolBase() const { return this->pool_base; }
+    void* getPoolBase() const;
 
 private:
     void createPool(size_t size);
@@ -34,7 +33,6 @@ private:
     void* pool_base = nullptr;
     TopicHeader* topic_header = nullptr;
     bool read_only = false;
-    Tlsf* allocator = nullptr;
 
     std::string sock_file_dir;
     CUmemGenericAllocationHandle handle;

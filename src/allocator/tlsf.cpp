@@ -1,4 +1,4 @@
-#include "alloc_algo/tlsf.hpp"
+#include "allocator/tlsf.hpp"
 
 #include <semaphore.h>
 
@@ -7,12 +7,18 @@
 #include <cstdint>
 #include <cstring>
 
-// NOTE: `tlsf_header` is initialized in Node's constructor
-Tlsf::Tlsf(Header* tlsf_header) : tlsf_header(tlsf_header) {
-    this->blocks = (BlockMetadata*) ((uintptr_t) tlsf_header + sizeof(Header));
+#include "metadata.hpp"
+
+TlsfAllocator::TlsfAllocator(TopicHeader* topic_header, bool read_only,
+                             const std::string& sock_file_dir)
+        : Allocator(topic_header, read_only, sock_file_dir) {
+    // NOTE: `tlsf_header` is already initialized in Node's constructor
+    this->tlsf_header = getTlsfHeader(topic_header);
+    this->blocks =
+        (TlsfBlockMetadata*) ((uintptr_t) tlsf_header + sizeof(TlsfHeader));
 
     bool pool_inited =
-        std::atomic_ref<bool>(tlsf_header->inited).exchange(true);
+        std::atomic_ref<bool>(this->tlsf_header->inited).exchange(true);
     if (!pool_inited) {
         this->blocks[0].header =
             tlsf_header->aligned_pool_size | kBlockFreeFlag | kBlockLastFlag;
@@ -21,7 +27,7 @@ Tlsf::Tlsf(Header* tlsf_header) : tlsf_header(tlsf_header) {
     }
 }
 
-size_t Tlsf::malloc(size_t size) {
+size_t TlsfAllocator::malloc(size_t size) {
     if (size == 0) return -1;
 
     size = this->alignSize(size);
@@ -47,7 +53,7 @@ size_t Tlsf::malloc(size_t size) {
     return block_idx * kBlockMinSize;
 }
 
-void Tlsf::free(size_t offset) {
+void TlsfAllocator::free(size_t offset) {
     if (offset == -1) return;
     size_t block_idx = offset / kBlockMinSize;
     sem_wait(&this->tlsf_header->lock);
@@ -61,11 +67,7 @@ void Tlsf::free(size_t offset) {
     sem_post(&this->tlsf_header->lock);
 }
 
-size_t Tlsf::BlockMetadata::getSize() const {
-    return this->header & ~kBlockFlagBits;
-}
-
-void Tlsf::mapping(size_t size, int* fidx, int* sidx) const {
+void TlsfAllocator::mapping(size_t size, int* fidx, int* sidx) const {
     // index of leftmost 1-bit
     *fidx = kWidthMinusOne - __builtin_clzll(size);
     // `kSndLvlIdx` bits from the right of the leftmost 1-bit
@@ -73,11 +75,11 @@ void Tlsf::mapping(size_t size, int* fidx, int* sidx) const {
 }
 
 // align `size` to the multiple of `kBlockMinSize` (2^`kSndLvlIdx`)
-size_t Tlsf::alignSize(size_t size) const {
+size_t TlsfAllocator::alignSize(size_t size) const {
     return (((size - 1) >> kSndLvlIdx) + 1) << kSndLvlIdx;
 }
 
-size_t Tlsf::findSuitableBlock(size_t size, int* fidx, int* sidx) {
+size_t TlsfAllocator::findSuitableBlock(size_t size, int* fidx, int* sidx) {
     // non-empty lists indexed by `*fidx` and second-level indices greater than
     // `*sidx`
     uint32_t non_empty_lists =
@@ -97,10 +99,10 @@ size_t Tlsf::findSuitableBlock(size_t size, int* fidx, int* sidx) {
     return this->tlsf_header->free_lists[*fidx][*sidx] - 1;
 }
 
-size_t Tlsf::splitBlock(size_t block_idx, size_t size) {
+size_t TlsfAllocator::splitBlock(size_t block_idx, size_t size) {
     size_t rest_block_idx = block_idx + size / kBlockMinSize;
-    BlockMetadata* block = this->blocks + block_idx;
-    BlockMetadata* rest_block = this->blocks + rest_block_idx;
+    TlsfBlockMetadata* block = this->blocks + block_idx;
+    TlsfBlockMetadata* rest_block = this->blocks + rest_block_idx;
 
     rest_block->header = (block->getSize() - size) | kBlockFreeFlag;
     rest_block->phys_prev_idx = block_idx;
@@ -116,13 +118,13 @@ size_t Tlsf::splitBlock(size_t block_idx, size_t size) {
     return rest_block_idx;
 }
 
-size_t Tlsf::mergeBlock(size_t block_idx) {
-    BlockMetadata* block = this->blocks + block_idx;
+size_t TlsfAllocator::mergeBlock(size_t block_idx) {
+    TlsfBlockMetadata* block = this->blocks + block_idx;
 
     size_t prev_idx = block->phys_prev_idx;
     size_t next_idx = block_idx + block->getSize() / kBlockMinSize;
-    BlockMetadata* prev = this->blocks + prev_idx;
-    BlockMetadata* next = this->blocks + next_idx;
+    TlsfBlockMetadata* prev = this->blocks + prev_idx;
+    TlsfBlockMetadata* next = this->blocks + next_idx;
 
     size_t new_block_idx = block_idx;
     bool block_is_last = block->header & kBlockLastFlag;
@@ -140,7 +142,7 @@ size_t Tlsf::mergeBlock(size_t block_idx) {
         new_block_idx = prev_idx;
     }
 
-    BlockMetadata* new_block = this->blocks + new_block_idx;
+    TlsfBlockMetadata* new_block = this->blocks + new_block_idx;
     if (block_is_last) {
         new_block->header |= kBlockLastFlag;
     } else {
@@ -152,8 +154,8 @@ size_t Tlsf::mergeBlock(size_t block_idx) {
 }
 
 // insert the block to the head of the list
-void Tlsf::insertBlock(size_t block_idx) {
-    BlockMetadata* block = this->blocks + block_idx;
+void TlsfAllocator::insertBlock(size_t block_idx) {
+    TlsfBlockMetadata* block = this->blocks + block_idx;
     int fidx, sidx;
     this->mapping(block->getSize(), &fidx, &sidx);
 
@@ -168,13 +170,13 @@ void Tlsf::insertBlock(size_t block_idx) {
 }
 
 // remove the block from the list
-void Tlsf::removeBlock(size_t block_idx) {
+void TlsfAllocator::removeBlock(size_t block_idx) {
     int fidx, sidx;
     this->mapping(this->blocks[block_idx].getSize(), &fidx, &sidx);
     this->removeBlock(block_idx, fidx, sidx);
 }
 
-void Tlsf::removeBlock(size_t block_idx, int fidx, int sidx) {
+void TlsfAllocator::removeBlock(size_t block_idx, int fidx, int sidx) {
     size_t prev_idx = this->blocks[block_idx].prev_free_idx;
     size_t next_idx = this->blocks[block_idx].next_free_idx;
 
