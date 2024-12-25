@@ -28,10 +28,11 @@ Publisher::Publisher(const session_t& session, std::string&& topic_name,
         : Node(topic_name.c_str(), pool_size),
 #ifdef BUILD_PYSHOZ
           z_publisher(
-              session.getSession().declare_publisher("shoz/" + topic_name)) {
+              session.getSession().declare_publisher("shoz/" + topic_name,
 #else
-          z_publisher(session.declare_publisher("shoz/" + topic_name)) {
+          z_publisher(session.declare_publisher("shoz/" + topic_name,
 #endif
+                                                     {.is_express = true})) {
     this->allocator = new TlsfAllocator((TopicHeader*) this->shm_base);
 }
 
