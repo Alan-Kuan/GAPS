@@ -14,8 +14,8 @@ public:
     TlsfAllocator(TopicHeader* topic_header, bool read_only = false,
                   const std::string& sock_file_dir = "/tmp/shoz");
 
-    size_t malloc(size_t size);
-    void free(size_t offset);
+    size_t malloc(size_t size) override;
+    void free(size_t offset) override;
 
 private:
     // bit number of size_t - 1
