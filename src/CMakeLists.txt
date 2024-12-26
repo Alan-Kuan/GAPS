@@ -1,5 +1,5 @@
 # Shoi
-prj_add_target(shoi
+prj_add_target(node
     SRCS node/node.cpp node/publisher.cpp node/subscriber.cpp
     LIBS CUDA::cuda_driver iceoryx_posh::iceoryx_posh allocator error)
 prj_add_target(allocator

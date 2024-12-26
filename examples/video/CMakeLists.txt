@@ -6,7 +6,7 @@ set(common_libs
     opencv_core
     opencv_imgproc
     opencv_videoio
-    shoi)
+    node)
 
 prj_add_target(pub_preproc
     IS_EXE
