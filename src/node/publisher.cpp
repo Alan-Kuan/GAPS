@@ -151,11 +151,10 @@ void Publisher::put(void* payload, size_t size) {
     // notify subscribers with the message ID & tensor info
     std::vector<uint8_t> byte_arr(sizeof(msg_buf));
     memcpy(byte_arr.data(), &msg_buf, sizeof(msg_buf));
-    this->z_publisher.put(zenoh::Bytes(byte_arr));
 #else
     // notify subscribers with the message ID
     std::vector<uint8_t> byte_arr(sizeof(msg_id));
     memcpy(byte_arr.data(), &msg_id, sizeof(msg_id));
-    this->z_publisher.put(zenoh::Bytes(byte_arr));
 #endif
+    this->z_publisher.put(zenoh::Bytes(std::move(byte_arr)));
 }
