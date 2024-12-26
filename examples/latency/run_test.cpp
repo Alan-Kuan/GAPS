@@ -1,6 +1,5 @@
 #include <sys/wait.h>
 
-#include <chrono>
 #include <cstddef>
 #include <cstdlib>
 #include <iostream>
@@ -18,7 +17,6 @@
 #include "node/subscriber.hpp"
 
 using namespace std;
-using namespace std::chrono_literals;
 namespace z = zenoh;
 
 void pubTest(int nproc, const char* output_name, size_t size, size_t times);
