@@ -1,5 +1,5 @@
 # Shoz
-prj_add_target(shoz
+prj_add_target(node
     SRCS node/node.cpp node/publisher.cpp node/subscriber.cpp
     LIBS CUDA::cuda_driver zenohcxx::zenohpico allocator error)
 prj_add_target(allocator
