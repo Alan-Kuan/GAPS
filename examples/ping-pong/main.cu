@@ -131,11 +131,6 @@ void runAsPingSide(int a, int b) {
         exit(1);
     }
 
-    cout << endl
-         << "Note: it's possible that the ping side failed to catch in the "
-            "first round due to the design of the underlying Zenoh"
-         << endl;
-
     std::free(res);
     std::free(data);
     cudaFree(res_d);
