@@ -1,6 +1,7 @@
 #ifndef SUBSCRIBER_HPP
 #define SUBSCRIBER_HPP
 
+#include <cstddef>
 #include <functional>
 #include <string>
 
