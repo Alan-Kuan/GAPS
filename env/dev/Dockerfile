@@ -1,5 +1,4 @@
-ARG IMG=nvidia/cuda:12.3.0-devel-ubuntu22.04
-FROM $IMG
+FROM nvidia/cuda:12.6.0-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 

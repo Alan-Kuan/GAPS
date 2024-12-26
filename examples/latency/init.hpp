@@ -3,6 +3,10 @@
 
 #include <cstddef>
 
-void init_data(int* arr, size_t count, int tag);
+namespace init {
+
+void fillArray(int* arr, size_t count, int tag);
+
+}  // namespace init
 
 #endif  // INIT_HPP

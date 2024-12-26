@@ -14,7 +14,7 @@ def main():
                         help="be a publisher or not (if not specify, it becomes a subscriber)")
     args = parser.parse_args()
 
-    signal.signal(signal.SIGINT, lambda sig, frame: print("Stopped"))
+    signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
 
     if args.p:
         print("Publisher Mode")
@@ -24,7 +24,8 @@ def main():
         run_as_subscriber()
 
 def run_as_publisher():
-    publisher = pyshoz.Publisher(TOPIC, LLOCATOR, POOL_SIZE)
+    session = pyshoz.ZenohSession(LLOCATOR)
+    publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE)
 
     # int[64]
     t = publisher.malloc(1, (64, ), (0, 32, 1))
@@ -42,11 +43,12 @@ def run_as_publisher():
     signal.pause()
 
 def run_as_subscriber():
-    subscriber = pyshoz.Subscriber(TOPIC, LLOCATOR, POOL_SIZE)
-
     def msg_handler(tensor):
         print(tensor * 2)
-    subscriber.sub(msg_handler)
+
+    session = pyshoz.ZenohSession(LLOCATOR)
+    # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
+    _subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, msg_handler)
 
     print("Ctrl+C to leave")
     signal.pause()

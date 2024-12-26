@@ -1,7 +1,5 @@
 #include <sys/wait.h>
 
-#include <chrono>
-#include <csignal>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -11,7 +9,6 @@
 #include <string>
 #include <thread>
 
-#include <cuda_runtime.h>
 #include <iceoryx_posh/runtime/posh_runtime.hpp>
 
 #include "helpers.hpp"
@@ -20,46 +17,52 @@
 #include "node/subscriber.hpp"
 
 using namespace std;
-using namespace hlp;
-using namespace chrono_literals;
 
 void pubTest(int nproc, const char* output_name, size_t size, size_t times);
 void subTest(int nproc, const char* output_name);
 
 const char kTopic[] = "latency-test";
-constexpr size_t kPoolSize = 2 * 1024 * 1024;  // 2 MiB
+const auto kPubInterval = 20ms;
+constexpr size_t kPoolSize = 32 * 1024 * 1024;  // 2 MiB
 
 int main(int argc, char* argv[]) {
-    if (argc < 2 || (stoi(argv[1]) == 0 && argc < 4)) {
+    if (argc < 4 || (argv[1][0] == 'p' && argc < 6)) {
         cerr << "Usage: " << argv[0] << " TYPE NPROC OUTPUT [SIZE] [TIMES]\n\n"
              << "TYPE:\n"
-             << "  0    publisher\n"
-             << "  1    subscriber\n"
+             << "  p    publisher\n"
+             << "  s    subscriber\n"
              << "NPROC:\n"
              << "  number of publishers / subscribers\n"
              << "OUTPUT:\n"
-             << "  name of the output csv\n"
+             << "  prefix of the output csv (may contain directory)\n"
              << "SIZE:\n"
              << "  size of the message to publish in bytes (only required when "
-                "TYPE=0)\n"
+                "TYPE=p)\n"
              << "TIMES:\n"
              << "  number of times to publish a message (only required when "
-                "TYPE=0)"
+                "TYPE=p)"
              << endl;
-        exit(1);
+        return 1;
     }
-    int node_type = stoi(argv[1]);
+    char node_type = argv[1][0];
     int nproc = stoi(argv[2]);
     const char* output_name = argv[3];
-    size_t size, times;
+    size_t size;
+    int times;
+
+#ifndef NDEBUG
+    cout << "The code was compiled without NDEBUG macro defined, which may "
+            "contain codes that influence time measurement."
+         << endl;
+#endif
 
     switch (node_type) {
-    case 0:
+    case 'p':
         size = stoul(argv[4]);
-        times = stoul(argv[5]);
+        times = stoi(argv[5]);
         pubTest(nproc, output_name, size, times);
         break;
-    case 1:
+    case 's':
         subTest(nproc, output_name);
         break;
     default:
@@ -71,9 +74,6 @@ int main(int argc, char* argv[]) {
 }
 
 void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
-    cout << "size: " << size << endl;
-    cout << "times: " << times << endl;
-
     pid_t pid = -1;
     int p = 1;
 
@@ -87,7 +87,7 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
         }
     }
 
-    Timer timer(times);
+    hlp::Timer timer(times);
 
     try {
         char runtime_name[32];
@@ -101,7 +101,7 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
             do {
                 buf_d = (int*) pub.malloc(size);
             } while (!buf_d);
-            init_data(buf_d, size / sizeof(int), tag);
+            init::fillArray(buf_d, size / sizeof(int), tag);
 
             timer.setPoint(tag);
             // since we won't use the data from the subscriber side, it's ok to
@@ -110,7 +110,7 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
             // another time point is set at the subscriber-end
 
             // control publishing frequency
-            this_thread::sleep_for(1ms);
+            this_thread::sleep_for(kPubInterval);
         }
 
         if (pid != 0) cout << "Ctrl+C to leave" << endl;
@@ -121,7 +121,7 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
     }
 
     stringstream ss;
-    ss << "pub-" << output_name << '-' << p << ".csv";
+    ss << output_name << "-" << p << ".csv";
     timer.dump(ss.str().c_str());
 
     if (pid == 0) return;
@@ -142,7 +142,7 @@ void subTest(int nproc, const char* output_name) {
         }
     }
 
-    Timer timer(10000);
+    hlp::Timer timer(10000);
 
     try {
         char runtime_name[32];
@@ -162,7 +162,7 @@ void subTest(int nproc, const char* output_name) {
     }
 
     stringstream ss;
-    ss << "sub-" << output_name << '-' << p << ".csv";
+    ss << output_name << "-" << p << ".csv";
     timer.dump(ss.str().c_str());
 
     if (pid == 0) return;

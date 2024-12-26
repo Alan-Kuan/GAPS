@@ -7,23 +7,13 @@ To setup the environment, make sure the following requirements are met:
 - Docker Compose is installed
 - NVIDIA Container Toolkit is installed
     - Follow the installation and configuration steps [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
-- CUDA 12.3 is supported by your host's NVIDIA driver
+- CUDA 12.6 is supported by your host's NVIDIA driver
 - Some CUDA Driver APIs like `cuMemCreate` and `cuMemExportToShareableHandle` are supported by your NVIDIA GPU
 
-First, update `.env` in `env/`.
-If the host machine is NVIDIA Jetson series devkit, such as AGX Orin or Orin Nano, write:
-```
-IMG=nvcr.io/nvidia/l4t-cuda:12.2.12-devel
-```
+There is an environment for development on x86 machine in `env/dev` and an environment for testing on Jetson Dev Board in `env/jetson`.
 
-Otherwise, write:
-```
-IMG=nvidia/cuda:12.3.0-devel-ubuntu22.04
-```
-
-Then, run the following commands:
+Choose one environment, and then run the following commands:
 ```sh
-cd env
 docker compose up -d
 ssh ubuntu@localhost -p 22222
 ```
@@ -42,6 +32,14 @@ ninja -C build
 ```
 
 After building the project, the compiled executables lie in `build/src`.
+
+### CMake Build Options
+- `BUILD_TORCH_SUPPORT=[on|(off)]`: whether to build PyTorch support
+- `BUILD_EXAMPLES=[(on)|off]`: whether to build example codes
+- `CMAKE_BUILD_TYPE=[(Release)|Debug]`: whether to build with debug flags (in our project, we also add some checking codes if build type is not "Release")
+
+> [!Note]
+> The one wrapped with parentheses is the default value
 
 ## Pre-Commit
 Pre-commit is used to setup clang-format pre-commit hooks.

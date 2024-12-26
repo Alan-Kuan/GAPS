@@ -4,11 +4,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <functional>
 
 #include <iceoryx_posh/capro/service_description.hpp>
 #include <iceoryx_posh/popo/subscriber.hpp>
 
-#include "allocator.hpp"
+#include "allocator/tlsf.hpp"
 #include "error.hpp"
 #include "metadata.hpp"
 
@@ -24,7 +25,7 @@ Subscriber::Subscriber(const char* topic_name, size_t pool_size,
     std::atomic_ref<uint32_t>(topic_header->sub_count)++;
     this->mq_header = getMessageQueueHeader(getTlsfHeader(topic_header));
 
-    this->allocator = new Allocator((TopicHeader*) this->shm_base, true);
+    this->allocator = new TlsfAllocator((TopicHeader*) this->shm_base, true);
 
     this->iox_listener
         .attachEvent(this->iox_subscriber,

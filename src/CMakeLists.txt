@@ -1,20 +1,17 @@
-# shoi
-shoi_add_target(node
+# Shoi
+prj_add_target(shoi
     SRCS node/node.cpp node/publisher.cpp node/subscriber.cpp
     LIBS CUDA::cuda_driver iceoryx_posh::iceoryx_posh allocator error)
-shoi_add_target(allocator
-    SRCS allocator.cpp
-    LIBS CUDA::cuda_driver alloc_algo error
+prj_add_target(allocator
+    SRCS allocator/allocator.cpp allocator/tlsf.cpp
+    LIBS CUDA::cuda_driver error
     PIC)
-shoi_add_target(alloc_algo
-    SRCS alloc_algo/tlsf.cpp
-    PIC)
-shoi_add_target(error
+prj_add_target(error
     SRCS error.cpp
     PIC)
 
 # Memory Manager
-shoi_add_target(mem_manager
+prj_add_target(mem_manager
     IS_EXE
     SRCS mem_manager.cpp
     LIBS CUDA::cuda_driver error)
@@ -26,7 +23,8 @@ if(BUILD_TORCH_SUPPORT)
         pyshoz.cpp
         node/node.cpp
         node/publisher.cpp
-        node/subscriber.cpp)
+        node/subscriber.cpp
+        zenoh_wrapper.cpp)
     target_compile_definitions(pyshoz
         PRIVATE
         BUILD_PYSHOZ)
@@ -35,6 +33,5 @@ if(BUILD_TORCH_SUPPORT)
         CUDA::cuda_driver
         zenohcxx::zenohpico
         allocator
-        alloc_algo
         error)
 endif()

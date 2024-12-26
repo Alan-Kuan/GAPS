@@ -17,7 +17,8 @@ def main():
 
     model_name = "microsoft/Phi-3.5-mini-instruct"
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    publisher = pyshoz.Publisher(TOPIC, LLOCATOR, POOL_SIZE)
+    session = pyshoz.ZenohSession(LLOCATOR)
+    publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE)
     sents = read_sentences(sys.argv[1])
 
     print("Publisher is ready")

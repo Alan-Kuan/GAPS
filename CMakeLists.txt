@@ -21,13 +21,13 @@ if(BUILD_TORCH_SUPPORT)
 endif()
 
 # Utility Function
-function(shoi_add_target targetName)
+function(prj_add_target targetName)
     set(flags IS_EXE PIC)
     set(listArgs SRCS INCS LIBS)
     cmake_parse_arguments(ARG "${flags}" "" "${listArgs}" ${ARGN})
 
     if (NOT ARG_SRCS)
-        message(FATAL_ERROR "[shoi_add_target]: missing required argument SRCS")
+        message(FATAL_ERROR "[prj_add_target]: missing required argument SRCS")
     endif()
 
     if (ARG_IS_EXE)

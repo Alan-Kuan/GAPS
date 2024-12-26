@@ -11,9 +11,7 @@ LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
 POOL_SIZE = 8 * 1024 * 1024;  # 8 MiB
 
 def main():
-    signal.signal(signal.SIGINT, lambda sig, frame: print("Stopped"))
-
-    subscriber = pyshoz.Subscriber(TOPIC, LLOCATOR, POOL_SIZE)
+    signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
 
     weights_path = pathlib.Path(__file__).parent.resolve().joinpath("cifar_net.pth")
 
@@ -39,7 +37,9 @@ def main():
         pred = torch.argmax(output).item()
         print(f"Prediction: {labels[pred]}")
 
-    subscriber.sub(handler)
+    session = pyshoz.ZenohSession(LLOCATOR)
+    _subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, handler)
+
     print("Ctrl+C to leave")
     signal.pause()
 

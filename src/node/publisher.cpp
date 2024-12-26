@@ -9,7 +9,7 @@
 #include <iceoryx_posh/capro/service_description.hpp>
 #include <iceoryx_posh/popo/publisher.hpp>
 
-#include "allocator.hpp"
+#include "allocator/tlsf.hpp"
 #include "error.hpp"
 #include "metadata.hpp"
 
@@ -18,7 +18,7 @@ Publisher::Publisher(const char* topic_name, size_t pool_size)
           iox_publisher({"", "shoi",
                          iox::capro::IdString_t(iox::cxx::TruncateToCapacity,
                                                 topic_name)}) {
-    this->allocator = new Allocator((TopicHeader*) this->shm_base);
+    this->allocator = new TlsfAllocator((TopicHeader*) this->shm_base);
 }
 
 void* Publisher::malloc(size_t size) {
