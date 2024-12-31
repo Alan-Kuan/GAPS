@@ -19,10 +19,14 @@ OUTPUT_2_DIR="${PROJECT_DIR}/outputs/mpns"
 mkdir -p "${OUTPUT_1_DIR}"
 mkdir -p "${OUTPUT_2_DIR}"
 
+iox-roudi -l off -c "${SCRIPT_DIR}/iox-roudi-config.toml" &
+ROUDI_PID="$!"
+
 "${PROJECT_DIR}/build/src/mem_manager" >/dev/null &
 MM_PID="$!"
 sleep 1
 
+trap -- "kill -s INT ${ROUDI_PID}" EXIT
 trap -- "kill -s INT ${MM_PID}" EXIT
 
 echo "1. Testing with different payload sizes"
