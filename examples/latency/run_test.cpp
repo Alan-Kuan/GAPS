@@ -112,9 +112,6 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
             // control publishing frequency
             this_thread::sleep_for(kPubInterval);
         }
-
-        if (pid != 0) cout << "Ctrl+C to leave" << endl;
-        hlp::waitForSigInt();
     } catch (runtime_error& err) {
         cerr << "Publisher: " << err.what() << endl;
         exit(1);
