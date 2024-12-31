@@ -10,10 +10,16 @@ NP=(2 4 8 1 1 1 4)
 NS=(1 1 1 2 4 8 4)
 SPEC_SIZE="${SIZE[7]}"
 
-mkdir -p outputs/1p1s
-mkdir -p outputs/mpns
+SCRIPT_DIR=`dirname $(realpath -s "$0")`
+PROJECT_DIR=`dirname ${SCRIPT_DIR}`
+RUN_TEST="${PROJECT_DIR}/build/examples/latency/run_test"
+OUTPUT_1_DIR="${PROJECT_DIR}/outputs/1p1s"
+OUTPUT_2_DIR="${PROJECT_DIR}/outputs/mpns"
 
-./build/src/mem_manager >/dev/null &
+mkdir -p "${OUTPUT_1_DIR}"
+mkdir -p "${OUTPUT_2_DIR}"
+
+"${PROJECT_DIR}/build/src/mem_manager" >/dev/null &
 MM_PID="$!"
 sleep 1
 
@@ -25,10 +31,10 @@ echo
 for i in {0..7}; do
     echo "Testing with payload size: ${NAME[i]} ..."
 
-    ./build/examples/latency/run_test s 1 "outputs/1p1s/sub-${NAME[i]}" >/dev/null &
+    "${RUN_TEST}" s 1 "${OUTPUT_1_DIR}/sub-${NAME[i]}" >/dev/null &
     SUB_PID="$!"
     sleep 1  # wait a while for the subscriber to be ready
-    ./build/examples/latency/run_test p 1 "outputs/1p1s/pub-${NAME[i]}" "${SIZE[i]}" "${TIMES}"
+    "${RUN_TEST}" p 1 "${OUTPUT_1_DIR}/pub-${NAME[i]}" "${SIZE[i]}" "${TIMES}"
     sleep 1  # wait a while for the subscriber to finish handling
 
     kill -s INT "${SUB_PID}"
@@ -42,9 +48,9 @@ echo
 for i in {0..6}; do
     echo "Testing with (p, s) = (${NP[i]}, ${NS[i]}) ..."
 
-    ./build/examples/latency/run_test s "${NS[i]}" "outputs/mpns/sub-${NP[i]}p${NS[i]}s" >/dev/null &
+    "${RUN_TEST}" s "${NS[i]}" "${OUTPUT_2_DIR}/sub-${NP[i]}p${NS[i]}s" >/dev/null &
     sleep 1  # wait a while for the subscriber to be ready
-    ./build/examples/latency/run_test p "${NP[i]}" "outputs/mpns/pub-${NP[i]}p${NS[i]}s" "${SPEC_SIZE}" "${TIMES}"
+    "${RUN_TEST}" p "${NP[i]}" "${OUTPUT_2_DIR}/pub-${NP[i]}p${NS[i]}s" "${SPEC_SIZE}" "${TIMES}"
     sleep 1  # wait a while for the subscriber to finish handling
 
     pkill --signal INT run_test
