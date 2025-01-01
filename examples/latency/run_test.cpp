@@ -9,6 +9,7 @@
 #include <string>
 #include <thread>
 
+#include <iceoryx_hoofs/log/logmanager.hpp>
 #include <iceoryx_posh/runtime/posh_runtime.hpp>
 
 #include "env.hpp"
@@ -61,6 +62,9 @@ int main(int argc, char* argv[]) {
             break;
         }
     }
+
+    iox::log::LogManager::GetLogManager().SetDefaultLogLevel(
+        iox::log::LogLevel::kOff);
 
     char runtime_name[32];
     sprintf(runtime_name, "latency_test_%c", node_type);
