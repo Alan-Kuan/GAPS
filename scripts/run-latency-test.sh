@@ -2,7 +2,6 @@
 
 set -e
 
-TIMES=100
 SIZE=(1024 4096 16384 65536 262144 1048576 4194304 16777216)
 NAME=(1KB 4KB 16KB 64KB 256KB 1MB 4MB 16MB)
 
@@ -34,7 +33,7 @@ for i in {0..7}; do
     "${RUN_TEST}" s 1 "${OUTPUT_1_DIR}/sub-${NAME[i]}" >/dev/null &
     SUB_PID="$!"
     sleep 1  # wait a while for the subscriber to be ready
-    "${RUN_TEST}" p 1 "${OUTPUT_1_DIR}/pub-${NAME[i]}" "${SIZE[i]}" "${TIMES}"
+    "${RUN_TEST}" p 1 "${OUTPUT_1_DIR}/pub-${NAME[i]}" "${SIZE[i]}"
     sleep 1  # wait a while for the subscriber to finish handling
 
     kill -s INT "${SUB_PID}"
@@ -50,7 +49,7 @@ for i in {0..6}; do
 
     "${RUN_TEST}" s "${NS[i]}" "${OUTPUT_2_DIR}/sub-${NP[i]}p${NS[i]}s" >/dev/null &
     sleep 1  # wait a while for the subscriber to be ready
-    "${RUN_TEST}" p "${NP[i]}" "${OUTPUT_2_DIR}/pub-${NP[i]}p${NS[i]}s" "${SPEC_SIZE}" "${TIMES}"
+    "${RUN_TEST}" p "${NP[i]}" "${OUTPUT_2_DIR}/pub-${NP[i]}p${NS[i]}s" "${SPEC_SIZE}"
     sleep 1  # wait a while for the subscriber to finish handling
 
     pkill --signal INT run_test
