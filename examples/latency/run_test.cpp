@@ -11,6 +11,7 @@
 
 #include <zenoh.hxx>
 
+#include "env.hpp"
 #include "helpers.hpp"
 #include "init.hpp"
 #include "node/publisher.hpp"
@@ -19,17 +20,13 @@
 using namespace std;
 namespace z = zenoh;
 
-void pubTest(int nproc, const char* output_name, size_t size, size_t times);
-void subTest(int nproc, const char* output_name);
-
-const char kTopic[] = "latency-test";
-const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
-const auto kPubInterval = 20ms;
-constexpr size_t kPoolSize = 32 * 1024 * 1024;  // 32 MiB
+void runAsPublisher(z::Session& session, int id, const char* output_name,
+                    size_t payload_size);
+void runAsSubscriber(z::Session& session, int id, const char* output_name);
 
 int main(int argc, char* argv[]) {
-    if (argc < 4 || (argv[1][0] == 'p' && argc < 6)) {
-        cerr << "Usage: " << argv[0] << " TYPE NPROC OUTPUT [SIZE] [TIMES]\n\n"
+    if (argc < 4 || (argv[1][0] == 'p' && argc < 5)) {
+        cerr << "Usage: " << argv[0] << " TYPE NPROC OUTPUT [SIZE]\n\n"
              << "TYPE:\n"
              << "  p    publisher\n"
              << "  s    subscriber\n"
@@ -39,9 +36,6 @@ int main(int argc, char* argv[]) {
              << "  prefix of the output csv (may contain directory)\n"
              << "SIZE:\n"
              << "  size of the message to publish in bytes (only required when "
-                "TYPE=p)\n"
-             << "TIMES:\n"
-             << "  number of times to publish a message (only required when "
                 "TYPE=p)"
              << endl;
         return 1;
@@ -49,8 +43,7 @@ int main(int argc, char* argv[]) {
     char node_type = argv[1][0];
     int nproc = stoi(argv[2]);
     const char* output_name = argv[3];
-    size_t size;
-    int times;
+    size_t payload_size;
 
 #ifndef NDEBUG
     cout << "The code was compiled without NDEBUG macro defined, which may "
@@ -58,28 +51,10 @@ int main(int argc, char* argv[]) {
          << endl;
 #endif
 
-    switch (node_type) {
-    case 'p':
-        size = stoul(argv[4]);
-        times = stoi(argv[5]);
-        pubTest(nproc, output_name, size, times);
-        break;
-    case 's':
-        subTest(nproc, output_name);
-        break;
-    default:
-        cerr << "Unknown type" << endl;
-        return 1;
-    }
-
-    return 0;
-}
-
-void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
     pid_t pid = -1;
-    int p = 1;
+    int id = 1;
 
-    for (; p < nproc; p++) {
+    for (; id < nproc; id++) {
         pid = fork();
         if (pid < 0) {
             cerr << "Failed to fork" << endl;
@@ -89,22 +64,41 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
         }
     }
 
-    hlp::Timer timer(times);
+    auto config = z::Config::create_default();
+    config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
+    config.insert(Z_CONFIG_LISTEN_KEY, env::kDftLLocator);
+    z::Session session(std::move(config));
+
+    switch (node_type) {
+    case 'p':
+        payload_size = stoul(argv[4]);
+        runAsPublisher(session, id, output_name, payload_size);
+        break;
+    case 's':
+        runAsSubscriber(session, id, output_name);
+        break;
+    default:
+        cerr << "Unknown type" << endl;
+        return 1;
+    }
+
+    if (pid == 0) return 0;
+    for (int i = 1; i < nproc; i++) wait(nullptr);
+
+    return 0;
+}
+
+void runAsPublisher(z::Session& session, int id, const char* output_name,
+                    size_t payload_size) {
+    hlp::Timer timer(env::kTimes);
 
     try {
-        auto config = z::Config::create_default();
-        config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
-        config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
-        z::Session session(std::move(config));
-        Publisher pub(session, kTopic, kPoolSize);
+        Publisher pub(session, env::kTopic, env::kPoolSize);
 
-        for (int t = 0; t < times; t++) {
-            int tag = (p - 1) * times + t + 1;
-            int* buf_d;
-            do {
-                buf_d = (int*) pub.malloc(size);
-            } while (!buf_d);
-            init::fillArray(buf_d, size / sizeof(int), tag);
+        for (int t = 0; t < env::kTimes; t++) {
+            int tag = (id - 1) * env::kTimes + t + 1;
+            int* buf_d = (int*) pub.malloc(payload_size);
+            init::fillArray(buf_d, payload_size / sizeof(int), tag);
 
             timer.setPoint(tag);
             // since we won't use the data from the subscriber side, it's ok to
@@ -113,7 +107,7 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
             // another time point is set at the subscriber-end
 
             // control publishing frequency
-            this_thread::sleep_for(kPubInterval);
+            this_thread::sleep_for(env::kPubInterval);
         }
     } catch (runtime_error& err) {
         cerr << "Publisher: " << err.what() << endl;
@@ -121,41 +115,21 @@ void pubTest(int nproc, const char* output_name, size_t size, size_t times) {
     }
 
     stringstream ss;
-    ss << output_name << "-" << p << ".csv";
+    ss << output_name << "-" << id << ".csv";
     timer.dump(ss.str().c_str());
-
-    if (pid == 0) return;
-    for (int i = 1; i < nproc; i++) wait(nullptr);
 }
 
-void subTest(int nproc, const char* output_name) {
-    pid_t pid = -1;
-    int p = 1;
-
-    for (; p < nproc; p++) {
-        pid = fork();
-        if (pid < 0) {
-            cerr << "Failed to fork" << endl;
-            exit(1);
-        } else if (pid == 0) {
-            break;
-        }
-    }
-
+void runAsSubscriber(z::Session& session, int id, const char* output_name) {
     hlp::Timer timer(10000);
 
     try {
-        auto config = z::Config::create_default();
-        config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
-        config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
-        z::Session session(std::move(config));
-        Subscriber sub(session, kTopic, kPoolSize,
+        Subscriber sub(session, env::kTopic, env::kPoolSize,
                        [&timer](void* msg, size_t tag) {
                            // upon received, set the current time point
                            timer.setPoint(tag);
                        });
 
-        if (pid != 0) cout << "Ctrl+C to leave" << endl;
+        if (id == 1) cout << "Ctrl+C to leave" << endl;
         hlp::waitForSigInt();
     } catch (runtime_error& err) {
         cerr << "Subscriber: " << err.what() << endl;
@@ -163,9 +137,6 @@ void subTest(int nproc, const char* output_name) {
     }
 
     stringstream ss;
-    ss << output_name << "-" << p << ".csv";
+    ss << output_name << "-" << id << ".csv";
     timer.dump(ss.str().c_str());
-
-    if (pid == 0) return;
-    for (int i = 1; i < nproc; i++) wait(nullptr);
 }
