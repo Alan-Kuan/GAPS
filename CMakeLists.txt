@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.25.2)
 project(shoi LANGUAGES CXX CUDA)
 
+option(BUILD_DEBUG "Build with debugging codes" OFF)
 option(BUILD_EXAMPLES "Build example programs" ON)
 option(BUILD_TORCH_SUPPORT "Build a Python module with PyTorch support" OFF)
 
@@ -9,6 +10,7 @@ set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_ARCHITECTURES 70)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Dependencies
 find_package(CUDAToolkit REQUIRED)
 find_package(iceoryx_posh CONFIG REQUIRED)
 if(BUILD_TORCH_SUPPORT)
@@ -43,6 +45,9 @@ function(prj_add_target targetName)
     endif()
     if (ARG_LIBS)
         target_link_libraries(${targetName} PRIVATE ${ARG_LIBS})
+    endif()
+    if (BUILD_DEBUG)
+        target_compile_definitions(${targetName} PRIVATE DEBUG)
     endif()
 
     if (ARG_PIC)
