@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <ctime>
 
-#ifndef NDEBUG
+#ifdef DEBUG
 #include <cstdlib>
 #include <iostream>
 #endif
@@ -18,7 +18,7 @@ public:
     inline void reset() { this->size = 0; }
 
     inline void setPoint(uint16_t label) {
-#ifndef NDEBUG
+#ifdef DEBUG
         if (this->size >= capacity) {
             std::cerr << "The timer's buffer overflowed" << std::endl;
             exit(1);
