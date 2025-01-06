@@ -2,29 +2,59 @@ FROM nvidia/cuda:12.6.0-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# dev dependencies
+#
+#  Tools
+#
 RUN apt update && apt install -y \
     build-essential ninja-build \
-    sudo curl wget git tar tmux openssh-server
+    sudo curl wget git tar tmux openssh-server \
+    python3-pip
 
-# optional dev dependencies
-RUN apt update && apt install -y \
-    libopencv-dev
-
-# cmake
+# install CMake
 WORKDIR /opt
 RUN wget "https://github.com/Kitware/CMake/releases/download/v3.29.6/cmake-3.29.6-linux-`arch`.tar.gz"
 RUN tar xvf cmake-3.29.6-linux-`arch`.tar.gz
 
-# user
-WORKDIR /
+#
+#  Dependencies
+#
+
+# install Zenoh-pico
+WORKDIR /root
+RUN git clone https://github.com/eclipse-zenoh/zenoh-pico.git --branch 1.1.0 --depth 1
+WORKDIR /root/zenoh-pico
+RUN /opt/cmake-3.29.6-linux-x86_64/bin/cmake -B build -G Ninja -DFRAG_MAX_SIZE=17000000
+RUN ninja -C build && ninja -C build install
+
+# install Zenoh-cpp
+WORKDIR /root
+RUN git clone https://github.com/eclipse-zenoh/zenoh-cpp.git --branch 1.1.0 --depth 1
+WORKDIR /root/zenoh-cpp
+RUN /opt/cmake-3.29.6-linux-x86_64/bin/cmake -B build -DZENOHCXX_ZENOHC=off -DZENOHCXX_ZENOHPICO=on
+RUN make -C build install
+
+RUN pip install nanobind==2.1.0
+RUN pip install torch==2.2.2 torchvision==0.17.2 --index-url https://download.pytorch.org/whl/cu121
+
+#
+#  Optional Dependencies
+#
+RUN apt update && apt install -y \
+    libopencv-dev
+
+RUN pip install facenet-pytorch
+
+#
+#  Misc
+#
+
+# add a user
 RUN useradd ubuntu -m -G sudo -s /usr/bin/bash
 RUN passwd -d ubuntu
 RUN echo 'export PATH="/opt/cmake-3.29.6-linux-`arch`/bin:/usr/local/cuda/bin:${PATH}"' >> /home/ubuntu/.bashrc
+RUN echo 'export PYTHONPATH=./build/src' >> /home/ubuntu/.bashrc
 
-# ssh server
-WORKDIR /
-USER root
+# configure ssh server
 RUN mkdir /var/run/sshd
 RUN echo 'Port 22' >> /etc/ssh/sshd_config
 RUN echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config
