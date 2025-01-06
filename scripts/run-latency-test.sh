@@ -2,8 +2,8 @@
 
 set -e
 
-SIZE=(1024 4096 16384 65536 262144 1048576 4194304 16777216)
-NAME=(1KB 4KB 16KB 64KB 256KB 1MB 4MB 16MB)
+SIZE=(1024 4096 16384 65536 262144 1048576 4194304)
+NAME=(1KB 4KB 16KB 64KB 256KB 1MB 4MB)
 
 # NP=(2 4 8 1 1 1 4)
 # NS=(1 1 1 2 4 8 4)
@@ -27,7 +27,7 @@ trap -- "kill -s INT ${MM_PID}" EXIT
 echo "1. Testing with different payload sizes"
 echo
 
-for i in {0..7}; do
+for i in {0..6}; do
     echo "Testing with payload size: ${NAME[i]} ..."
 
     "${RUN_TEST}" s 1 "${OUTPUT_1_DIR}/sub-${NAME[i]}" >/dev/null &

@@ -8,7 +8,7 @@ PROJECT_DIR = path.dirname(SCRIPT_DIR)
 OUTPUT_1_DIR = path.join(PROJECT_DIR, 'outputs/1p1s')
 # OUTPUT_2_DIR = path.join(PROJECT_DIR, 'outputs/mpns')
 
-names = ['1KB', '4KB', '16KB', '64KB', '256KB', '1MB', '4MB', '16MB']
+names = ['1KB', '4KB', '16KB', '64KB', '256KB', '1MB', '4MB']
 table = {}
 
 def getDiff(pub_csv, sub_csv):
