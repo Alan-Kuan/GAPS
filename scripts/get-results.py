@@ -13,12 +13,7 @@ table = {}
 
 def getDiff(pub_csv, sub_csv):
     diff_nsec = sub_csv[2] - pub_csv[2]
-
-    ltz_idx = diff_nsec < 0
-    diff_nsec[ltz_idx] += 10**9
-    sub_csv.loc[ltz_idx, 1] -= 1
     diff_sec = sub_csv[1] - pub_csv[1]
-
     return diff_sec * 10**6 + diff_nsec / 10**3
 
 # Calculate 1p1s latencies
