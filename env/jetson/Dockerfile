@@ -18,13 +18,13 @@ RUN pip install nanobind==2.1.0 \
 
 # zenoh
 WORKDIR /root
-RUN git clone https://github.com/eclipse-zenoh/zenoh-pico.git --branch 1.0.4 --depth 1
+RUN git clone https://github.com/eclipse-zenoh/zenoh-pico.git --branch 1.1.0 --depth 1
 WORKDIR /root/zenoh-pico
 RUN cmake -B build -G Ninja -DFRAG_MAX_SIZE=17000000
 RUN ninja -C build && ninja -C build install
 
 WORKDIR /root
-RUN git clone https://github.com/eclipse-zenoh/zenoh-cpp.git --branch 1.0.4 --depth 1
+RUN git clone https://github.com/eclipse-zenoh/zenoh-cpp.git --branch 1.1.0 --depth 1
 WORKDIR /root/zenoh-cpp
 RUN cmake -B build -DZENOHCXX_ZENOHC=off -DZENOHCXX_ZENOHPICO=on
 RUN make -C build install
