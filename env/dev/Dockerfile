@@ -42,7 +42,8 @@ RUN pip install torch==2.2.2 torchvision==0.17.2 --index-url https://download.py
 RUN apt update && apt install -y \
     libopencv-dev
 
-RUN pip install facenet-pytorch
+RUN pip install pandas \
+    facenet-pytorch
 
 #
 #  Misc

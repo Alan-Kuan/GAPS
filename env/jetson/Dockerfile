@@ -36,7 +36,8 @@ RUN pip install nanobind==2.1.0
 RUN apt update && apt install -y \
     libopencv-dev
 
-RUN pip install facenet-pytorch
+RUN pip install pandas \
+    facenet-pytorch
 
 #
 #  Misc
