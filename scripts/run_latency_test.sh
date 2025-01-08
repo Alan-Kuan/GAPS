@@ -9,16 +9,15 @@ NAME=(1KB 4KB 16KB 64KB 256KB 1MB 4MB)
 # NS=(1 1 1 2 4 8 4)
 # SPEC_SIZE="${SIZE[7]}"
 
-SCRIPT_DIR=`dirname $(realpath -s "$0")`
-PROJECT_DIR=`dirname ${SCRIPT_DIR}`
-RUN_TEST="${PROJECT_DIR}/build/examples/latency/run_test"
-OUTPUT_1_DIR="${PROJECT_DIR}/outputs/1p1s"
-# OUTPUT_2_DIR="${PROJECT_DIR}/outputs/mpns"
+SCRIPT_DIR=`dirname $(realpath "$0")`
+RUN_TEST="./build/examples/latency/run_test"
+OUTPUT_1_DIR="outputs/1p1s"
+# OUTPUT_2_DIR="outputs/mpns"
 
 mkdir -p "${OUTPUT_1_DIR}"
 # mkdir -p "${OUTPUT_2_DIR}"
 
-"${PROJECT_DIR}/build/src/mem_manager" >/dev/null &
+./build/src/mem_manager >/dev/null &
 MM_PID="$!"
 sleep 1
 
@@ -58,3 +57,5 @@ done
 
 echo
 echo "Done!"
+
+"${SCRIPT_DIR}/get_results.py"

@@ -5,8 +5,8 @@ import pandas as pd
 
 SCRIPT_DIR = path.dirname(path.realpath(__file__))
 PROJECT_DIR = path.dirname(SCRIPT_DIR)
-OUTPUT_1_DIR = path.join(PROJECT_DIR, 'outputs/1p1s')
-# OUTPUT_2_DIR = path.join(PROJECT_DIR, 'outputs/mpns')
+OUTPUT_1_DIR = 'outputs/1p1s'
+# OUTPUT_2_DIR = 'outputs/mpns'
 
 names = ['1KB', '4KB', '16KB', '64KB', '256KB', '1MB', '4MB']
 table = {}
@@ -23,8 +23,9 @@ for name in names:
     sub_csv = pd.read_csv(f'{OUTPUT_1_DIR}/sub-{name}-1.csv', header=None)
     table[name] = getDiff(pub_csv, sub_csv)
 
-pd.DataFrame(table).to_csv(f'{PROJECT_DIR}/results.csv', index=False)
-print(f'results.csv is generated at {PROJECT_DIR}')
+output_file = 'results.csv'
+pd.DataFrame(table).to_csv(output_file, index=False)
+print(f'{output_file} is generated')
 
 # Calculate mpns latencies
 
@@ -46,5 +47,6 @@ print(f'results.csv is generated at {PROJECT_DIR}')
 #         diff_list.append(getDiff(pub_csv, sub_csv))
 #     table[name] = pd.concat(diff_list)
 #
-# pd.DataFrame(table).to_csv(f'{PROJECT_DIR}/results-mpns.csv', index=False)
-# print(f'results-mpns.csv is generated at {PROJECT_DIR}')
+# output_file = 'results-mpns.csv'
+# pd.DataFrame(table).to_csv(output_file, index=False)
+# print(f'{output_file} is generated')
