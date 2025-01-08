@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
-from os import path
-
 import pandas as pd
 
-names = ['1KB', '4KB', '16KB', '64KB', '256KB', '1MB', '4MB']
-
-SCRIPT_DIR = path.dirname(path.realpath(__file__))
-PROJECT_DIR = path.dirname(SCRIPT_DIR)
 OUTPUT_DIR = 'outputs/python'
+
+names = ['1KB', '4KB', '16KB', '64KB', '256KB', '1MB', '4MB']
 
 table = {}
 
