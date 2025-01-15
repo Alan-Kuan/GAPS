@@ -30,8 +30,7 @@ def main():
 def run_as_publisher(session):
     publisher = pyshoz.Publisher(session, TOPIC_PING, POOL_SIZE)
 
-    # int[64]
-    ori_tensor = publisher.malloc((64, ), (0, 32, 1))
+    ori_tensor = publisher.malloc((64, ), pyshoz.int32)
     for i in range(64):
         ori_tensor[i] = i
 
@@ -56,7 +55,7 @@ def run_as_subscriber(session):
     publisher = pyshoz.Publisher(session, TOPIC_PONG, POOL_SIZE)
 
     def msg_handler(tensor):
-        buf = publisher.malloc((64, ), (0, 32, 1))
+        buf = publisher.malloc((64, ), pyshoz.int32)
         publisher.copy_tensor(buf, tensor.contiguous())
         buf *= 2
         publisher.put(buf)

@@ -18,6 +18,7 @@
 #ifdef BUILD_PYSHOZ
 #include <nanobind/ndarray.h>
 
+#include "pyshoz.hpp"
 #include "zenoh_wrapper.hpp"
 
 namespace nb = nanobind;
@@ -45,12 +46,31 @@ void Publisher::copyTensor(DeviceTensor& dst,
     cudaMemcpy(dst.data(), src.data(), src.nbytes(), kind);
 }
 
-DeviceTensor Publisher::malloc(nb::tuple shape, nb::tuple dtype_tup,
-                               bool clean) {
-    uint8_t code = nb::cast<uint8_t>(dtype_tup[0]);
-    uint8_t bits = nb::cast<uint8_t>(dtype_tup[1]);
-    uint16_t lanes = nb::cast<uint16_t>(dtype_tup[2]);
-    nb::dlpack::dtype dtype{.code = code, .bits = bits, .lanes = lanes};
+DeviceTensor Publisher::malloc(nb::tuple shape, Dtype dtype, bool clean) {
+    nb::dlpack::dtype nb_dtype;
+    switch (dtype) {
+    case Dtype::int8:
+        nb_dtype = {.code = 0, .bits = 8, .lanes = 1};
+        break;
+    case Dtype::int16:
+        nb_dtype = {.code = 0, .bits = 16, .lanes = 1};
+        break;
+    case Dtype::int32:
+        nb_dtype = {.code = 0, .bits = 32, .lanes = 1};
+        break;
+    case Dtype::int64:
+        nb_dtype = {.code = 0, .bits = 64, .lanes = 1};
+        break;
+    case Dtype::uint8:
+        nb_dtype = {.code = 1, .bits = 8, .lanes = 1};
+        break;
+    case Dtype::float16:
+        nb_dtype = {.code = 2, .bits = 16, .lanes = 1};
+        break;
+    case Dtype::float32:
+        nb_dtype = {.code = 2, .bits = 32, .lanes = 1};
+        break;
+    }
 
     int32_t ndim = shape.size();
     std::vector<size_t> shape_buf;
@@ -60,7 +80,7 @@ DeviceTensor Publisher::malloc(nb::tuple shape, nb::tuple dtype_tup,
         size *= val;
         shape_buf.push_back(val);
     }
-    size *= (bits * lanes + 7) / 8;
+    size *= (nb_dtype.bits * nb_dtype.lanes + 7) / 8;
 
     size_t offset = this->allocator->malloc(size);
     if (offset == -1) throwError("no available space");
@@ -69,7 +89,7 @@ DeviceTensor Publisher::malloc(nb::tuple shape, nb::tuple dtype_tup,
     if (clean) cudaMemset(addr, 0, size);
 
     return DeviceTensor(addr, ndim, shape_buf.data(), nb::handle(), nullptr,
-                        dtype, nb::device::cuda::value);
+                        nb_dtype, nb::device::cuda::value);
 }
 #else
 void* Publisher::malloc(size_t size) {

@@ -36,7 +36,7 @@ def main():
         buffer_time = 1
         time.sleep(speaking_time + buffer_time)
 
-        msg_tokens = publisher.malloc(input_tokens.shape, (0, 64, 1))
+        msg_tokens = publisher.malloc(input_tokens.shape, pyshoz.int64)
         publisher.copy_tensor(msg_tokens, input_tokens.contiguous())
         publisher.put(msg_tokens)
 

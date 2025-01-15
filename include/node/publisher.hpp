@@ -11,6 +11,7 @@
 #ifdef BUILD_PYSHOZ
 #include <nanobind/ndarray.h>
 
+#include "pyshoz.hpp"
 #include "zenoh_wrapper.hpp"
 
 namespace nb = nanobind;
@@ -29,7 +30,7 @@ public:
 
 #ifdef BUILD_PYSHOZ
     void copyTensor(DeviceTensor& dst, const nb::ndarray<nb::pytorch>& src);
-    DeviceTensor malloc(nb::tuple shape, nb::tuple dtype_tup, bool clean);
+    DeviceTensor malloc(nb::tuple shape, Dtype dtype, bool clean);
     void put(const DeviceTensor& tensor);
 #else
     void* malloc(size_t size);
