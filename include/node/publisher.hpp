@@ -29,8 +29,7 @@ public:
 
 #ifdef BUILD_PYSHOZ
     void copyTensor(DeviceTensor& dst, const nb::ndarray<nb::pytorch>& src);
-    DeviceTensor malloc(size_t ndim, nb::tuple shape, nb::tuple dtype_tup,
-                        bool clean);
+    DeviceTensor malloc(nb::tuple shape, nb::tuple dtype_tup, bool clean);
     void put(const DeviceTensor& tensor);
 #else
     void* malloc(size_t size);

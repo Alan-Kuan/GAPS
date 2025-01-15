@@ -145,12 +145,17 @@ inline MessageQueueEntry* getMessageQueueEntry(MessageQueueHeader* mq_header,
 #ifdef BUILD_PYSHOZ
 #include <nanobind/ndarray.h>
 
-struct MsgBuf {
+/**
+ *  Message:
+ *  ┌────────┬─────────────────────────┐
+ *  │ Header │ Shape (size_t[ndim])    │
+ *  └────────┴─────────────────────────┘
+ */
+
+struct MsgHeader {
     size_t msg_id;
     nanobind::dlpack::dtype dtype;
     int32_t ndim;
-    int64_t shape[3];
-    int64_t strides[3];
 };
 #endif
 

@@ -45,27 +45,20 @@ void Publisher::copyTensor(DeviceTensor& dst,
     cudaMemcpy(dst.data(), src.data(), src.nbytes(), kind);
 }
 
-DeviceTensor Publisher::malloc(size_t ndim, nb::tuple shape,
-                               nb::tuple dtype_tup, bool clean) {
-    if (ndim != shape.size()) {
-        throwError("'ndim' does not match the size of 'shape'");
-    }
-    if (ndim > 3) {
-        throwError("Currently supports only at most 3 dimensions");
-    }
-
+DeviceTensor Publisher::malloc(nb::tuple shape, nb::tuple dtype_tup,
+                               bool clean) {
     uint8_t code = nb::cast<uint8_t>(dtype_tup[0]);
     uint8_t bits = nb::cast<uint8_t>(dtype_tup[1]);
     uint16_t lanes = nb::cast<uint16_t>(dtype_tup[2]);
     nb::dlpack::dtype dtype{.code = code, .bits = bits, .lanes = lanes};
 
-    size_t shape_buf[3];
+    int32_t ndim = shape.size();
+    std::vector<size_t> shape_buf;
     size_t size = 1;
-    int i = 0;
     for (auto it = shape.begin(); it != shape.end(); it++) {
         size_t val = nb::cast<size_t>(*it);
         size *= val;
-        shape_buf[i++] = val;
+        shape_buf.push_back(val);
     }
     size *= (bits * lanes + 7) / 8;
 
@@ -75,8 +68,8 @@ DeviceTensor Publisher::malloc(size_t ndim, nb::tuple shape,
 
     if (clean) cudaMemset(addr, 0, size);
 
-    return DeviceTensor(addr, ndim, shape_buf, nb::handle(), nullptr, dtype,
-                        nb::device::cuda::value);
+    return DeviceTensor(addr, ndim, shape_buf.data(), nb::handle(), nullptr,
+                        dtype, nb::device::cuda::value);
 }
 #else
 void* Publisher::malloc(size_t size) {
@@ -90,26 +83,12 @@ void* Publisher::malloc(size_t size) {
 // version, so it is written as below.
 #ifdef BUILD_PYSHOZ
 void Publisher::put(const DeviceTensor& tensor) {
-    if (tensor.ndim() > 3) {
-        throwError("Tensor with dimension greater than 3 is not supported");
-    }
-
     size_t size = tensor.nbytes();
     if (size == 0) return;
 
-    MsgBuf msg_buf;
-    msg_buf.dtype = tensor.dtype();
-    msg_buf.ndim = tensor.ndim();
-    for (int i = 0; i < msg_buf.ndim; i++) {
-        msg_buf.shape[i] = tensor.shape(i);
-    }
-    if (tensor.stride_ptr()) {
-        for (int i = 0; i < msg_buf.ndim; i++) {
-            msg_buf.strides[i] = tensor.stride(i);
-        }
-    } else {
-        msg_buf.strides[0] = 0;
-    }
+    MsgHeader msg_header;
+    msg_header.dtype = tensor.dtype();
+    msg_header.ndim = tensor.ndim();
 
     size_t offset =
         (uintptr_t) tensor.data() - (uintptr_t) this->allocator->getPoolBase();
@@ -124,10 +103,10 @@ void Publisher::put(void* payload, size_t size) {
     MessageQueueHeader* mq_header =
         getMessageQueueHeader(getTlsfHeader(getTopicHeader(this->shm_base)));
 #ifdef BUILD_PYSHOZ
-    msg_buf.msg_id = std::atomic_ref<size_t>(mq_header->next).fetch_add(1) %
-                     mq_header->capacity;
+    msg_header.msg_id = std::atomic_ref<size_t>(mq_header->next).fetch_add(1) %
+                        mq_header->capacity;
     MessageQueueEntry* mq_entry =
-        getMessageQueueEntry(mq_header, msg_buf.msg_id);
+        getMessageQueueEntry(mq_header, msg_header.msg_id);
 #else
     size_t msg_id = std::atomic_ref<size_t>(mq_header->next).fetch_add(1) %
                     mq_header->capacity;
@@ -149,8 +128,14 @@ void Publisher::put(void* payload, size_t size) {
 
 #ifdef BUILD_PYSHOZ
     // notify subscribers with the message ID & tensor info
-    std::vector<uint8_t> byte_arr(sizeof(msg_buf));
-    memcpy(byte_arr.data(), &msg_buf, sizeof(msg_buf));
+    std::vector<uint8_t> byte_arr(sizeof(msg_header) +
+                                  sizeof(int64_t) * msg_header.ndim);
+    auto shape_buf =
+        (size_t*) ((uintptr_t) byte_arr.data() + sizeof(msg_header));
+    memcpy(byte_arr.data(), &msg_header, sizeof(msg_header));
+    for (int i = 0; i < msg_header.ndim; i++) {
+        shape_buf[i] = tensor.shape(i);
+    }
 #else
     // notify subscribers with the message ID
     std::vector<uint8_t> byte_arr(sizeof(msg_id));

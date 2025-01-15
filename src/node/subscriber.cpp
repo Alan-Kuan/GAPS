@@ -6,6 +6,7 @@
 #include <cstring>
 #include <functional>
 #include <string>
+#include <vector>
 
 #include <zenoh-pico/config.h>
 #include <zenoh.hxx>
@@ -50,11 +51,11 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
 
     auto callback = [=, this](const zenoh::Sample& sample) {
 #ifdef BUILD_PYSHOZ
-        MsgBuf msg_buf;
-        memcpy(&msg_buf, sample.get_payload().as_vector().data(),
-               sizeof(MsgBuf));
+        std::vector<uint8_t> raw_msg{sample.get_payload().as_vector()};
+        auto msg_header = (MsgHeader*) raw_msg.data();
+        auto shape_buf = (size_t*) ((uintptr_t) msg_header + sizeof(MsgHeader));
         MessageQueueEntry* mq_entry =
-            getMessageQueueEntry(mq_header, msg_buf.msg_id);
+            getMessageQueueEntry(mq_header, msg_header->msg_id);
 #else
         size_t msg_id;
         memcpy(&msg_id, sample.get_payload().as_vector().data(),
@@ -69,11 +70,9 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
 #ifdef BUILD_PYSHOZ
         {
             nb::gil_scoped_acquire acq;
-            const int64_t* strides =
-                msg_buf.strides[0] ? msg_buf.strides : nullptr;
-            DeviceTensor tensor(
-                data, msg_buf.ndim, (const size_t*) msg_buf.shape, nb::handle(),
-                strides, msg_buf.dtype, nb::device::cuda::value);
+            DeviceTensor tensor(data, msg_header->ndim, shape_buf, nb::handle(),
+                                nullptr, msg_header->dtype,
+                                nb::device::cuda::value);
             handler(tensor);
         }
 #else

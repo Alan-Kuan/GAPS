@@ -30,7 +30,7 @@ def main():
     ])
     proc_tensor = transforms(img_tensor.to('cuda'))
 
-    buf_tensor = publisher.malloc(3, (3, 32, 32), (2, 32, 1), False)
+    buf_tensor = publisher.malloc((3, 32, 32), (2, 32, 1), False)
     publisher.copy_tensor(buf_tensor, proc_tensor)
 
     publisher.put(buf_tensor)

@@ -42,7 +42,7 @@ def main():
         ])
         proc_tensor = transforms(img_tensor)
 
-        buf_tensor = publisher.malloc(3, (3, 512, 512), (2, 32, 1), False)
+        buf_tensor = publisher.malloc((3, 512, 512), (2, 32, 1), False)
         publisher.copy_tensor(buf_tensor, proc_tensor)
         publisher.put(buf_tensor)
         time.sleep(0.1)
