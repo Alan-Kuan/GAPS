@@ -57,7 +57,7 @@ def run_as_subscriber(session):
 
     def msg_handler(tensor):
         buf = publisher.malloc((64, ), (0, 32, 1))
-        publisher.copy_tensor(buf, tensor)
+        publisher.copy_tensor(buf, tensor.contiguous())
         buf *= 2
         publisher.put(buf)
 
