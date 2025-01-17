@@ -25,8 +25,8 @@ namespace nb = nanobind;
 #endif
 
 Publisher::Publisher(const session_t& session, std::string&& topic_name,
-                     size_t pool_size)
-        : Node(topic_name.c_str(), pool_size),
+                     size_t pool_size, int msg_queue_cap_exp)
+        : Node(topic_name.c_str(), pool_size, msg_queue_cap_exp),
 #ifdef BUILD_PYSHOZ
           z_publisher(
               session.getSession().declare_publisher("shoz/" + topic_name,

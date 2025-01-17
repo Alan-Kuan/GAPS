@@ -14,6 +14,7 @@ DEVICE = "cuda"
 TOPIC = "cv_pipeline"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
 POOL_SIZE = 128 << 20  # 128 MiB
+MSG_QUEUE_CAP_EXP = 7
 BLUR_RATIO = 0.25
 
 def main():
@@ -48,7 +49,7 @@ def main():
     ])
 
     session = pyshoz.ZenohSession(LLOCATOR)
-    pub = pyshoz.Publisher(session, TOPIC, POOL_SIZE)
+    pub = pyshoz.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
     beg = time.monotonic()
     for img_batch in img_batches:

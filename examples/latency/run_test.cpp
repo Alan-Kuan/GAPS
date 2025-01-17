@@ -93,7 +93,8 @@ void runAsPublisher(z::Session& session, int id, const char* output_name,
     hlp::Timer timer(env::kTimes);
 
     try {
-        Publisher pub(session, env::kTopic, env::kPoolSize);
+        Publisher pub(session, env::kTopic, env::kPoolSize,
+                      env::kMsgQueueCapExp);
 
         for (int t = 0; t < env::kTimes; t++) {
             int tag = (id - 1) * env::kTimes + t + 1;
@@ -124,7 +125,7 @@ void runAsSubscriber(z::Session& session, int id, const char* output_name) {
 
     try {
         Subscriber sub(session, env::kTopic, env::kPoolSize,
-                       [&timer](void* msg, size_t tag) {
+                       env::kMsgQueueCapExp, [&timer](void* msg, size_t tag) {
                            // upon received, set the current time point
                            timer.setPoint(tag);
                        });

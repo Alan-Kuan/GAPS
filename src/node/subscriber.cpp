@@ -23,8 +23,9 @@ namespace nb = nanobind;
 #endif
 
 Subscriber::Subscriber(const session_t& session, std::string&& topic_name,
-                       size_t pool_size, MessageHandler handler)
-        : Node(topic_name.c_str(), pool_size),
+                       size_t pool_size, int msg_queue_cap_exp,
+                       MessageHandler handler)
+        : Node(topic_name.c_str(), pool_size, msg_queue_cap_exp),
 #ifdef BUILD_PYSHOZ
           z_subscriber(session.getSession().declare_subscriber(
               "shoz/" + topic_name,

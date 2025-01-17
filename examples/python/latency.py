@@ -6,7 +6,8 @@ import pyshoz
 
 TOPIC = "py_latency_test"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
-POOL_SIZE = 32 * 1024 * 1024;  # 32 MiB
+POOL_SIZE = 32 << 20;  # 32 MiB
+MSG_QUEUE_CAP_EXP = 7
 PUB_INTERVAL = 0.5  # 500ms
 TIMES = 100
 
@@ -34,7 +35,7 @@ def main():
         run_as_subscriber(session, args.o)
 
 def run_as_publisher(session, payload_size, output_name):
-    publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE)
+    publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     count = payload_size // 4
     time_points = [None] * TIMES
 
@@ -54,7 +55,7 @@ def run_as_subscriber(session, output_name):
         time_points.append(time.monotonic())
 
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
-    _subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, msg_handler)
+    _subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
     print("Ctrl+C to leave")
     signal.pause()

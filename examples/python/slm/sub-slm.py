@@ -10,7 +10,8 @@ import pyshoz
 
 TOPIC = "slm"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
-POOL_SIZE = 2 * 1024 * 1024  # 2 MiB
+POOL_SIZE = 2 << 20  # 2 MiB
+MSG_QUEUE_CAP_EXP = 7
 
 def main():
     if len(sys.argv) < 2:
@@ -66,7 +67,7 @@ English: """
         print(len(translation))
 
     session = pyshoz.ZenohSession(LLOCATOR)
-    _subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, handler)
+    _subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, handler)
 
     print("Subscriber is ready")
     print("Ctrl+C to leave")

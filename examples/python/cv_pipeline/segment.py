@@ -12,6 +12,7 @@ DEVICE = "cuda"
 TOPIC = "cv_pipeline"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
 POOL_SIZE = 128 << 20  # 128 MiB
+MSG_QUEUE_CAP_EXP = 7
 
 def main():
     if len(sys.argv) < 2:
@@ -43,7 +44,7 @@ def main():
         if count == expect_img_num:
             print(time.monotonic())
             os.kill(os.getpid(), signal.SIGINT)
-    _sub = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, msg_handler)
+    _sub = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
     print("Ctrl+C to leave")
     signal.pause()

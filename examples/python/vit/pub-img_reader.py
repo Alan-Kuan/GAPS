@@ -11,7 +11,8 @@ import pyshoz
 
 TOPIC = "vit"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
-POOL_SIZE = 12 * 1024 * 1024  # 12 MiB
+POOL_SIZE = 12 << 20  # 12 MiB
+MSG_QUEUE_CAP_EXP = 7
 DEVICE = "cuda"
 
 def main():
@@ -26,7 +27,7 @@ def main():
     beg = time.time()
 
     session = pyshoz.ZenohSession(LLOCATOR)
-    publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE)
+    publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
     img_paths = sorted(os.listdir(img_dir_path))
     for file in img_paths[:max_img_count]:

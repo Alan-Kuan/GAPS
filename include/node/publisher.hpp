@@ -26,7 +26,7 @@ class Publisher : public Node {
 public:
     Publisher() = delete;
     Publisher(const session_t& session, std::string&& topic_name,
-              size_t pool_size);
+              size_t pool_size, int msg_queue_cap_exp);
 
 #ifdef BUILD_PYSHOZ
     void copyTensor(DeviceTensor& dst, const nb::ndarray<nb::pytorch>& src);

@@ -1,18 +1,13 @@
 #ifndef ENV_HPP
 #define ENV_HPP
 
-#include <chrono>
 #include <cstddef>
 
 namespace env {
 
-using namespace std::chrono_literals;
-
-const char kTopic[] = "latency-test";
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
-const int kTimes = 100;
-const auto kPubInterval = 20ms;
-constexpr size_t kPoolSize = 32 << 20;  // 32 MiB
+const char kTopicName[] = "video";
+constexpr size_t kPoolSize = 4 << 20;  // 4 MiB
 const int kMsgQueueCapExp = 7;
 
 }  // namespace env

@@ -10,15 +10,12 @@
 #include <zenoh.hxx>
 
 #include "blur.hpp"
+#include "env.hpp"
 #include "helpers.hpp"
 #include "node/subscriber.hpp"
 
 using namespace std;
 using namespace cv;
-
-const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
-const char kTopicName[] = "video";
-constexpr size_t kPoolSize = 4 * 1024 * 1024;  // 4 MiB
 
 void printUsageAndExit(char* program_name);
 void dump(ofstream& out, uchar* arr, size_t size);
@@ -51,7 +48,7 @@ int main(int argc, char* argv[]) {
 
         auto config = zenoh::Config::create_default();
         config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
-        config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
+        config.insert(Z_CONFIG_LISTEN_KEY, env::kDftLLocator);
         zenoh::Session session(std::move(config));
         size_t frame_size = 600 * 316 * 3;
         uchar* frame_blurred_d;
@@ -72,7 +69,8 @@ int main(int argc, char* argv[]) {
         ofstream out;
         if (dump_hash) out.open("recv.out");
 
-        Subscriber sub(session, kTopicName, kPoolSize,
+        Subscriber sub(session, env::kTopicName, env::kPoolSize,
+                       env::kMsgQueueCapExp,
                        [dump_hash, frame_blurred_d, frame_blurred, filter_d,
                         &out, &writer](void* data_d, size_t size) {
                            if (dump_hash) {

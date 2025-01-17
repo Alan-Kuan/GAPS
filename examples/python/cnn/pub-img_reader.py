@@ -8,7 +8,8 @@ import pyshoz
 
 TOPIC = "cnn"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
-POOL_SIZE = 8 * 1024 * 1024;  # 8 MiB
+POOL_SIZE = 8 << 20;  # 8 MiB
+MSG_QUEUE_CAP_EXP = 7
 
 def main():
     if len(sys.argv) < 2:
@@ -16,7 +17,7 @@ def main():
         exit(1)
 
     session = pyshoz.ZenohSession(LLOCATOR)
-    publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE)
+    publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
     img = cv2.imread(sys.argv[1])
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

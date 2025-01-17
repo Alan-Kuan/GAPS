@@ -8,7 +8,8 @@ import pyshoz
 
 TOPIC = "cnn"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
-POOL_SIZE = 8 * 1024 * 1024;  # 8 MiB
+POOL_SIZE = 8 << 20;  # 8 MiB
+MSG_QUEUE_CAP_EXP = 7
 
 def main():
     signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
@@ -38,7 +39,7 @@ def main():
         print(f"Prediction: {labels[pred]}")
 
     session = pyshoz.ZenohSession(LLOCATOR)
-    _subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, handler)
+    _subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, handler)
 
     print("Ctrl+C to leave")
     signal.pause()

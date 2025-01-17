@@ -10,14 +10,11 @@
 #include <opencv2/videoio.hpp>
 #include <zenoh.hxx>
 
+#include "env.hpp"
 #include "node/publisher.hpp"
 
 using namespace std;
 using namespace cv;
-
-const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
-const char kTopicName[] = "video";
-constexpr size_t kPoolSize = 4 * 1024 * 1024;  // 4 MiB
 
 void printUsageAndExit(char* program_name);
 void matToVec(Mat& m, vector<uchar>& v);
@@ -54,9 +51,10 @@ int main(int argc, char* argv[]) {
     try {
         auto config = zenoh::Config::create_default();
         config.insert(Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_PEER);
-        config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
+        config.insert(Z_CONFIG_LISTEN_KEY, env::kDftLLocator);
         zenoh::Session session(std::move(config));
-        Publisher pub(session, kTopicName, kPoolSize);
+        Publisher pub(session, env::kTopicName, env::kPoolSize,
+                      env::kMsgQueueCapExp);
         Mat frame;
         vector<uchar> frame_vec;
 

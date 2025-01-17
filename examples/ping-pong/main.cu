@@ -30,9 +30,10 @@ using namespace std;
 const char kDftLLocator[] = "udp/224.0.0.123:7447#iface=lo";
 const char kTopicNamePing[] = "pp-ping";
 const char kTopicNamePong[] = "pp-pong";
-const size_t kPoolSize = 2 * 1024 * 1024;  // 2 MiB
-const size_t kBufSize = 1024;              // 1 KiB
+const size_t kPoolSize = 2 << 20;  // 2 MiB
+const size_t kBufSize = 1024;      // 1 KiB
 const size_t kBufCount = kBufSize / sizeof(int);
+const int kMsgQueueCapExp = 7;
 const int kTotalTimes = 5;
 
 void runAsPingSide(int a, int b);
@@ -96,7 +97,8 @@ void runAsPingSide(int a, int b) {
         config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
         zenoh::Session session(std::move(config));
 
-        Publisher publisher(session, kTopicNamePing, kPoolSize);
+        Publisher publisher(session, kTopicNamePing, kPoolSize,
+                            kMsgQueueCapExp);
 
         auto handler = [data, res, &cv](void* data_d, size_t size) {
             cudaMemcpy(data, data_d, kBufSize, cudaMemcpyDeviceToHost);
@@ -108,7 +110,7 @@ void runAsPingSide(int a, int b) {
             cv.notify_one();
         };
         Subscriber subscriber(session, kTopicNamePong, kPoolSize,
-                              std::move(handler));
+                              kMsgQueueCapExp, std::move(handler));
 
         // make sure both sides are ready
         cout << "Ready..." << endl;
@@ -157,7 +159,8 @@ void runAsPongSide(int a, int b) {
         config.insert(Z_CONFIG_LISTEN_KEY, kDftLLocator);
         zenoh::Session session(std::move(config));
 
-        Publisher publisher(session, kTopicNamePong, kPoolSize);
+        Publisher publisher(session, kTopicNamePong, kPoolSize,
+                            kMsgQueueCapExp);
         int* res_d = (int*) publisher.malloc(kBufSize);
 
         auto handler = [&publisher, res_d, a, b, &cv, &times](void* data,
@@ -169,7 +172,7 @@ void runAsPongSide(int a, int b) {
             cv.notify_one();
         };
         Subscriber subscriber(session, kTopicNamePing, kPoolSize,
-                              std::move(handler));
+                              kMsgQueueCapExp, std::move(handler));
 
         unique_lock lock{cv_m};
         cv.wait(lock, [&times] { return times == kTotalTimes; });

@@ -11,7 +11,8 @@ import pyshoz
 
 TOPIC = "vit"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
-POOL_SIZE = 12 * 1024 * 1024  # 12 MiB
+POOL_SIZE = 12 << 20  # 12 MiB
+MSG_QUEUE_CAP_EXP = 7
 DEVICE = "cuda"
 
 def main():
@@ -40,7 +41,7 @@ def main():
             os.kill(os.getpid(), signal.SIGINT)
 
     session = pyshoz.ZenohSession(LLOCATOR)
-    _subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, handler)
+    _subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, handler)
 
     print(f"Ready! Expect to receive {expect_img_num} images")
     signal.pause()

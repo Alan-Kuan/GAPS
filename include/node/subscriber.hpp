@@ -32,7 +32,7 @@ public:
 
     Subscriber() = delete;
     Subscriber(const session_t& session, std::string&& topic_name,
-               size_t pool_size, MessageHandler handler);
+               size_t pool_size, int msg_queue_cap_exp, MessageHandler handler);
     ~Subscriber();
 
 protected:

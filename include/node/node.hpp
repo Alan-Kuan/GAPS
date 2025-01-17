@@ -8,7 +8,7 @@
 class Node {
 public:
     Node() = delete;
-    Node(const char* topic_name, size_t pool_size);
+    Node(const char* topic_name, size_t pool_size, int msg_queue_cap_exp);
     ~Node();
     // prevent the node from being copied, since it may cause problem when the
     // copy destructs
@@ -17,7 +17,6 @@ public:
 
 protected:
     static const int kMaxTopicNameLen = 31;
-    static const size_t kMaxMessageNum = 128;  // NOTE: it must be power of 2
 
     void* shm_base = nullptr;
     size_t shm_size = 0;
