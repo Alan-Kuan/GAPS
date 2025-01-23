@@ -2,36 +2,33 @@ import os
 import sys
 import time
 
-from facenet_pytorch import MTCNN
 import torch
 import torchvision
 from torchvision.transforms import v2
-import torchvision.transforms.functional as F
+import torchvision.transforms.v2.functional as F
+from ultralytics.utils import ops
 
 import pyshoz
 
 DEVICE = "cuda"
 TOPIC = "cv_pipeline"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
-POOL_SIZE = 128 << 20  # 128 MiB
+POOL_SIZE = 256 << 20
 MSG_QUEUE_CAP_EXP = 7
 BLUR_RATIO = 0.25
 
 def main():
-    if len(sys.argv) < 4:
-        print(f"Usage: {sys.argv[0]} IMG_DIR MAX_IMG_NUM BATCH_SIZE")
+    if len(sys.argv) < 5:
+        print(f"Usage: {sys.argv[0]} IMG_DIR MAX_IMG_NUM BATCH_SIZE MODEL_PATH")
         exit(1)
 
     img_dir = sys.argv[1]
     max_img_num = int(sys.argv[2])
     batch_size = int(sys.argv[3])
+    model_path = sys.argv[4]
 
-    model = MTCNN(
-        margin=14,
-        factor=0.6,
-        keep_all=True,
-        device=DEVICE,
-    )
+    model = torch.load(model_path)["model"].to(DEVICE)
+    model.eval()
 
     imgs = [
         torchvision.io.read_image(f"{img_dir}/{p}").to(DEVICE)
@@ -43,9 +40,8 @@ def main():
     ]
 
     transforms = v2.Compose([
-        v2.Resize(544),
-        v2.CenterCrop(512),
-        v2.ToDtype(torch.float32, scale=True),
+        v2.Resize((640, 640)),
+        v2.ToDtype(torch.float16, scale=True),
     ])
 
     session = pyshoz.ZenohSession(LLOCATOR)
@@ -53,21 +49,21 @@ def main():
 
     beg = time.monotonic()
     for img_batch in img_batches:
+        img_batch = transforms(img_batch)
         blur_faces(model, img_batch)
 
-        # preprocess
-        img_batch = transforms(img_batch)
-
-        buf = pub.malloc(img_batch.shape, pyshoz.float32)
+        buf = pub.malloc(img_batch.shape, pyshoz.float16)
         pub.copy_tensor(buf, img_batch.contiguous())
         pub.put(buf)
 
     print(f"beg: {beg}")
 
 def blur_faces(model, img_batch):
-    boxes_batch, _probs = model.detect(img_batch.permute(0, 2, 3, 1))
-    if boxes_batch is None:
-        return
+    with torch.no_grad():
+        preds = model(img_batch)
+
+    preds = ops.non_max_suppression(preds)
+    boxes_batch = [pred[:, :4].cpu().tolist() for pred in preds]
 
     # apply gaussian blur to human faces
     for i, boxes in enumerate(boxes_batch):
