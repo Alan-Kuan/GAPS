@@ -23,14 +23,14 @@ RUN tar xvf cmake-3.29.6-linux-`arch`.tar.gz
 WORKDIR /root
 RUN git clone https://github.com/eclipse-zenoh/zenoh-pico.git --branch 1.1.0 --depth 1
 WORKDIR /root/zenoh-pico
-RUN /opt/cmake-3.29.6-linux-x86_64/bin/cmake -B build -G Ninja -DFRAG_MAX_SIZE=17000000
+RUN /opt/cmake-3.29.6-linux-`arch`/bin/cmake -B build -G Ninja -DFRAG_MAX_SIZE=17000000
 RUN ninja -C build && ninja -C build install
 
 # install Zenoh-cpp
 WORKDIR /root
 RUN git clone https://github.com/eclipse-zenoh/zenoh-cpp.git --branch 1.1.0 --depth 1
 WORKDIR /root/zenoh-cpp
-RUN /opt/cmake-3.29.6-linux-x86_64/bin/cmake -B build -DZENOHCXX_ZENOHC=off -DZENOHCXX_ZENOHPICO=on
+RUN /opt/cmake-3.29.6-linux-`arch`/bin/cmake -B build -DZENOHCXX_ZENOHC=off -DZENOHCXX_ZENOHPICO=on
 RUN make -C build install
 
 RUN pip install nanobind==2.1.0 numpy==1.26.4
@@ -51,7 +51,7 @@ RUN pip install pandas ultralytics==8.3.65
 # add a user
 RUN useradd ubuntu -m -G sudo -s /usr/bin/bash
 RUN passwd -d ubuntu
-RUN echo 'export PATH="/opt/cmake-3.29.6-linux-`arch`/bin:/usr/local/cuda/bin:${PATH}"' >> /home/ubuntu/.bashrc
+RUN echo "export PATH=\"/opt/cmake-3.29.6-linux-`arch`/bin:/usr/local/cuda/bin:\${PATH}\"" >> /home/ubuntu/.bashrc
 RUN echo 'export PYTHONPATH=./build/src' >> /home/ubuntu/.bashrc
 
 # configure ssh server
