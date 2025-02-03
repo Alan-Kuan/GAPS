@@ -10,7 +10,7 @@
 class Publisher : public Node {
 public:
     Publisher() = delete;
-    Publisher(const char* topic_name, size_t pool_size);
+    Publisher(const char* topic_name, size_t pool_size, int msg_queue_cap_exp);
 
     void* malloc(size_t size);
     void put(void* payload, size_t size);

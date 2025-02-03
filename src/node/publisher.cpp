@@ -13,8 +13,9 @@
 #include "error.hpp"
 #include "metadata.hpp"
 
-Publisher::Publisher(const char* topic_name, size_t pool_size)
-        : Node(topic_name, pool_size),
+Publisher::Publisher(const char* topic_name, size_t pool_size,
+                     int msg_queue_cap_exp)
+        : Node(topic_name, pool_size, msg_queue_cap_exp),
           iox_publisher({"", "shoi",
                          iox::capro::IdString_t(iox::cxx::TruncateToCapacity,
                                                 topic_name)}) {

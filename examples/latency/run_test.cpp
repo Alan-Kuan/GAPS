@@ -93,7 +93,7 @@ void runAsPublisher(int id, const char* output_name, size_t payload_size) {
     hlp::Timer timer(env::kTimes);
 
     try {
-        Publisher pub(env::kTopic, env::kPoolSize);
+        Publisher pub(env::kTopic, env::kPoolSize, env::kMsgQueueCapExp);
 
         for (int t = 0; t < env::kTimes; t++) {
             int tag = (id - 1) * env::kTimes + t + 1;
@@ -125,9 +125,10 @@ void runAsSubscriber(int id, const char* output_name) {
     try {
         auto handler = [&timer](void* msg, size_t tag) {
             // upon received, set the current time point
-            timer.setPoint((int) tag);
+            timer.setPoint(tag);
         };
-        Subscriber sub(env::kTopic, env::kPoolSize, handler);
+        Subscriber sub(env::kTopic, env::kPoolSize, env::kMsgQueueCapExp,
+                       handler);
 
         if (id == 1) cout << "Ctrl+C to leave" << endl;
         hlp::waitForSigInt();

@@ -24,7 +24,7 @@ private:
     void mapping(size_t size, int* fidx, int* sidx) const;
     size_t alignSize(size_t size) const;
 
-    size_t findSuitableBlock(size_t size, int* fidx, int* sidx);
+    size_t findSuitableBlock(int* fidx, int* sidx);
 
     size_t splitBlock(size_t idx, size_t size);
     size_t mergeBlock(size_t idx);

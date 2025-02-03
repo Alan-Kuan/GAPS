@@ -8,7 +8,8 @@ import pyshoz
 
 TOPIC = "slm"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
-POOL_SIZE = 2 * 1024 * 1024  # 2 MiB
+POOL_SIZE = 2 << 20  # 2 MiB
+MSG_QUEUE_CAP_EXP = 7
 
 def main():
     if len(sys.argv) < 2:
@@ -18,7 +19,7 @@ def main():
     model_name = "microsoft/Phi-3.5-mini-instruct"
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     session = pyshoz.ZenohSession(LLOCATOR)
-    publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE)
+    publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     sents = read_sentences(sys.argv[1])
 
     print("Publisher is ready")
@@ -36,8 +37,8 @@ def main():
         buffer_time = 1
         time.sleep(speaking_time + buffer_time)
 
-        msg_tokens = publisher.malloc(2, input_tokens.shape, (0, 64, 1))
-        publisher.copy_tensor(msg_tokens, input_tokens)
+        msg_tokens = publisher.malloc(input_tokens.shape, pyshoz.int64)
+        publisher.copy_tensor(msg_tokens, input_tokens.contiguous())
         publisher.put(msg_tokens)
 
     print("Finished! Note that the subscribers are probably still translating.")

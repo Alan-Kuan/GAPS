@@ -15,7 +15,7 @@
 #include "error.hpp"
 #include "metadata.hpp"
 
-Node::Node(const char* topic_name, size_t pool_size) {
+Node::Node(const char* topic_name, size_t pool_size, int msg_queue_cap_exp) {
     if (strlen(topic_name) > kMaxTopicNameLen) throwError();
 
     // init CUDA Driver API
@@ -27,11 +27,12 @@ Node::Node(const char* topic_name, size_t pool_size) {
 
     size_t padded_pool_size = this->getPaddedSize(pool_size);
     size_t block_count = padded_pool_size / kBlockMinSize;
+    size_t msg_queue_cap = 1 << msg_queue_cap_exp;
 
     size_t tlsf_size =
         sizeof(TlsfHeader) + block_count * sizeof(TlsfBlockMetadata);
     size_t mq_size =
-        sizeof(MessageQueueHeader) + kMaxMessageNum * sizeof(MessageQueueEntry);
+        sizeof(MessageQueueHeader) + msg_queue_cap * sizeof(MessageQueueEntry);
 
     this->shm_size = sizeof(TopicHeader) + tlsf_size + mq_size;
     this->attachShm(topic_name, this->shm_size);
@@ -41,22 +42,35 @@ Node::Node(const char* topic_name, size_t pool_size) {
      */
 
     TopicHeader* topic_header = getTopicHeader(this->shm_base);
+
+    // WARN: there may be a race condition if 2 nodes of the same topic are
+    // created almost at the same time
+
     // init the header if this is a newly created topic
     if (topic_header->topic_name[0] == '\0') {
         strcpy(topic_header->topic_name, topic_name);
         topic_header->pool_size = padded_pool_size;
+
+        TlsfHeader* tlsf_header = getTlsfHeader(topic_header);
+        // NOTE: if `pool_size` is not a multiple of `kBlockMinSize`, the
+        // remaining space will be wasted
+        tlsf_header->aligned_pool_size = block_count * kBlockMinSize;
+        tlsf_header->block_count = block_count;
+        throwOnError(sem_init(&tlsf_header->lock, 1, 1));
+
+        MessageQueueHeader* mq_header = getMessageQueueHeader(tlsf_header);
+        mq_header->capacity = msg_queue_cap;
+    } else {
+        if (topic_header->pool_size != padded_pool_size) {
+            throwError("pool size does not match");
+        }
+        MessageQueueHeader* mq_header =
+            getMessageQueueHeader(getTlsfHeader(topic_header));
+        if (mq_header->capacity != msg_queue_cap) {
+            throwError("message queue capacity does not match");
+        }
     }
     std::atomic_ref<uint32_t>(topic_header->interest_count)++;
-
-    TlsfHeader* tlsf_header = getTlsfHeader(topic_header);
-    // NOTE: if `pool_size` is not a multiple of `kBlockMinSize`, the remaining
-    // space will be wasted
-    tlsf_header->aligned_pool_size = block_count * kBlockMinSize;
-    tlsf_header->block_count = block_count;
-    throwOnError(sem_init(&tlsf_header->lock, 1, 1));
-
-    MessageQueueHeader* mq_header = getMessageQueueHeader(tlsf_header);
-    mq_header->capacity = kMaxMessageNum;
 }
 
 Node::~Node() {

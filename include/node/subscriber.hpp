@@ -14,7 +14,7 @@ public:
     typedef std::function<void(void*, size_t)> MessageHandler;
 
     Subscriber() = delete;
-    Subscriber(const char* topic_name, size_t pool_size,
+    Subscriber(const char* topic_name, size_t pool_size, int msg_queue_cap_exp,
                MessageHandler handler);
     ~Subscriber();
 

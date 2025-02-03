@@ -14,8 +14,8 @@
 #include "metadata.hpp"
 
 Subscriber::Subscriber(const char* topic_name, size_t pool_size,
-                       MessageHandler handler)
-        : Node(topic_name, pool_size),
+                       int msg_queue_cap_exp, MessageHandler handler)
+        : Node(topic_name, pool_size, msg_queue_cap_exp),
           iox_subscriber({"", "shoi",
                           iox::capro::IdString_t(iox::cxx::TruncateToCapacity,
                                                  topic_name)},

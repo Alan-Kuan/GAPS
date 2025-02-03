@@ -37,7 +37,7 @@ size_t TlsfAllocator::malloc(size_t size) {
     this->mapping(size, &fidx, &sidx);
 
     sem_wait(&this->tlsf_header->lock);
-    size_t block_idx = findSuitableBlock(size, &fidx, &sidx);
+    size_t block_idx = findSuitableBlock(&fidx, &sidx);
     if (block_idx == -1) {
         sem_post(&this->tlsf_header->lock);
         return -1;
@@ -79,7 +79,7 @@ size_t TlsfAllocator::alignSize(size_t size) const {
     return (((size - 1) >> kSndLvlIdx) + 1) << kSndLvlIdx;
 }
 
-size_t TlsfAllocator::findSuitableBlock(size_t size, int* fidx, int* sidx) {
+size_t TlsfAllocator::findSuitableBlock(int* fidx, int* sidx) {
     // non-empty lists indexed by `*fidx` and second-level indices greater than
     // `*sidx`
     uint32_t non_empty_lists =

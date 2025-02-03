@@ -10,13 +10,11 @@
 #include <opencv2/core/mat.hpp>
 #include <opencv2/videoio.hpp>
 
+#include "env.hpp"
 #include "node/publisher.hpp"
 
 using namespace std;
 using namespace cv;
-
-const char kTopicName[] = "video";
-constexpr size_t kPoolSize = 4 * 1024 * 1024;  // 4 MiB
 
 void printUsageAndExit(char* program_name);
 void matToVec(Mat& m, vector<uchar>& v);
@@ -52,7 +50,7 @@ int main(int argc, char* argv[]) {
 
     try {
         iox::runtime::PoshRuntime::initRuntime("video_publisher");
-        Publisher pub(kTopicName, kPoolSize);
+        Publisher pub(env::kTopicName, env::kPoolSize, env::kMsgQueueCapExp);
         Mat frame;
         vector<uchar> frame_vec;
 
@@ -93,7 +91,7 @@ void matToVec(Mat& m, vector<uchar>& v) {
 }
 
 void printUsageAndExit(char* program_name) {
-    cerr << "Usage: " << program_name << " OPTIONS INPUT_VIDEO_PATH" << endl;
+    cerr << "Usage: " << program_name << " [OPTIONS] INPUT_VIDEO_PATH" << endl;
     cerr << "OPTIONS:" << endl;
     cerr << "  -v       whether dump hash of each frame for verification"
          << endl;
