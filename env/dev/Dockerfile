@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 #
 RUN apt update && apt install -y \
     build-essential ninja-build \
-    sudo curl wget git tar tmux openssh-server \
+    sudo curl wget git tar tmux vim openssh-server \
     python3-pip
 
 # install CMake
@@ -33,8 +33,8 @@ WORKDIR /root/zenoh-cpp
 RUN /opt/cmake-3.29.6-linux-x86_64/bin/cmake -B build -DZENOHCXX_ZENOHC=off -DZENOHCXX_ZENOHPICO=on
 RUN make -C build install
 
-RUN pip install nanobind==2.1.0
-RUN pip install torch==2.2.2 torchvision==0.17.2 --index-url https://download.pytorch.org/whl/cu121
+RUN pip install nanobind==2.1.0 numpy==1.26.4
+RUN pip install torch==2.5.0 torchvision==0.20.0 --index-url https://download.pytorch.org/whl/cu124
 
 #
 #  Optional Dependencies
@@ -42,8 +42,7 @@ RUN pip install torch==2.2.2 torchvision==0.17.2 --index-url https://download.py
 RUN apt update && apt install -y \
     libopencv-dev
 
-RUN pip install pandas \
-    facenet-pytorch
+RUN pip install pandas ultralytics==8.3.65
 
 #
 #  Misc

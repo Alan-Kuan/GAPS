@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/pytorch:24.08-py3-igpu
+FROM ultralytics/ultralytics:8.3.65-jetson-jetpack6
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 #
 RUN apt update && apt install -y \
     build-essential ninja-build \
-    sudo curl wget git tar tmux openssh-server
+    sudo curl wget git tar tmux vim openssh-server
 
 #
 #  Dependencies
@@ -28,16 +28,12 @@ RUN cmake -B build -DZENOHCXX_ZENOHC=off -DZENOHCXX_ZENOHPICO=on
 RUN make -C build install
 
 RUN python -m pip install --upgrade pip
-RUN pip install nanobind==2.1.0
+RUN pip install nanobind==2.1.0 numpy==1.26.4
 
 #
 #  Optional Dependencies
 #
-RUN apt update && apt install -y \
-    libopencv-dev
-
-RUN pip install pandas \
-    facenet-pytorch
+RUN pip install pandas
 
 #
 #  Misc
