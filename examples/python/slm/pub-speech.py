@@ -4,10 +4,10 @@ import time
 
 from transformers import AutoTokenizer
 
-import pyshoz
+import pyshoi
 
 TOPIC = "slm"
-LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
+RUNTIME = "slm-pub"
 POOL_SIZE = 2 << 20  # 2 MiB
 MSG_QUEUE_CAP_EXP = 7
 
@@ -18,8 +18,8 @@ def main():
 
     model_name = "microsoft/Phi-3.5-mini-instruct"
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    session = pyshoz.ZenohSession(LLOCATOR)
-    publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
+    pyshoi.init_runtime(RUNTIME)
+    publisher = pyshoi.Publisher(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     sents = read_sentences(sys.argv[1])
 
     print("Publisher is ready")
@@ -37,7 +37,7 @@ def main():
         buffer_time = 1
         time.sleep(speaking_time + buffer_time)
 
-        msg_tokens = publisher.malloc(input_tokens.shape, pyshoz.int64)
+        msg_tokens = publisher.malloc(input_tokens.shape, pyshoi.int64)
         publisher.copy_tensor(msg_tokens, input_tokens.contiguous())
         publisher.put(msg_tokens)
 

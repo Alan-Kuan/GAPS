@@ -6,10 +6,10 @@ import time
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-import pyshoz
+import pyshoi
 
 TOPIC = "slm"
-LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
+RUNTIME = "slm-sub"
 POOL_SIZE = 2 << 20  # 2 MiB
 MSG_QUEUE_CAP_EXP = 7
 
@@ -66,8 +66,8 @@ English: """
         timepoints.append(time.time())
         print(len(translation))
 
-    session = pyshoz.ZenohSession(LLOCATOR)
-    _subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, handler)
+    pyshoi.init_runtime(RUNTIME)
+    _subscriber = pyshoi.Subscriber(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, handler)
 
     print("Subscriber is ready")
     print("Ctrl+C to leave")

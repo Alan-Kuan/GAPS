@@ -8,11 +8,11 @@ from torchvision.transforms import v2
 import torchvision.transforms.v2.functional as F
 from ultralytics.utils import ops
 
-import pyshoz
+import pyshoi
 
 DEVICE = "cuda"
 TOPIC = "cv_pipeline"
-LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
+RUNTIME = "cv_pipeline-blur"
 POOL_SIZE = 256 << 20
 MSG_QUEUE_CAP_EXP = 7
 BLUR_RATIO = 0.25
@@ -44,15 +44,15 @@ def main():
         v2.ToDtype(torch.float16, scale=True),
     ])
 
-    session = pyshoz.ZenohSession(LLOCATOR)
-    pub = pyshoz.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
+    pyshoi.init_runtime(RUNTIME)
+    pub = pyshoi.Publisher(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
     beg = time.monotonic()
     for img_batch in img_batches:
         img_batch = transforms(img_batch)
         blur_faces(model, img_batch)
 
-        buf = pub.malloc(img_batch.shape, pyshoz.float16)
+        buf = pub.malloc(img_batch.shape, pyshoi.float16)
         pub.copy_tensor(buf, img_batch.contiguous())
         pub.put(buf)
 

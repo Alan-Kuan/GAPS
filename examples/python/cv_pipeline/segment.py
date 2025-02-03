@@ -6,11 +6,11 @@ import time
 import torch
 from ultralytics.utils import ops
 
-import pyshoz
+import pyshoi
 
 DEVICE = "cuda"
 TOPIC = "cv_pipeline"
-LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
+RUNTIME = "cv_pipeline-seg"
 POOL_SIZE = 256 << 20
 MSG_QUEUE_CAP_EXP = 7
 
@@ -27,7 +27,7 @@ def main():
     model = torch.load(model_path)["model"].to(DEVICE)
     model.eval()
 
-    session = pyshoz.ZenohSession(LLOCATOR)
+    pyshoi.init_runtime(RUNTIME)
 
     count = 0
     def msg_handler(inputs):
@@ -54,7 +54,7 @@ def main():
         if count == expect_img_num:
             print(f"end: {time.monotonic()}")
             os.kill(os.getpid(), signal.SIGINT)
-    _sub = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
+    _sub = pyshoi.Subscriber(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
     print("Ctrl+C to leave")
     signal.pause()
