@@ -12,10 +12,14 @@ OUTPUT_DIR="outputs/python"
 
 mkdir -p "${OUTPUT_DIR}"
 
+iox-roudi -l off -c "${SCRIPT_DIR}/iox-roudi-config.toml" &
+ROUDI_PID="$!"
+
 ./build/src/mem_manager >/dev/null &
 MM_PID="$!"
 sleep 1
 
+trap -- "kill -s INT ${ROUDI_PID}" EXIT
 trap -- "kill -s INT ${MM_PID}" EXIT
 
 echo "1. Testing with different payload sizes"
