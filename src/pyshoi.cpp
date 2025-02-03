@@ -1,34 +1,35 @@
-#include "pyshoz.hpp"
+#include "pyshoi.hpp"
 
 #include <cstddef>
-#include <string>
 
+#include <iceoryx_posh/runtime/posh_runtime.hpp>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/function.h>
-#include <nanobind/stl/string.h>
 
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
-#include "zenoh_wrapper.hpp"
 
 namespace nb = nanobind;
 using namespace nb::literals;
 
-NB_MODULE(pyshoz, m) {
-    nb::class_<ZenohSession>(m, "ZenohSession").def(nb::init<const char*>());
+NB_MODULE(pyshoi, m) {
+    // simple Iceoryx wrapper
+    m.def("init_runtime", [](const char* name) {
+        iox::RuntimeName_t runtime_name(iox::cxx::TruncateToCapacity, name);
+        iox::runtime::PoshRuntime::initRuntime(runtime_name);
+    });
 
     nb::class_<Node>(m, "Node").def(nb::init<const char*, size_t, int>());
 
     nb::class_<Publisher, Node>(m, "Publisher")
-        .def(nb::init<const ZenohSession&, std::string&&, size_t, int>())
+        .def(nb::init<const char*, size_t, int>())
         .def("put", &Publisher::put)
         .def("copy_tensor", &Publisher::copyTensor)
         .def("malloc", &Publisher::malloc, "shape"_a, "dtype"_a,
              "clean"_a = true, nb::rv_policy::reference);
 
     nb::class_<Subscriber, Node>(m, "Subscriber")
-        .def(nb::init<const ZenohSession&, std::string&&, size_t, int,
-                      Subscriber::MessageHandler>());
+        .def(nb::init<const char*, size_t, int, Subscriber::MessageHandler>());
 
     nb::enum_<Dtype>(m, "dtype")
         .value("int8", Dtype::int8)

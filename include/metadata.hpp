@@ -142,4 +142,21 @@ inline MessageQueueEntry* getMessageQueueEntry(MessageQueueHeader* mq_header,
                                  idx * sizeof(MessageQueueEntry));
 }
 
+#ifdef BUILD_PYSHOI
+#include <nanobind/ndarray.h>
+
+/**
+ *  Message:
+ *  ┌────────┬─────────────────────────┐
+ *  │ Header │ Shape (size_t[ndim])    │
+ *  └────────┴─────────────────────────┘
+ */
+
+struct MsgHeader {
+    size_t msg_id;
+    nanobind::dlpack::dtype dtype;
+    int32_t ndim;
+};
+#endif
+
 #endif  // METADATA_HPP

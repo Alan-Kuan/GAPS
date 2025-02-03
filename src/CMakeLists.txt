@@ -16,22 +16,21 @@ prj_add_target(mem_manager
     SRCS mem_manager.cpp
     LIBS CUDA::cuda_driver error)
 
-# Pyshoz
-# TODO: port shoi
+# Pyshoi
 if(BUILD_TORCH_SUPPORT)
-    nanobind_add_module(pyshoz
-        pyshoz.cpp
+    nanobind_add_module(pyshoi
+        pyshoi.cpp
         node/node.cpp
         node/publisher.cpp
-        node/subscriber.cpp
-        zenoh_wrapper.cpp)
-    target_compile_definitions(pyshoz
+        node/subscriber.cpp)
+    target_compile_definitions(pyshoi
         PRIVATE
-        BUILD_PYSHOZ)
-    target_link_libraries(pyshoz
+        BUILD_PYSHOI)
+    target_link_libraries(pyshoi
         PRIVATE
+        CUDA::cudart
         CUDA::cuda_driver
-        zenohcxx::zenohpico
+        iceoryx_posh::iceoryx_posh
         allocator
         error)
 endif()

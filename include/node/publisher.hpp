@@ -3,20 +3,40 @@
 
 #include <cstddef>
 
+#include "node/node.hpp"
+
+#ifdef BUILD_PYSHOI
+#include <iceoryx_posh/popo/untyped_publisher.hpp>
+#include <nanobind/ndarray.h>
+
+#include "pyshoi.hpp"
+
+namespace nb = nanobind;
+
+typedef nb::ndarray<nb::pytorch, nb::device::cuda> DeviceTensor;
+typedef iox::popo::UntypedPublisher iox_publisher_t;
+#else
 #include <iceoryx_posh/popo/publisher.hpp>
 
-#include "node/node.hpp"
+typedef iox::popo::Publisher<size_t> iox_publisher_t;
+#endif
 
 class Publisher : public Node {
 public:
     Publisher() = delete;
     Publisher(const char* topic_name, size_t pool_size, int msg_queue_cap_exp);
 
+#ifdef BUILD_PYSHOI
+    void copyTensor(DeviceTensor& dst, const nb::ndarray<nb::pytorch>& src);
+    DeviceTensor malloc(nb::tuple shape, Dtype dtype, bool clean);
+    void put(const DeviceTensor& tensor);
+#else
     void* malloc(size_t size);
     void put(void* payload, size_t size);
+#endif
 
 protected:
-    iox::popo::Publisher<size_t> iox_publisher;
+    iox_publisher_t iox_publisher;
 };
 
 #endif  // PUBLISHER_HPP
