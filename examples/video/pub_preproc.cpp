@@ -95,7 +95,7 @@ void matToVec(Mat& m, vector<uchar>& v) {
 }
 
 void printUsageAndExit(char* program_name) {
-    cerr << "Usage: " << program_name << " OPTIONS INPUT_VIDEO_PATH" << endl;
+    cerr << "Usage: " << program_name << " [OPTIONS] INPUT_VIDEO_PATH" << endl;
     cerr << "OPTIONS:" << endl;
     cerr << "  -v       whether dump hash of each frame for verification"
          << endl;
