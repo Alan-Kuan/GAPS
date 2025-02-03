@@ -52,7 +52,7 @@ def main():
         # record end time
         count += inputs.shape[0]
         if count == expect_img_num:
-            print(time.monotonic())
+            print(f"end: {time.monotonic()}")
             os.kill(os.getpid(), signal.SIGINT)
     _sub = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
