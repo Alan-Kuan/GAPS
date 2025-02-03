@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-#include <cuda_runtime.h>
 #include <zenoh-pico/config.h>
 #include <zenoh.hxx>
 
@@ -16,6 +15,7 @@
 #include "metadata.hpp"
 
 #ifdef BUILD_PYSHOZ
+#include <cuda_runtime.h>
 #include <nanobind/ndarray.h>
 
 #include "pyshoz.hpp"
