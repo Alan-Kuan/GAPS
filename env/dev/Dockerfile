@@ -54,6 +54,11 @@ RUN passwd -d ubuntu
 RUN echo "export PATH=\"/opt/cmake-3.29.6-linux-`arch`/bin:/usr/local/cuda/bin:\${PATH}\"" >> /home/ubuntu/.bashrc
 RUN echo 'export PYTHONPATH=./build/src' >> /home/ubuntu/.bashrc
 
+# download YOLO11 models
+WORKDIR /home/ubuntu
+RUN wget https://github.com/akanametov/yolo-face/releases/download/v0.0.0/yolov11n-face.pt -O yolo11n-face.pt
+RUN wget https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-seg.pt
+
 # configure ssh server
 RUN mkdir /var/run/sshd
 RUN echo 'Port 22' >> /etc/ssh/sshd_config
