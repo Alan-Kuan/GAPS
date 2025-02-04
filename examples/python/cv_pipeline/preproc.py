@@ -50,7 +50,7 @@ def main():
         img_batch = transforms(img_batch)
 
         buf = pub.malloc(img_batch.shape, pyshoz.float16)
-        pub.copy_tensor(buf, img_batch.contiguous())
+        buf.copy_(img_batch)
         pub.put(buf)
 
     print(f"beg: {beg}")

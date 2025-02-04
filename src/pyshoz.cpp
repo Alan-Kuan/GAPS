@@ -22,7 +22,6 @@ NB_MODULE(pyshoz, m) {
     nb::class_<Publisher, Node>(m, "Publisher")
         .def(nb::init<const ZenohSession&, std::string&&, size_t, int>())
         .def("put", &Publisher::put)
-        .def("copy_tensor", &Publisher::copyTensor)
         .def("malloc", &Publisher::malloc, "shape"_a, "dtype"_a,
              "clean"_a = true, nb::rv_policy::reference);
 

@@ -38,14 +38,6 @@ Publisher::Publisher(const session_t& session, std::string&& topic_name,
 }
 
 #ifdef BUILD_PYSHOZ
-void Publisher::copyTensor(DeviceTensor& dst,
-                           const nb::ndarray<nb::pytorch>& src) {
-    auto kind = src.device_type() == nb::device::cpu::value
-                    ? cudaMemcpyHostToDevice
-                    : cudaMemcpyDeviceToDevice;
-    cudaMemcpy(dst.data(), src.data(), src.nbytes(), kind);
-}
-
 DeviceTensor Publisher::malloc(nb::tuple shape, Dtype dtype, bool clean) {
     nb::dlpack::dtype nb_dtype;
     switch (dtype) {

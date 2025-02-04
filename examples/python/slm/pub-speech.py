@@ -38,7 +38,7 @@ def main():
         time.sleep(speaking_time + buffer_time)
 
         msg_tokens = publisher.malloc(input_tokens.shape, pyshoz.int64)
-        publisher.copy_tensor(msg_tokens, input_tokens.contiguous())
+        msg_tokens.copy_(input_tokens)
         publisher.put(msg_tokens)
 
     print("Finished! Note that the subscribers are probably still translating.")

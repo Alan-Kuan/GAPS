@@ -36,7 +36,7 @@ def main():
 
     def msg_handler(img_batch):
         buf = pub.malloc(img_batch.shape, pyshoz.float16)
-        pub.copy_tensor(buf, img_batch.contiguous())
+        buf.copy_(img_batch)
         blur_faces(model, buf)
         pub.put(buf)
     _sub = pyshoz.Subscriber(session, TOPIC_IN, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)

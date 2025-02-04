@@ -57,7 +57,7 @@ def run_as_subscriber(session):
 
     def msg_handler(tensor):
         buf = publisher.malloc((64, ), pyshoz.int32)
-        publisher.copy_tensor(buf, tensor.contiguous())
+        buf.copy_(tensor)
         buf *= 2
         publisher.put(buf)
 

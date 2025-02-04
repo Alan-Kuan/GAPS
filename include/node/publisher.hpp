@@ -29,7 +29,6 @@ public:
               size_t pool_size, int msg_queue_cap_exp);
 
 #ifdef BUILD_PYSHOZ
-    void copyTensor(DeviceTensor& dst, const nb::ndarray<nb::pytorch>& src);
     DeviceTensor malloc(nb::tuple shape, Dtype dtype, bool clean);
     void put(const DeviceTensor& tensor);
 #else
