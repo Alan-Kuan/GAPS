@@ -1,62 +1,48 @@
-import os
+import signal
 import sys
-import time
 
 import torch
-import torchvision
-from torchvision.transforms import v2
 import torchvision.transforms.v2.functional as F
 from ultralytics.utils import ops
 
 import pyshoz
 
+#
+#  This is a node that detects and blurs human faces
+#
+
 DEVICE = "cuda"
-TOPIC = "cv_pipeline"
+TOPIC_IN = "cv_pipeline-preprocessed_frames"
+TOPIC_OUT = "cv_pipeline-blurred_frames"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
 POOL_SIZE = 256 << 20
 MSG_QUEUE_CAP_EXP = 7
 BLUR_RATIO = 0.25
 
 def main():
-    if len(sys.argv) < 5:
-        print(f"Usage: {sys.argv[0]} IMG_DIR MAX_IMG_NUM BATCH_SIZE MODEL_PATH")
+    if len(sys.argv) < 2:
+        print(f"Usage: {sys.argv[0]} MODEL_PATH")
         exit(1)
 
-    img_dir = sys.argv[1]
-    max_img_num = int(sys.argv[2])
-    batch_size = int(sys.argv[3])
-    model_path = sys.argv[4]
+    model_path = sys.argv[1]
+
+    signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
 
     model = torch.load(model_path)["model"].to(DEVICE)
     model.eval()
 
-    imgs = [
-        torchvision.io.read_image(f"{img_dir}/{p}").to(DEVICE)
-        for p in os.listdir(img_dir)[:max_img_num]
-    ]
-    img_batches = [
-        torch.stack(imgs[i:i + batch_size])
-        for i in range(0, len(imgs), batch_size)
-    ]
-
-    transforms = v2.Compose([
-        v2.Resize((640, 640)),
-        v2.ToDtype(torch.float16, scale=True),
-    ])
-
     session = pyshoz.ZenohSession(LLOCATOR)
-    pub = pyshoz.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
+    pub = pyshoz.Publisher(session, TOPIC_OUT, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
-    beg = time.monotonic()
-    for img_batch in img_batches:
-        img_batch = transforms(img_batch)
-        blur_faces(model, img_batch)
-
+    def msg_handler(img_batch):
         buf = pub.malloc(img_batch.shape, pyshoz.float16)
         pub.copy_tensor(buf, img_batch.contiguous())
+        blur_faces(model, buf)
         pub.put(buf)
+    _sub = pyshoz.Subscriber(session, TOPIC_IN, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
-    print(f"beg: {beg}")
+    print("Ctrl+C to leave")
+    signal.pause()
 
 def blur_faces(model, img_batch):
     with torch.no_grad():

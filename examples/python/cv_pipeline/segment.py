@@ -8,8 +8,12 @@ from ultralytics.utils import ops
 
 import pyshoz
 
+#
+#  This is a node that does instance segmentation
+#
+
 DEVICE = "cuda"
-TOPIC = "cv_pipeline"
+TOPIC = "cv_pipeline-blurred_frames"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
 POOL_SIZE = 256 << 20
 MSG_QUEUE_CAP_EXP = 7
