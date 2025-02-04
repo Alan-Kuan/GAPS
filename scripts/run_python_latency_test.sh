@@ -12,7 +12,7 @@ OUTPUT_DIR="outputs/python"
 
 mkdir -p "${OUTPUT_DIR}"
 
-iox-roudi -l off -c "${SCRIPT_DIR}/iox-roudi-config.toml" &
+iox-roudi -l off &
 ROUDI_PID="$!"
 
 ./build/src/mem_manager >/dev/null &

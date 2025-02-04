@@ -17,7 +17,7 @@ OUTPUT_1_DIR="outputs/1p1s"
 mkdir -p "${OUTPUT_1_DIR}"
 # mkdir -p "${OUTPUT_2_DIR}"
 
-iox-roudi -l off -c "${SCRIPT_DIR}/iox-roudi-config.toml" &
+iox-roudi -l off &
 ROUDI_PID="$!"
 
 ./build/src/mem_manager >/dev/null &
