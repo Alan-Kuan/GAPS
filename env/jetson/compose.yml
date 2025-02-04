@@ -1,12 +1,12 @@
 services:
-  shoz:
+  shoi:
     build:
       context: .
     restart: unless-stopped
     ports:
       - 127.0.0.1:22222:22
     volumes:
-      - ../../:/home/ubuntu/shoz:ro
+      - ../../:/home/ubuntu/shoi:ro
     runtime: nvidia
     # 64 MiB
     shm_size: 67108864

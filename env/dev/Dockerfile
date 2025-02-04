@@ -19,19 +19,15 @@ RUN tar xvf cmake-3.29.6-linux-`arch`.tar.gz
 #  Dependencies
 #
 
-# install Zenoh-pico
-WORKDIR /root
-RUN git clone https://github.com/eclipse-zenoh/zenoh-pico.git --branch 1.1.0 --depth 1
-WORKDIR /root/zenoh-pico
-RUN /opt/cmake-3.29.6-linux-`arch`/bin/cmake -B build -G Ninja -DFRAG_MAX_SIZE=17000000
-RUN ninja -C build && ninja -C build install
+# install prerequisites of Iceoryx
+RUN apt install -y gcc g++ cmake libacl1-dev libncurses5-dev pkg-config
 
-# install Zenoh-cpp
+# install Iceoryx
 WORKDIR /root
-RUN git clone https://github.com/eclipse-zenoh/zenoh-cpp.git --branch 1.1.0 --depth 1
-WORKDIR /root/zenoh-cpp
-RUN /opt/cmake-3.29.6-linux-`arch`/bin/cmake -B build -DZENOHCXX_ZENOHC=off -DZENOHCXX_ZENOHPICO=on
-RUN make -C build install
+RUN git clone https://github.com/eclipse-iceoryx/iceoryx.git --branch v2.0.6 --depth 1
+WORKDIR /root/iceoryx
+RUN /opt/cmake-3.29.6-linux-`arch`/bin/cmake -B build -G Ninja iceoryx_meta
+RUN ninja -C build && ninja -C build install
 
 RUN pip install nanobind==2.1.0 numpy==1.26.4
 RUN pip install torch==2.5.0 torchvision==0.20.0 --index-url https://download.pytorch.org/whl/cu124
