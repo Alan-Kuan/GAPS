@@ -53,7 +53,6 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
     for (int i = 0; i < 5 && keep; i++) {
         iox_subscriber
             ->take()
-        // TODO
 #ifdef BUILD_PYSHOI
             .and_then([iox_subscriber, self](const void* payload) {
                 auto msg_header = (MsgHeader*) payload;
