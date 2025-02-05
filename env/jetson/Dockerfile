@@ -1,4 +1,5 @@
-FROM ultralytics/ultralytics:8.3.65-jetson-jetpack6
+# see README.md to learn how to build this image
+FROM torchvision:r36.4.0
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -38,7 +39,18 @@ RUN pip install nanobind==2.5.0 numpy==1.26.4
 #
 #  Optional Dependencies
 #
-RUN pip install pandas
+RUN pip install pandas ultralytics==8.3.65
+
+# install dependencies required by ultralytics
+RUN apt install -y \
+    libhdf5-dev \
+    libtesseract-dev \
+    libgtk-3-dev \
+    libavcodec-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libatlas-base-dev \
+    libtbb-dev
 
 #
 #  Misc
