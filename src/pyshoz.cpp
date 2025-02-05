@@ -21,7 +21,7 @@ NB_MODULE(pyshoz, m) {
     nb::class_<Publisher, Node>(m, "Publisher")
         .def(nb::init<const ZenohSession&, std::string&&, size_t, int>())
         .def("put", &Publisher::put)
-        .def("malloc", &Publisher::malloc, nb::rv_policy::reference);
+        .def("empty", &Publisher::empty, nb::rv_policy::reference);
 
     nb::class_<Subscriber, Node>(m, "Subscriber")
         .def(nb::init<const ZenohSession&, std::string&&, size_t, int,

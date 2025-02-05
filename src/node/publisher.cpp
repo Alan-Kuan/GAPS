@@ -37,7 +37,7 @@ Publisher::Publisher(const session_t& session, std::string&& topic_name,
 }
 
 #ifdef BUILD_PYSHOZ
-DeviceTensor Publisher::malloc(nb::tuple shape, Dtype dtype) {
+DeviceTensor Publisher::empty(nb::tuple shape, Dtype dtype) {
     nb::dlpack::dtype nb_dtype;
     switch (dtype) {
     case Dtype::int8:

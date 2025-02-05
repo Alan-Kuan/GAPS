@@ -35,7 +35,7 @@ def main():
     pub = pyshoz.Publisher(session, TOPIC_OUT, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
     def msg_handler(img_batch):
-        buf = pub.malloc(img_batch.shape, pyshoz.float16)
+        buf = pub.empty(img_batch.shape, pyshoz.float16)
         buf.copy_(img_batch)
         blur_faces(model, buf)
         pub.put(buf)

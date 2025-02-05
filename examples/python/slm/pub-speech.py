@@ -37,7 +37,7 @@ def main():
         buffer_time = 1
         time.sleep(speaking_time + buffer_time)
 
-        msg_tokens = publisher.malloc(input_tokens.shape, pyshoz.int64)
+        msg_tokens = publisher.empty(input_tokens.shape, pyshoz.int64)
         msg_tokens.copy_(input_tokens)
         publisher.put(msg_tokens)
 

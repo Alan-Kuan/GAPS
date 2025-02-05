@@ -49,7 +49,7 @@ def main():
         img_batch = torch.stack(img_batch)
         img_batch = transforms(img_batch)
 
-        buf = pub.malloc(img_batch.shape, pyshoz.float16)
+        buf = pub.empty(img_batch.shape, pyshoz.float16)
         buf.copy_(img_batch)
         pub.put(buf)
 
