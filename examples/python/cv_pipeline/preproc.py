@@ -18,7 +18,6 @@ TOPIC = "cv_pipeline-preprocessed_frames"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
 POOL_SIZE = 256 << 20
 MSG_QUEUE_CAP_EXP = 7
-BLUR_RATIO = 0.25
 
 def main():
     if len(sys.argv) < 4:
