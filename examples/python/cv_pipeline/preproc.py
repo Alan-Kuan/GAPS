@@ -6,7 +6,7 @@ import torch
 import torchvision
 from torchvision.transforms import v2
 
-import pyshoz
+import pyshoi
 
 # 
 #  This program mocks a node decoding images from a camera with GPU,
@@ -15,7 +15,7 @@ import pyshoz
 
 DEVICE = "cuda"
 TOPIC = "cv_pipeline-preprocessed_frames"
-LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
+RUNTIME = "cv_pipeline-preproc"
 POOL_SIZE = 256 << 20
 MSG_QUEUE_CAP_EXP = 7
 BLUR_RATIO = 0.25
@@ -40,8 +40,8 @@ def main():
         v2.ToDtype(torch.float16, scale=True),
     ])
 
-    session = pyshoz.ZenohSession(LLOCATOR)
-    pub = pyshoz.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
+    pyshoi.init_runtime(RUNTIME)
+    pub = pyshoi.Publisher(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
     beg = time.monotonic()
     for i in range(0, len(raw_imgs), batch_size):
@@ -49,7 +49,7 @@ def main():
         img_batch = torch.stack(img_batch)
         img_batch = transforms(img_batch)
 
-        buf = pub.empty(img_batch.shape, pyshoz.float16)
+        buf = pub.empty(img_batch.shape, pyshoi.float16)
         buf.copy_(img_batch)
         pub.put(buf)
 
