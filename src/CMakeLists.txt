@@ -29,7 +29,6 @@ if(BUILD_TORCH_SUPPORT)
         BUILD_PYSHOZ)
     target_link_libraries(pyshoz
         PRIVATE
-        CUDA::cudart
         CUDA::cuda_driver
         zenohcxx::zenohpico
         allocator
