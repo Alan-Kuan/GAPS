@@ -71,8 +71,11 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
 #ifdef BUILD_PYSHOZ
         {
             nb::gil_scoped_acquire acq;
-            DeviceTensor tensor(data, msg_header->ndim, shape_buf, nb::handle(),
-                                nullptr, msg_header->dtype,
+            // NOTE: use nb::bytes("0") to trick nanobind into believing it's
+            // the owner; otherwise, nanobind will copy the tensor (since
+            // nanobind 2.2.0), which is what we want to avoid
+            DeviceTensor tensor(data, msg_header->ndim, shape_buf,
+                                nb::bytes("0"), nullptr, msg_header->dtype,
                                 nb::device::cuda::value);
             handler(tensor);
         }
