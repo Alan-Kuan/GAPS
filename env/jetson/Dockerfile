@@ -1,4 +1,5 @@
-FROM ultralytics/ultralytics:8.3.65-jetson-jetpack6
+# see README.md to learn how to build this image
+FROM torchvision:r36.4.0
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -34,7 +35,18 @@ RUN pip install nanobind==2.5.0 numpy==1.26.4
 #
 #  Optional Dependencies
 #
-RUN pip install pandas
+RUN pip install pandas ultralytics==8.3.65
+
+# install dependencies required by ultralytics
+RUN apt install -y \
+    libhdf5-dev \
+    libtesseract-dev \
+    libgtk-3-dev \
+    libavcodec-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libatlas-base-dev \
+    libtbb-dev
 
 #
 #  Misc
@@ -48,8 +60,8 @@ RUN echo 'export PYTHONPATH=./build/src' >> /home/ubuntu/.bashrc
 
 # download YOLO11 models
 WORKDIR /home/ubuntu
-RUN wget https://github.com/akanametov/yolo-face/releases/download/v0.0.0/yolov11n-face.pt -O yolo11n-face.pt
-RUN wget https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-seg.pt
+ADD https://github.com/akanametov/yolo-face/releases/download/v0.0.0/yolov11n-face.pt yolo11n-face.pt
+ADD https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-seg.pt
 
 # configure ssh server
 RUN mkdir /var/run/sshd
