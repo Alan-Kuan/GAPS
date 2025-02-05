@@ -40,6 +40,7 @@ def main():
         v2.ToDtype(torch.float16, scale=True),
     ])
 
+    pyshoi.turn_off_logging()
     pyshoi.init_runtime(RUNTIME)
     pub = pyshoi.Publisher(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 

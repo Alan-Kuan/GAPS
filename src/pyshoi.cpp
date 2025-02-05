@@ -2,6 +2,7 @@
 
 #include <cstddef>
 
+#include <iceoryx_hoofs/log/logmanager.hpp>
 #include <iceoryx_posh/runtime/posh_runtime.hpp>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/function.h>
@@ -16,6 +17,10 @@ NB_MODULE(pyshoi, m) {
     m.def("init_runtime", [](const char* name) {
         iox::RuntimeName_t runtime_name(iox::cxx::TruncateToCapacity, name);
         iox::runtime::PoshRuntime::initRuntime(runtime_name);
+    });
+    m.def("turn_off_logging", []() {
+        iox::log::LogManager::GetLogManager().SetDefaultLogLevel(
+            iox::log::LogLevel::kOff);
     });
 
     nb::class_<Node>(m, "Node").def(nb::init<const char*, size_t, int>());

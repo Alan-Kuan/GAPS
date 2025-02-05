@@ -31,6 +31,7 @@ def main():
     model = torch.load(model_path)["model"].to(DEVICE)
     model.eval()
 
+    pyshoi.turn_off_logging()
     pyshoi.init_runtime(RUNTIME)
 
     count = 0

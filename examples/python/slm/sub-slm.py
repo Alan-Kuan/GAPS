@@ -66,6 +66,7 @@ English: """
         timepoints.append(time.time())
         print(len(translation))
 
+    pyshoi.turn_off_logging()
     pyshoi.init_runtime(RUNTIME)
     _subscriber = pyshoi.Subscriber(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, handler)
 

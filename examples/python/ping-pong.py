@@ -18,6 +18,7 @@ def main():
     args = parser.parse_args()
 
     signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
+    pyshoi.turn_off_logging()
 
     if args.p:
         print("Ping Side")

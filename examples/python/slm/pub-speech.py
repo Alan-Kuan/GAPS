@@ -18,6 +18,7 @@ def main():
 
     model_name = "microsoft/Phi-3.5-mini-instruct"
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+    pyshoi.turn_off_logging()
     pyshoi.init_runtime(RUNTIME)
     publisher = pyshoi.Publisher(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     sents = read_sentences(sys.argv[1])
