@@ -33,7 +33,7 @@ RUN /opt/cmake-3.29.6-linux-`arch`/bin/cmake -B build -DZENOHCXX_ZENOHC=off -DZE
 RUN make -C build install
 
 RUN python -m pip install --upgrade pip
-RUN pip install nanobind==2.1.0 numpy==1.26.4
+RUN pip install nanobind==2.5.0 numpy==1.26.4
 
 #
 #  Optional Dependencies

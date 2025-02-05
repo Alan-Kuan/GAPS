@@ -33,7 +33,7 @@ WORKDIR /root/zenoh-cpp
 RUN /opt/cmake-3.29.6-linux-`arch`/bin/cmake -B build -DZENOHCXX_ZENOHC=off -DZENOHCXX_ZENOHPICO=on
 RUN make -C build install
 
-RUN pip install nanobind==2.1.0 numpy==1.26.4
+RUN pip install nanobind==2.5.0 numpy==1.26.4
 RUN pip install torch==2.5.0 torchvision==0.20.0 --index-url https://download.pytorch.org/whl/cu124
 
 #
