@@ -29,7 +29,7 @@ WORKDIR /root/iceoryx
 RUN /opt/cmake-3.29.6-linux-`arch`/bin/cmake -B build -G Ninja iceoryx_meta
 RUN ninja -C build && ninja -C build install
 
-RUN python -m pip install --upgrade pip
+RUN pip install --upgrade pip
 RUN pip install nanobind==2.5.0 numpy==1.26.4
 
 #
