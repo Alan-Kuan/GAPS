@@ -65,7 +65,7 @@ RUN echo 'export PYTHONPATH=./build/src' >> /home/ubuntu/.bashrc
 # download YOLO11 models
 WORKDIR /home/ubuntu
 ADD https://github.com/akanametov/yolo-face/releases/download/v0.0.0/yolov11n-face.pt yolo11n-face.pt
-ADD https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-seg.pt
+ADD https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-seg.pt yolo11n-seg.pt
 
 # configure ssh server
 RUN mkdir /var/run/sshd
