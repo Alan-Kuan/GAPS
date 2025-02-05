@@ -22,13 +22,13 @@ def main():
 
     session = pyshoz.ZenohSession(LLOCATOR)
     if args.p:
-        print("Publisher Mode")
-        run_as_publisher(session)
+        print("Ping Side")
+        run_as_ping_side(session)
     else:
-        print("Subscriber Mode")
-        run_as_subscriber(session)
+        print("Pong Side")
+        run_as_pong_side(session)
 
-def run_as_publisher(session):
+def run_as_ping_side(session):
     publisher = pyshoz.Publisher(session, TOPIC_PING, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
     ori_tensor = publisher.empty((64, ), pyshoz.int32)
@@ -44,15 +44,16 @@ def run_as_publisher(session):
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
     _subscriber = pyshoz.Subscriber(session, TOPIC_PONG, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
-    # make sure subscriber is ready
+    # make sure the subscriber is ready
     time.sleep(2)
 
     publisher.put(ori_tensor)
+    print('Ping!')
 
     print("Ctrl+C to leave")
     signal.pause()
 
-def run_as_subscriber(session):
+def run_as_pong_side(session):
     publisher = pyshoz.Publisher(session, TOPIC_PONG, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
     def msg_handler(tensor):
@@ -60,6 +61,7 @@ def run_as_subscriber(session):
         buf.copy_(tensor)
         buf *= 2
         publisher.put(buf)
+        print('Pong!')
 
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
     _subscriber = pyshoz.Subscriber(session, TOPIC_PING, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
