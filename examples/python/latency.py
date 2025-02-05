@@ -40,7 +40,7 @@ def run_as_publisher(payload_size, output_name):
     time_points = [None] * TIMES
 
     for i in range(TIMES):
-        tensor = publisher.malloc((count, ), pyshoi.int32)
+        tensor = publisher.empty((count, ), pyshoi.int32)
         tensor.fill_(i)
         time_points[i] = time.monotonic()
         publisher.put(tensor)

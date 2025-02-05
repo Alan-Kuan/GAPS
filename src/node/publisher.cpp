@@ -32,15 +32,7 @@ Publisher::Publisher(const char* topic_name, size_t pool_size,
 }
 
 #ifdef BUILD_PYSHOI
-void Publisher::copyTensor(DeviceTensor& dst,
-                           const nb::ndarray<nb::pytorch>& src) {
-    auto kind = src.device_type() == nb::device::cpu::value
-                    ? cudaMemcpyHostToDevice
-                    : cudaMemcpyDeviceToDevice;
-    cudaMemcpy(dst.data(), src.data(), src.nbytes(), kind);
-}
-
-DeviceTensor Publisher::malloc(nb::tuple shape, Dtype dtype, bool clean) {
+DeviceTensor Publisher::empty(nb::tuple shape, Dtype dtype) {
     nb::dlpack::dtype nb_dtype;
     switch (dtype) {
     case Dtype::int8:
@@ -79,8 +71,6 @@ DeviceTensor Publisher::malloc(nb::tuple shape, Dtype dtype, bool clean) {
     size_t offset = this->allocator->malloc(size);
     if (offset == -1) throwError("no available space");
     auto addr = (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
-
-    if (clean) cudaMemset(addr, 0, size);
 
     return DeviceTensor(addr, ndim, shape_buf.data(), nb::handle(), nullptr,
                         nb_dtype, nb::device::cuda::value);

@@ -27,8 +27,7 @@ public:
     Publisher(const char* topic_name, size_t pool_size, int msg_queue_cap_exp);
 
 #ifdef BUILD_PYSHOI
-    void copyTensor(DeviceTensor& dst, const nb::ndarray<nb::pytorch>& src);
-    DeviceTensor malloc(nb::tuple shape, Dtype dtype, bool clean);
+    DeviceTensor empty(nb::tuple shape, Dtype dtype);
     void put(const DeviceTensor& tensor);
 #else
     void* malloc(size_t size);

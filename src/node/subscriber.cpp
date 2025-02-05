@@ -75,8 +75,11 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
 #ifdef BUILD_PYSHOI
                 {
                     nb::gil_scoped_acquire acq;
+                    // NOTE: use nb::bytes("0") to trick nanobind into believing
+                    // it's the owner; otherwise, nanobind will copy the tensor
+                    // (since nanobind 2.2.0), which is what we want to avoid
                     DeviceTensor tensor(
-                        data, msg_header->ndim, shape_buf, nb::handle(),
+                        data, msg_header->ndim, shape_buf, nb::bytes("0"),
                         nullptr, msg_header->dtype, nb::device::cuda::value);
                     self->handler(tensor);
                 }

@@ -28,7 +28,6 @@ if(BUILD_TORCH_SUPPORT)
         BUILD_PYSHOI)
     target_link_libraries(pyshoi
         PRIVATE
-        CUDA::cudart
         CUDA::cuda_driver
         iceoryx_posh::iceoryx_posh
         allocator

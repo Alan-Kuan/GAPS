@@ -20,18 +20,18 @@ def main():
     signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
 
     if args.p:
-        print("Publisher Mode")
+        print("Ping Side")
         pyshoi.init_runtime("py-ping-pong-publisher")
-        run_as_publisher()
+        run_as_ping_side()
     else:
-        print("Subscriber Mode")
+        print("Pong Side")
         pyshoi.init_runtime("py-ping-pong-subscriber")
-        run_as_subscriber()
+        run_as_pong_side()
 
-def run_as_publisher():
+def run_as_ping_side():
     publisher = pyshoi.Publisher(TOPIC_PING, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
-    ori_tensor = publisher.malloc((64, ), pyshoi.int32)
+    ori_tensor = publisher.empty((64, ), pyshoi.int32)
     for i in range(64):
         ori_tensor[i] = i
 
@@ -44,22 +44,24 @@ def run_as_publisher():
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
     _subscriber = pyshoi.Subscriber(TOPIC_PONG, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
-    # make sure subscriber is ready
+    # make sure the subscriber is ready
     time.sleep(2)
 
     publisher.put(ori_tensor)
+    print('Ping!')
 
     print("Ctrl+C to leave")
     signal.pause()
 
-def run_as_subscriber():
+def run_as_pong_side():
     publisher = pyshoi.Publisher(TOPIC_PONG, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
     def msg_handler(tensor):
-        buf = publisher.malloc((64, ), pyshoi.int32)
-        publisher.copy_tensor(buf, tensor.contiguous())
+        buf = publisher.empty((64, ), pyshoi.int32)
+        buf.copy_(tensor)
         buf *= 2
         publisher.put(buf)
+        print('Pong!')
 
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
     _subscriber = pyshoi.Subscriber(TOPIC_PING, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)

@@ -8,8 +8,12 @@ from ultralytics.utils import ops
 
 import pyshoi
 
+#
+#  This is a node that does instance segmentation
+#
+
 DEVICE = "cuda"
-TOPIC = "cv_pipeline"
+TOPIC = "cv_pipeline-blurred_frames"
 RUNTIME = "cv_pipeline-seg"
 POOL_SIZE = 256 << 20
 MSG_QUEUE_CAP_EXP = 7
