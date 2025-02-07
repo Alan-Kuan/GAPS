@@ -47,7 +47,7 @@ Subscriber::~Subscriber() {
 void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
                                   Subscriber* self) {
     bool keep = true;
-    for (int i = 0; i < 5 && keep; i++) {
+    while (keep) {
         iox_subscriber
             ->take()
 #ifdef BUILD_PYSHOI
