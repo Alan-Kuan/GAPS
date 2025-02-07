@@ -9,7 +9,6 @@
 #include <iceoryx_posh/capro/service_description.hpp>
 #include <iceoryx_posh/popo/publisher.hpp>
 
-#include "allocator/tlsf.hpp"
 #include "error.hpp"
 #include "metadata.hpp"
 
@@ -27,9 +26,7 @@ Publisher::Publisher(const char* topic_name, size_t pool_size,
         : Node(topic_name, pool_size, msg_queue_cap_exp),
           iox_publisher({"", "shoi",
                          iox::capro::IdString_t(iox::cxx::TruncateToCapacity,
-                                                topic_name)}) {
-    this->allocator = new TlsfAllocator((TopicHeader*) this->shm_base);
-}
+                                                topic_name)}) {}
 
 #ifdef BUILD_PYSHOI
 DeviceTensor Publisher::empty(nb::tuple shape, Dtype dtype) {

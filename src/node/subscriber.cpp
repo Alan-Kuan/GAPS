@@ -9,7 +9,6 @@
 #include <iceoryx_posh/capro/service_description.hpp>
 #include <iceoryx_posh/popo/subscriber.hpp>
 
-#include "allocator/tlsf.hpp"
 #include "error.hpp"
 #include "metadata.hpp"
 
@@ -21,7 +20,7 @@ namespace nb = nanobind;
 
 Subscriber::Subscriber(const char* topic_name, size_t pool_size,
                        int msg_queue_cap_exp, MessageHandler handler)
-        : Node(topic_name, pool_size, msg_queue_cap_exp),
+        : Node(topic_name, pool_size, msg_queue_cap_exp, true),
           iox_subscriber({"", "shoi",
                           iox::capro::IdString_t(iox::cxx::TruncateToCapacity,
                                                  topic_name)},
@@ -30,8 +29,6 @@ Subscriber::Subscriber(const char* topic_name, size_t pool_size,
     TopicHeader* topic_header = getTopicHeader(this->shm_base);
     std::atomic_ref<uint32_t>(topic_header->sub_count)++;
     this->mq_header = getMessageQueueHeader(getTlsfHeader(topic_header));
-
-    this->allocator = new TlsfAllocator((TopicHeader*) this->shm_base, true);
 
     this->iox_listener
         .attachEvent(this->iox_subscriber,

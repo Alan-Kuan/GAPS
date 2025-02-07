@@ -12,11 +12,15 @@
 
 #include <cuda.h>
 
+#include "allocator/tlsf.hpp"
 #include "error.hpp"
 #include "metadata.hpp"
 
-Node::Node(const char* topic_name, size_t pool_size, int msg_queue_cap_exp) {
-    if (strlen(topic_name) > kMaxTopicNameLen) throwError();
+Node::Node(const char* topic_name, size_t pool_size, int msg_queue_cap_exp,
+           bool read_only) {
+    if (strlen(topic_name) > kMaxTopicNameLen) {
+        throwError("topic name is too long");
+    }
 
     // init CUDA Driver API
     throwOnErrorCuda(cuInit(0));
@@ -71,6 +75,12 @@ Node::Node(const char* topic_name, size_t pool_size, int msg_queue_cap_exp) {
         }
     }
     std::atomic_ref<uint32_t>(topic_header->interest_count)++;
+
+    /**
+     *  Create the allocator
+     */
+
+    this->allocator = new TlsfAllocator(topic_header, read_only);
 }
 
 Node::~Node() {

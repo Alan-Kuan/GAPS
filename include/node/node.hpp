@@ -8,7 +8,8 @@
 class Node {
 public:
     Node() = delete;
-    Node(const char* topic_name, size_t pool_size, int msg_queue_cap_exp);
+    Node(const char* topic_name, size_t pool_size, int msg_queue_cap_exp,
+         bool read_only = false);
     ~Node();
     // prevent the node from being copied, since it may cause problem when the
     // copy destructs
