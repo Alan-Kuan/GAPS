@@ -16,7 +16,9 @@
 #include "metadata.hpp"
 
 Node::Node(const char* topic_name, size_t pool_size, int msg_queue_cap_exp) {
-    if (strlen(topic_name) > kMaxTopicNameLen) throwError();
+    if (strlen(topic_name) > kMaxTopicNameLen) {
+        throwError("topic name is too long");
+    }
 
     // init CUDA Driver API
     throwOnErrorCuda(cuInit(0));
