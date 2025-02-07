@@ -39,6 +39,9 @@ RUN pip install nanobind==2.5.0 numpy==1.26.4
 #
 #  Optional Dependencies
 #
+RUN apt update && apt install -y \
+    libopencv-dev
+
 RUN pip install pandas ultralytics==8.3.65
 
 # install dependencies required by ultralytics
