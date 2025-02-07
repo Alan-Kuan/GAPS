@@ -11,7 +11,6 @@
 #include <zenoh-pico/config.h>
 #include <zenoh.hxx>
 
-#include "allocator/tlsf.hpp"
 #include "metadata.hpp"
 
 #ifdef BUILD_PYSHOZ
@@ -25,7 +24,7 @@ namespace nb = nanobind;
 Subscriber::Subscriber(const session_t& session, std::string&& topic_name,
                        size_t pool_size, int msg_queue_cap_exp,
                        MessageHandler handler)
-        : Node(topic_name.c_str(), pool_size, msg_queue_cap_exp),
+        : Node(topic_name.c_str(), pool_size, msg_queue_cap_exp, true),
 #ifdef BUILD_PYSHOZ
           z_subscriber(session.getSession().declare_subscriber(
               "shoz/" + topic_name,
@@ -34,7 +33,6 @@ Subscriber::Subscriber(const session_t& session, std::string&& topic_name,
               "shoz/" + topic_name,
 #endif
               this->makeCallback(handler), zenoh::closures::none)) {
-    this->allocator = new TlsfAllocator((TopicHeader*) this->shm_base, true);
 }
 
 Subscriber::~Subscriber() {
