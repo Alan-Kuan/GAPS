@@ -7,8 +7,6 @@ import pyshoi
 TOPIC = "py_latency_test"
 POOL_SIZE = 32 << 20;  # 32 MiB
 MSG_QUEUE_CAP_EXP = 7
-PUB_INTERVAL = 0.5  # 500ms
-TIMES = 100
 
 def main():
     parser = argparse.ArgumentParser()
@@ -17,6 +15,10 @@ def main():
                         help="be a publisher or not (if not specify, it becomes a subscriber)")
     parser.add_argument("-s",
                         help="size of the payload to be published (only required if -p is specified)")
+    parser.add_argument("-t",
+                        help="publishing how many times (only required if -p is specified)")
+    parser.add_argument("-i",
+                        help="publishing interval in second (only required if -p is specified)")
     parser.add_argument("-o",
                         required=True,
                         help="output path")
@@ -29,23 +31,28 @@ def main():
         if args.s == None:
             print('-s should be specified')
             exit(1)
-        pyshoi.init_runtime("py-latency-pub")
-        run_as_publisher(int(args.s), args.o)
+        if args.t == None:
+            print("-t should be specified")
+            exit(1)
+        if args.i == None:
+            print('-i should be specified')
+            exit(1)
+        run_as_publisher(args.o, int(args.s), int(args.t), float(args.i))
     else:
         pyshoi.init_runtime("py-latency-sub")
         run_as_subscriber(args.o)
 
-def run_as_publisher(payload_size, output_name):
+def run_as_publisher(output_name, payload_size, times, pub_interval):
     publisher = pyshoi.Publisher(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     count = payload_size // 4
-    time_points = [None] * TIMES
+    time_points = [None] * times
 
-    for i in range(TIMES):
+    for i in range(times):
         tensor = publisher.empty((count, ), pyshoi.int32)
         tensor.fill_(i)
         time_points[i] = time.monotonic()
         publisher.put(tensor)
-        time.sleep(PUB_INTERVAL)
+        time.sleep(pub_interval)
 
     dump_time_points(time_points, output_name)
 

@@ -9,6 +9,8 @@ SCRIPT_DIR=`dirname $(realpath "$0")`
 PROJECT_DIR=`dirname "${SCRIPT_DIR}"`
 TEST="${PROJECT_DIR}/examples/python/latency.py"
 OUTPUT_DIR="outputs/python"
+TIMES=100
+PUB_INTERVAL=0.05  # 50 ms
 
 mkdir -p "${OUTPUT_DIR}"
 
@@ -31,7 +33,7 @@ for i in {0..6}; do
     python3 "${TEST}" -o "${OUTPUT_DIR}/sub-${NAME[i]}" >/dev/null &
     SUB_PID="$!"
     sleep 1  # wait a while for the subscriber to be ready
-    python3 "${TEST}" -o "${OUTPUT_DIR}/pub-${NAME[i]}" -p -s "${SIZE[i]}"
+    python3 "${TEST}" -o "${OUTPUT_DIR}/pub-${NAME[i]}" -p -s "${SIZE[i]}" -t "${TIMES}" -i "${PUB_INTERVAL}"
     sleep 1  # wait a while for the subscriber to finish handling
 
     kill -s INT "${SUB_PID}"
