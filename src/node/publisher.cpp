@@ -12,6 +12,7 @@
 
 #include "error.hpp"
 #include "metadata.hpp"
+#include "profiling.hpp"
 
 #ifdef BUILD_PYSHOZ
 #include <nanobind/ndarray.h>
@@ -32,6 +33,7 @@ Publisher::Publisher(const session_t& session, std::string&& topic_name,
           z_publisher(session.declare_publisher("shoz/" + topic_name,
 #endif
                                                      {.is_express = true})) {
+    PROFILE_WARN;
 }
 
 #ifdef BUILD_PYSHOZ
@@ -78,18 +80,11 @@ DeviceTensor Publisher::empty(nb::tuple shape, Dtype dtype) {
     return DeviceTensor(addr, ndim, shape_buf.data(), nb::handle(), nullptr,
                         nb_dtype, nb::device::cuda::value);
 }
-#else
-void* Publisher::malloc(size_t size) {
-    size_t offset = this->allocator->malloc(size);
-    if (offset == -1) return nullptr;
-    return (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
-}
-#endif
 
-// Some parts of Publisher::put is common between C++ version and Python
-// version, so it is written as below.
-#ifdef BUILD_PYSHOZ
 void Publisher::put(const DeviceTensor& tensor) {
+    PROFILE_INIT(3);
+    PROFILE_SETPOINT(0);
+
     size_t size = tensor.nbytes();
     if (size == 0) return;
 
@@ -99,41 +94,18 @@ void Publisher::put(const DeviceTensor& tensor) {
 
     size_t offset =
         (uintptr_t) tensor.data() - (uintptr_t) this->allocator->getPoolBase();
-#else
-void Publisher::put(void* payload, size_t size) {
-    if (!payload) throwError("Payload was not provided");
-    if (size == 0) return;
-    size_t offset =
-        (uintptr_t) payload - (uintptr_t) this->allocator->getPoolBase();
-#endif
+
     // get next available index as message id
     MessageQueueHeader* mq_header =
         getMessageQueueHeader(getTlsfHeader(getTopicHeader(this->shm_base)));
-#ifdef BUILD_PYSHOZ
     msg_header.msg_id = std::atomic_ref<size_t>(mq_header->next).fetch_add(1) %
                         mq_header->capacity;
     MessageQueueEntry* mq_entry =
         getMessageQueueEntry(mq_header, msg_header.msg_id);
-#else
-    size_t msg_id = std::atomic_ref<size_t>(mq_header->next).fetch_add(1) %
-                    mq_header->capacity;
-    MessageQueueEntry* mq_entry = getMessageQueueEntry(mq_header, msg_id);
-#endif
 
-    // free the payload's space if it hasn't been freed
-    // NOTE: since `offset` from the allocator is always even,
-    // we use its first bit to determine if the space is freed
-    if (mq_entry->offset & 1) {
-        this->allocator->free(mq_entry->offset);
-    }
+    this->updateEntry(mq_entry, offset, size);
+    PROFILE_SETPOINT(1);
 
-    // NOTE: though `taken_num` and `avail` should be atomic referenced, it's
-    // okay because no other process will access these variables at this moment
-    mq_entry->taken_num = 0;
-    mq_entry->offset = offset | 1;
-    mq_entry->size = size;
-
-#ifdef BUILD_PYSHOZ
     // notify subscribers with the message ID & tensor info
     std::vector<uint8_t> byte_arr(sizeof(msg_header) +
                                   sizeof(int64_t) * msg_header.ndim);
@@ -143,10 +115,44 @@ void Publisher::put(void* payload, size_t size) {
     for (int i = 0; i < msg_header.ndim; i++) {
         shape_buf[i] = tensor.shape(i);
     }
+    this->z_publisher.put(zenoh::Bytes(std::move(byte_arr)));
+    PROFILE_SETPOINT(2);
+
+    PROFILE_OUTPUT(3);
+}
 #else
+void* Publisher::malloc(size_t size) {
+    size_t offset = this->allocator->malloc(size);
+    if (offset == -1) return nullptr;
+    return (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
+}
+
+void Publisher::put(void* payload, size_t size) {
+    PROFILE_INIT(3);
+    PROFILE_SETPOINT(0);
+
+    if (!payload) throwError("Payload was not provided");
+    if (size == 0) return;
+
+    size_t offset =
+        (uintptr_t) payload - (uintptr_t) this->allocator->getPoolBase();
+
+    // get next available index as message id
+    MessageQueueHeader* mq_header =
+        getMessageQueueHeader(getTlsfHeader(getTopicHeader(this->shm_base)));
+    size_t msg_id = std::atomic_ref<size_t>(mq_header->next).fetch_add(1) %
+                    mq_header->capacity;
+    MessageQueueEntry* mq_entry = getMessageQueueEntry(mq_header, msg_id);
+
+    this->updateEntry(mq_entry, offset, size);
+    PROFILE_SETPOINT(1);
+
     // notify subscribers with the message ID
     std::vector<uint8_t> byte_arr(sizeof(msg_id));
     memcpy(byte_arr.data(), &msg_id, sizeof(msg_id));
-#endif
     this->z_publisher.put(zenoh::Bytes(std::move(byte_arr)));
+    PROFILE_SETPOINT(2);
+
+    PROFILE_OUTPUT(3);
 }
+#endif

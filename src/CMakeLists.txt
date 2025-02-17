@@ -33,4 +33,10 @@ if(BUILD_TORCH_SUPPORT)
         zenohcxx::zenohpico
         allocator
         error)
+
+    if (PROFILING)
+        target_compile_definitions(pyshoz
+            PRIVATE
+            PROFILING)
+    endif()
 endif()

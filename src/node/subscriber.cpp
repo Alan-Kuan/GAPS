@@ -12,6 +12,7 @@
 #include <zenoh.hxx>
 
 #include "metadata.hpp"
+#include "profiling.hpp"
 
 #ifdef BUILD_PYSHOZ
 #include <nanobind/ndarray.h>
@@ -33,6 +34,7 @@ Subscriber::Subscriber(const session_t& session, std::string&& topic_name,
               "shoz/" + topic_name,
 #endif
               this->makeCallback(handler), zenoh::closures::none)) {
+    PROFILE_WARN;
 }
 
 Subscriber::~Subscriber() {
@@ -49,6 +51,9 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
         getMessageQueueHeader(getTlsfHeader(topic_header));
 
     auto callback = [=, this](const zenoh::Sample& sample) {
+        PROFILE_INIT(4);
+        PROFILE_SETPOINT(0);
+
 #ifdef BUILD_PYSHOZ
         std::vector<uint8_t> raw_msg{sample.get_payload().as_vector()};
         auto msg_header = (MsgHeader*) raw_msg.data();
@@ -65,6 +70,7 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
         size_t offset = mq_entry->offset ^ 1;
         void* data =
             (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
+        PROFILE_SETPOINT(1);
 
 #ifdef BUILD_PYSHOZ
         {
@@ -80,6 +86,7 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
 #else
         handler(data, mq_entry->size);
 #endif
+        PROFILE_SETPOINT(2);
 
         // last subscriber reading the message should free the allocation
         if (std::atomic_ref<uint32_t>(mq_entry->taken_num).fetch_add(1) ==
@@ -88,6 +95,9 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
             // remove the label that indicates the payload is not freed
             mq_entry->offset = offset;
         }
+        PROFILE_SETPOINT(3);
+
+        PROFILE_OUTPUT(4);
     };
     return callback;
 }

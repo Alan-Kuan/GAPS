@@ -34,6 +34,11 @@ ninja -C build
 After building the project, the compiled executables lie in `build/src`.
 
 ### CMake Build Options
+- `PROFILING=[on|(off)]`: whether to profile subscriber's callback
+    > [!WARN]
+    > When profiling the callback,
+    > make sure the publishing interval is high enough,
+    > or the outputing lines will affect the time measurement significantly
 - `BUILD_DEBUG=[on|(off)]`: whether to build with debugging codes
 - `BUILD_TORCH_SUPPORT=[on|(off)]`: whether to build PyTorch support
 - `BUILD_EXAMPLES=[(on)|off]`: whether to build example codes
