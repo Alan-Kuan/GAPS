@@ -8,8 +8,6 @@ TOPIC = "py_latency_test"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
 POOL_SIZE = 32 << 20;  # 32 MiB
 MSG_QUEUE_CAP_EXP = 7
-PUB_INTERVAL = 0.5  # 500ms
-TIMES = 100
 
 def main():
     parser = argparse.ArgumentParser()
@@ -18,6 +16,10 @@ def main():
                         help="be a publisher or not (if not specify, it becomes a subscriber)")
     parser.add_argument("-s",
                         help="size of the payload to be published (only required if -p is specified)")
+    parser.add_argument("-t",
+                        help="publishing how many times (only required if -p is specified)")
+    parser.add_argument("-i",
+                        help="publishing interval in second (only required if -p is specified)")
     parser.add_argument("-o",
                         required=True,
                         help="output path")
@@ -30,21 +32,27 @@ def main():
         if args.s == None:
             print('-s should be specified')
             exit(1)
-        run_as_publisher(session, int(args.s), args.o)
+        if args.t == None:
+            print("-t should be specified")
+            exit(1)
+        if args.i == None:
+            print('-i should be specified')
+            exit(1)
+        run_as_publisher(session, args.o, int(args.s), int(args.t), float(args.i))
     else:
         run_as_subscriber(session, args.o)
 
-def run_as_publisher(session, payload_size, output_name):
+def run_as_publisher(session, output_name, payload_size, times, pub_interval):
     publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     count = payload_size // 4
-    time_points = [None] * TIMES
+    time_points = [None] * times
 
-    for i in range(TIMES):
+    for i in range(times):
         tensor = publisher.empty((count, ), pyshoz.int32)
         tensor.fill_(i)
         time_points[i] = time.monotonic()
         publisher.put(tensor)
-        time.sleep(PUB_INTERVAL)
+        time.sleep(pub_interval)
 
     dump_time_points(time_points, output_name)
 
