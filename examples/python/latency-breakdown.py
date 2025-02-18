@@ -4,6 +4,10 @@ import time
 
 import pyshoi
 
+#
+#  This program is used to profile the publishing loop at the Python side
+#
+
 TOPIC = "py_latency_test"
 POOL_SIZE = 32 << 20;  # 32 MiB
 MSG_QUEUE_CAP_EXP = 7
@@ -19,9 +23,6 @@ def main():
                         help="publishing how many times (only required if -p is specified)")
     parser.add_argument("-i",
                         help="publishing interval in second (only required if -p is specified)")
-    parser.add_argument("-o",
-                        required=True,
-                        help="output path")
     args = parser.parse_args()
 
     signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
@@ -38,26 +39,44 @@ def main():
             print('-i should be specified')
             exit(1)
         pyshoi.init_runtime("py-latency-pub")
-        run_as_publisher(args.o, int(args.s), int(args.t), float(args.i))
+        run_as_publisher(int(args.s), int(args.t), float(args.i))
     else:
         pyshoi.init_runtime("py-latency-sub")
-        run_as_subscriber(args.o)
+        run_as_subscriber()
 
-def run_as_publisher(output_name, payload_size, times, pub_interval):
+def run_as_publisher(payload_size, times, pub_interval):
     publisher = pyshoi.Publisher(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     count = payload_size // 4
-    time_points = [None] * times
+    time_points_1 = [None] * (times + 3)
+    time_points_2 = [None] * (times + 3)
+    time_points_3 = [None] * (times + 3)
 
-    for i in range(times):
+    # warming up
+    for i in range(3):
+        time_points_1[i] = time.monotonic()
         tensor = publisher.empty((count, ), pyshoi.int32)
         tensor.fill_(i)
-        time_points[i] = time.monotonic()
+        time_points_2[i] = time.monotonic()
         publisher.put(tensor)
+        time_points_3[i] = time.monotonic()
+        time.sleep(1)
+
+    for i in range(3, times + 3):
+        time_points_1[i] = time.monotonic()
+        tensor = publisher.empty((count, ), pyshoi.int32)
+        tensor.fill_(i)
+        time_points_2[i] = time.monotonic()
+        publisher.put(tensor)
+        time_points_3[i] = time.monotonic()
         time.sleep(pub_interval)
 
-    dump_time_points(time_points, output_name)
+    print("init put")
+    for i in range(times + 3):
+        dur_init = (time_points_2[i] - time_points_1[i]) * 1e6
+        dur_put = (time_points_3[i] - time_points_2[i]) * 1e6
+        print(dur_init, dur_put)
 
-def run_as_subscriber(output_name):
+def run_as_subscriber():
     time_points = []
 
     def msg_handler(_tensor):
@@ -68,13 +87,6 @@ def run_as_subscriber(output_name):
 
     print("Ctrl+C to leave")
     signal.pause()
-
-    dump_time_points(time_points, output_name)
-
-def dump_time_points(time_points, output_name):
-    with open(output_name, 'w') as f:
-        for point in time_points:
-            f.write(f'{point}\n')
 
 if __name__ == '__main__':
     main()

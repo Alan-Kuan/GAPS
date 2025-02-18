@@ -32,4 +32,10 @@ if(BUILD_TORCH_SUPPORT)
         iceoryx_posh::iceoryx_posh
         allocator
         error)
+
+    if (PROFILING)
+        target_compile_definitions(pyshoi
+            PRIVATE
+            PROFILING)
+    endif()
 endif()

@@ -11,6 +11,7 @@
 
 #include "error.hpp"
 #include "metadata.hpp"
+#include "profiling.hpp"
 
 #ifdef BUILD_PYSHOI
 #include <nanobind/ndarray.h>
@@ -37,6 +38,7 @@ Subscriber::Subscriber(const char* topic_name, size_t pool_size,
                          this->onSampleReceived, *this))
         .or_else(
             [](auto) { throwError("Failed to register message handler"); });
+    PROFILE_WARN;
 }
 
 Subscriber::~Subscriber() {
@@ -48,17 +50,21 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
                                   Subscriber* self) {
     bool keep = true;
     while (keep) {
+        PROFILE_INIT(4);
+        PROFILE_SETPOINT(0);
+
         iox_subscriber
             ->take()
 #ifdef BUILD_PYSHOI
-            .and_then([iox_subscriber, self](const void* payload) {
+            .and_then([iox_subscriber,
+                       self PROFILE_CAPTURE](const void* payload) {
                 auto msg_header = (MsgHeader*) payload;
                 auto shape_buf =
                     (size_t*) ((uintptr_t) msg_header + sizeof(MsgHeader));
                 MessageQueueEntry* mq_entry =
                     getMessageQueueEntry(self->mq_header, msg_header->msg_id);
 #else
-            .and_then([iox_subscriber, self](auto& msg_id) {
+            .and_then([iox_subscriber, self PROFILE_CAPTURE](auto& msg_id) {
                 MessageQueueEntry* mq_entry =
                     getMessageQueueEntry(self->mq_header, *msg_id);
 #endif
@@ -68,13 +74,15 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
                 void* data =
                     (void*) ((uintptr_t) self->allocator->getPoolBase() +
                              offset);
+                PROFILE_SETPOINT(1);
 
 #ifdef BUILD_PYSHOI
                 {
                     nb::gil_scoped_acquire acq;
-                    // NOTE: use nb::bytes("0") to trick nanobind into believing
-                    // it's the owner; otherwise, nanobind will copy the tensor
-                    // (since nanobind 2.2.0), which is what we want to avoid
+                    // NOTE: use nb::bytes("0") to trick nanobind into
+                    // believing it's the owner; otherwise, nanobind will
+                    // copy the tensor (since nanobind 2.2.0), which is what
+                    // we want to avoid
                     DeviceTensor tensor(
                         data, msg_header->ndim, shape_buf, nb::bytes("0"),
                         nullptr, msg_header->dtype, nb::device::cuda::value);
@@ -83,15 +91,20 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
 #else
                 self->handler(data, mq_entry->size);
 #endif
+                PROFILE_SETPOINT(2);
 
                 // last subscriber reading the message should free the
                 // allocation
                 if (std::atomic_ref<uint32_t>(mq_entry->taken_num)
                         .fetch_add(1) == topic_header->sub_count - 1) {
                     self->allocator->free(offset);
-                    // remove the label that indicates the payload is not freed
+                    // remove the label that indicates the payload is not
+                    // freed
                     mq_entry->offset = offset;
                 }
+                PROFILE_SETPOINT(3);
+
+                PROFILE_OUTPUT(4);
             })
             .or_else([&keep](auto& result) { keep = false; });
     }
