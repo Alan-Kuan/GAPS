@@ -34,7 +34,7 @@ ninja -C build
 After building the project, the compiled executables lie in `build/src`.
 
 ### CMake Build Options
-- `PROFILING=[on|(off)]`: whether to profile subscriber's callback
+- `PROFILING=[on|(off)]`: whether to profile publisher's put and subscriber's callback
     > [!WARN]
     > When profiling the callback,
     > make sure the publishing interval is high enough,
