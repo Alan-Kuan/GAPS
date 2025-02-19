@@ -21,8 +21,7 @@ ROUDI_PID="$!"
 MM_PID="$!"
 sleep 1
 
-trap -- "kill -s INT ${ROUDI_PID}" EXIT
-trap -- "kill -s INT ${MM_PID}" EXIT
+trap -- "kill -s INT ${ROUDI_PID} ${MM_PID}" EXIT
 
 echo "1. Testing with different payload sizes"
 echo
