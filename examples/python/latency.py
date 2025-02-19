@@ -45,9 +45,18 @@ def main():
 def run_as_publisher(session, output_name, payload_size, times, pub_interval):
     publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     count = payload_size // 4
-    time_points = [None] * times
+    total_times = times + 3
+    time_points = [None] * total_times
 
-    for i in range(times):
+    # warming up
+    for i in range(3):
+        tensor = publisher.empty((count, ), pyshoz.int32)
+        tensor.fill_(i)
+        time_points[i] = time.monotonic()
+        publisher.put(tensor)
+        time.sleep(1)
+
+    for i in range(3, total_times):
         tensor = publisher.empty((count, ), pyshoz.int32)
         tensor.fill_(i)
         time_points[i] = time.monotonic()
