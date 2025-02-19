@@ -10,7 +10,7 @@ PROJECT_DIR=`dirname "${SCRIPT_DIR}"`
 TEST="${PROJECT_DIR}/examples/python/latency.py"
 OUTPUT_DIR="outputs/python"
 TIMES=100
-PUB_INTERVAL=0.05  # 50 ms
+PUB_INTERVAL=0.02  # 20 ms
 
 mkdir -p "${OUTPUT_DIR}"
 

@@ -47,9 +47,10 @@ def main():
 def run_as_publisher(payload_size, times, pub_interval):
     publisher = pyshoi.Publisher(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     count = payload_size // 4
-    time_points_1 = [None] * (times + 3)
-    time_points_2 = [None] * (times + 3)
-    time_points_3 = [None] * (times + 3)
+    total_times = times + 3
+    time_points_1 = [None] * total_times
+    time_points_2 = [None] * total_times
+    time_points_3 = [None] * total_times
 
     # warming up
     for i in range(3):
@@ -61,7 +62,7 @@ def run_as_publisher(payload_size, times, pub_interval):
         time_points_3[i] = time.monotonic()
         time.sleep(1)
 
-    for i in range(3, times + 3):
+    for i in range(3, total_times):
         time_points_1[i] = time.monotonic()
         tensor = publisher.empty((count, ), pyshoi.int32)
         tensor.fill_(i)
@@ -71,7 +72,7 @@ def run_as_publisher(payload_size, times, pub_interval):
         time.sleep(pub_interval)
 
     print("init put")
-    for i in range(times + 3):
+    for i in range(total_times):
         dur_init = (time_points_2[i] - time_points_1[i]) * 1e6
         dur_put = (time_points_3[i] - time_points_2[i]) * 1e6
         print(dur_init, dur_put)
