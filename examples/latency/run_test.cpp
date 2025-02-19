@@ -102,6 +102,7 @@ int main(int argc, char* argv[]) {
         } else if (pid == 0) {
             break;
         }
+        this_thread::sleep_for(20ms);
     }
 
     auto config = z::Config::create_default();
