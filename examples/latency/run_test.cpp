@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
         iox::log::LogLevel::kOff);
 
     char runtime_name[32];
-    sprintf(runtime_name, "latency_test_%c", is_publisher ? 'p' : 's');
+    sprintf(runtime_name, "latency_test_%c_%d", is_publisher ? 'p' : 's', id);
     iox::runtime::PoshRuntime::initRuntime(runtime_name);
 
     if (is_publisher) {
