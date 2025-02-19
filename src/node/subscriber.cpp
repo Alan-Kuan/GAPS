@@ -97,7 +97,7 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
         }
         PROFILE_SETPOINT(3);
 
-        PROFILE_OUTPUT(4);
+        PROFILE_OUTPUT(4, "sub");
     };
     return callback;
 }

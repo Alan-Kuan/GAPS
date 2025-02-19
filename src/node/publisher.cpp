@@ -118,7 +118,7 @@ void Publisher::put(const DeviceTensor& tensor) {
     this->z_publisher.put(zenoh::Bytes(std::move(byte_arr)));
     PROFILE_SETPOINT(2);
 
-    PROFILE_OUTPUT(3);
+    PROFILE_OUTPUT(3, "pub");
 }
 #else
 void* Publisher::malloc(size_t size) {
@@ -153,6 +153,6 @@ void Publisher::put(void* payload, size_t size) {
     this->z_publisher.put(zenoh::Bytes(std::move(byte_arr)));
     PROFILE_SETPOINT(2);
 
-    PROFILE_OUTPUT(3);
+    PROFILE_OUTPUT(3, "pub");
 }
 #endif
