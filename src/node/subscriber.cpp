@@ -104,7 +104,7 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
                 }
                 PROFILE_SETPOINT(3);
 
-                PROFILE_OUTPUT(4);
+                PROFILE_OUTPUT(4, "sub", mq_entry->size);
             })
             .or_else([&keep](auto& result) { keep = false; });
     }

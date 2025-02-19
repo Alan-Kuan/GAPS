@@ -119,7 +119,7 @@ void Publisher::put(const DeviceTensor& tensor) {
         });
     PROFILE_SETPOINT(2);
 
-    PROFILE_OUTPUT(3);
+    PROFILE_OUTPUT(3, "pub", size);
 }
 #else
 void* Publisher::malloc(size_t size) {
@@ -156,6 +156,6 @@ void Publisher::put(void* payload, size_t size) {
     });
     PROFILE_SETPOINT(2);
 
-    PROFILE_OUTPUT(3);
+    PROFILE_OUTPUT(3, "pub", size);
 }
 #endif

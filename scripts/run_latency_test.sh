@@ -4,6 +4,8 @@ set -e
 
 SIZE=(1024 4096 16384 65536 262144 1048576 4194304)
 NAME=(1KB 4KB 16KB 64KB 256KB 1MB 4MB)
+TIMES=100
+PUB_INTERVAL=0.02  # 20ms
 
 # NP=(2 4 8 1 1 1 4)
 # NS=(1 1 1 2 4 8 4)
@@ -33,10 +35,10 @@ echo
 for i in {0..6}; do
     echo "Testing with payload size: ${NAME[i]} ..."
 
-    "${RUN_TEST}" s 1 "${OUTPUT_1_DIR}/sub-${NAME[i]}" >/dev/null &
+    "${RUN_TEST}" -n 1 -o "${OUTPUT_1_DIR}/sub-${NAME[i]}" >/dev/null &
     SUB_PID="$!"
     sleep 1  # wait a while for the subscriber to be ready
-    "${RUN_TEST}" p 1 "${OUTPUT_1_DIR}/pub-${NAME[i]}" "${SIZE[i]}"
+    "${RUN_TEST}" -p -n 1 -o "${OUTPUT_1_DIR}/pub-${NAME[i]}" -s "${SIZE[i]}" -t "${TIMES}" -i "${PUB_INTERVAL}"
     sleep 1  # wait a while for the subscriber to finish handling
 
     kill -s INT "${SUB_PID}"

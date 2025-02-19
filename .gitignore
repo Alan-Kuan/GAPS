@@ -4,5 +4,6 @@ outputs
 *.mp4
 *.jpg
 *.csv
+profile-*
 # clangd
 .cache
