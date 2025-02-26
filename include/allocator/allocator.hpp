@@ -14,7 +14,7 @@ public:
 
     Allocator() = delete;
     Allocator(TopicHeader* topic_header, bool read_only = false,
-              const std::string& sock_file_dir = "/tmp/shoz");
+              const std::string& sock_file_dir = "/tmp/gaps");
     virtual ~Allocator();
 
     virtual size_t malloc(size_t size) = 0;

@@ -1,4 +1,4 @@
-# Shoz
+# GAPS
 prj_add_target(node
     SRCS node/node.cpp node/publisher.cpp node/subscriber.cpp
     LIBS CUDA::cuda_driver zenohcxx::zenohpico allocator error)
@@ -16,18 +16,18 @@ prj_add_target(mem_manager
     SRCS mem_manager.cpp
     LIBS CUDA::cuda_driver error)
 
-# Pyshoz
+# PyGAPS
 if(BUILD_TORCH_SUPPORT)
-    nanobind_add_module(pyshoz
-        pyshoz.cpp
+    nanobind_add_module(pygaps
+        pygaps.cpp
         node/node.cpp
         node/publisher.cpp
         node/subscriber.cpp
         zenoh_wrapper.cpp)
-    target_compile_definitions(pyshoz
+    target_compile_definitions(pygaps
         PRIVATE
-        BUILD_PYSHOZ)
-    target_link_libraries(pyshoz
+        BUILD_PYGAPS)
+    target_link_libraries(pygaps
         PRIVATE
         CUDA::cuda_driver
         zenohcxx::zenohpico
@@ -35,7 +35,7 @@ if(BUILD_TORCH_SUPPORT)
         error)
 
     if (PROFILING)
-        target_compile_definitions(pyshoz
+        target_compile_definitions(pygaps
             PRIVATE
             PROFILING)
     endif()

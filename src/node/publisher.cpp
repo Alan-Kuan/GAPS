@@ -14,10 +14,10 @@
 #include "metadata.hpp"
 #include "profiling.hpp"
 
-#ifdef BUILD_PYSHOZ
+#ifdef BUILD_PYGAPS
 #include <nanobind/ndarray.h>
 
-#include "pyshoz.hpp"
+#include "pygaps.hpp"
 #include "zenoh_wrapper.hpp"
 
 namespace nb = nanobind;
@@ -26,17 +26,17 @@ namespace nb = nanobind;
 Publisher::Publisher(const session_t& session, std::string&& topic_name,
                      size_t pool_size, int msg_queue_cap_exp)
         : Node(topic_name.c_str(), pool_size, msg_queue_cap_exp),
-#ifdef BUILD_PYSHOZ
+#ifdef BUILD_PYGAPS
           z_publisher(
-              session.getSession().declare_publisher("shoz/" + topic_name,
+              session.getSession().declare_publisher("gaps/" + topic_name,
 #else
-          z_publisher(session.declare_publisher("shoz/" + topic_name,
+          z_publisher(session.declare_publisher("gaps/" + topic_name,
 #endif
                                                      {.is_express = true})) {
     PROFILE_WARN;
 }
 
-#ifdef BUILD_PYSHOZ
+#ifdef BUILD_PYGAPS
 DeviceTensor Publisher::empty(nb::tuple shape, Dtype dtype) {
     nb::dlpack::dtype nb_dtype;
     switch (dtype) {

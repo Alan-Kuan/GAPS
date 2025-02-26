@@ -2,7 +2,7 @@ import argparse
 import signal
 import time
 
-import pyshoz
+import pygaps
 import torch
 
 TOPIC_PING = "p3-ping"
@@ -20,7 +20,7 @@ def main():
 
     signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
 
-    session = pyshoz.ZenohSession(LLOCATOR)
+    session = pygaps.ZenohSession(LLOCATOR)
     if args.p:
         print("Ping Side")
         run_as_ping_side(session)
@@ -29,9 +29,9 @@ def main():
         run_as_pong_side(session)
 
 def run_as_ping_side(session):
-    publisher = pyshoz.Publisher(session, TOPIC_PING, POOL_SIZE, MSG_QUEUE_CAP_EXP)
+    publisher = pygaps.Publisher(session, TOPIC_PING, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
-    ori_tensor = publisher.empty((64, ), pyshoz.int32)
+    ori_tensor = publisher.empty((64, ), pygaps.int32)
     for i in range(64):
         ori_tensor[i] = i
 
@@ -42,7 +42,7 @@ def run_as_ping_side(session):
             print('Failed')
 
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
-    _subscriber = pyshoz.Subscriber(session, TOPIC_PONG, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
+    _subscriber = pygaps.Subscriber(session, TOPIC_PONG, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
     # make sure the subscriber is ready
     time.sleep(2)
@@ -54,17 +54,17 @@ def run_as_ping_side(session):
     signal.pause()
 
 def run_as_pong_side(session):
-    publisher = pyshoz.Publisher(session, TOPIC_PONG, POOL_SIZE, MSG_QUEUE_CAP_EXP)
+    publisher = pygaps.Publisher(session, TOPIC_PONG, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
     def msg_handler(tensor):
-        buf = publisher.empty((64, ), pyshoz.int32)
+        buf = publisher.empty((64, ), pygaps.int32)
         buf.copy_(tensor)
         buf *= 2
         publisher.put(buf)
         print('Pong!')
 
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
-    _subscriber = pyshoz.Subscriber(session, TOPIC_PING, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
+    _subscriber = pygaps.Subscriber(session, TOPIC_PING, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
     print("Ctrl+C to leave")
     signal.pause()

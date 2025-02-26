@@ -2,7 +2,7 @@ import argparse
 import signal
 import time
 
-import pyshoz
+import pygaps
 
 TOPIC = "py_latency_test"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
@@ -27,7 +27,7 @@ def main():
 
     signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
 
-    session = pyshoz.ZenohSession(LLOCATOR)
+    session = pygaps.ZenohSession(LLOCATOR)
     if args.p:
         if args.s == None:
             print('-s should be specified')
@@ -43,21 +43,21 @@ def main():
         run_as_subscriber(session, args.o)
 
 def run_as_publisher(session, output_name, payload_size, times, pub_interval):
-    publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
+    publisher = pygaps.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     count = payload_size // 4
     total_times = times + 3
     time_points = [None] * total_times
 
     # warming up
     for i in range(3):
-        tensor = publisher.empty((count, ), pyshoz.int32)
+        tensor = publisher.empty((count, ), pygaps.int32)
         tensor.fill_(i)
         time_points[i] = time.monotonic()
         publisher.put(tensor)
         time.sleep(1)
 
     for i in range(3, total_times):
-        tensor = publisher.empty((count, ), pyshoz.int32)
+        tensor = publisher.empty((count, ), pygaps.int32)
         tensor.fill_(i)
         time_points[i] = time.monotonic()
         publisher.put(tensor)
@@ -72,7 +72,7 @@ def run_as_subscriber(session, output_name):
         time_points.append(time.monotonic())
 
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
-    _subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
+    _subscriber = pygaps.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
     print("Ctrl+C to leave")
     signal.pause()

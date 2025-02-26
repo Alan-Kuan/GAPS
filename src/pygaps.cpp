@@ -1,4 +1,4 @@
-#include "pyshoz.hpp"
+#include "pygaps.hpp"
 
 #include <cstddef>
 #include <string>
@@ -13,7 +13,7 @@
 
 namespace nb = nanobind;
 
-NB_MODULE(pyshoz, m) {
+NB_MODULE(pygaps, m) {
     nb::class_<ZenohSession>(m, "ZenohSession").def(nb::init<const char*>());
 
     nb::class_<Node>(m, "Node").def(nb::init<const char*, size_t, int>());

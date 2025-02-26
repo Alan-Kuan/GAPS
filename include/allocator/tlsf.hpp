@@ -12,7 +12,7 @@ class TlsfAllocator : public Allocator {
 public:
     TlsfAllocator() = delete;
     TlsfAllocator(TopicHeader* topic_header, bool read_only = false,
-                  const std::string& sock_file_dir = "/tmp/shoz");
+                  const std::string& sock_file_dir = "/tmp/gaps");
 
     size_t malloc(size_t size) override;
     void free(size_t offset) override;

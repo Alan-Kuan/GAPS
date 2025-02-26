@@ -1,5 +1,5 @@
-#ifndef PYSHOZ_HPP
-#define PYSHOZ_HPP
+#ifndef PYGAPS_HPP
+#define PYGAPS_HPP
 
 #include <cstdint>
 
@@ -13,4 +13,4 @@ enum class Dtype : uint8_t {
     float32,
 };
 
-#endif  // PYSHOZ_HPP
+#endif  // PYGAPS_HPP

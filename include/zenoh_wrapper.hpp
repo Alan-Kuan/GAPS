@@ -3,7 +3,7 @@
 
 #include <zenoh.hxx>
 
-// a simple zenoh session wrapper for Pyshoz
+// a simple zenoh session wrapper for PyGAPS
 class ZenohSession {
 public:
     ZenohSession() = delete;

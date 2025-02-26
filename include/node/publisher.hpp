@@ -9,10 +9,10 @@
 #include "metadata.hpp"
 #include "node/node.hpp"
 
-#ifdef BUILD_PYSHOZ
+#ifdef BUILD_PYGAPS
 #include <nanobind/ndarray.h>
 
-#include "pyshoz.hpp"
+#include "pygaps.hpp"
 #include "zenoh_wrapper.hpp"
 
 namespace nb = nanobind;
@@ -29,7 +29,7 @@ public:
     Publisher(const session_t& session, std::string&& topic_name,
               size_t pool_size, int msg_queue_cap_exp);
 
-#ifdef BUILD_PYSHOZ
+#ifdef BUILD_PYGAPS
     DeviceTensor empty(nb::tuple shape, Dtype dtype);
     void put(const DeviceTensor& tensor);
 #else

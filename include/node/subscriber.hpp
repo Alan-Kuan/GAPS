@@ -9,7 +9,7 @@
 
 #include "node/node.hpp"
 
-#ifdef BUILD_PYSHOZ
+#ifdef BUILD_PYGAPS
 #include <nanobind/ndarray.h>
 
 #include "zenoh_wrapper.hpp"
@@ -24,7 +24,7 @@ typedef zenoh::Session session_t;
 
 class Subscriber : public Node {
 public:
-#ifdef BUILD_PYSHOZ
+#ifdef BUILD_PYGAPS
     typedef std::function<void(const DeviceTensor&)> MessageHandler;
 #else
     typedef std::function<void(void*, size_t)> MessageHandler;

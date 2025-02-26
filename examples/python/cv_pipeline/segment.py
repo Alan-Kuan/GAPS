@@ -6,7 +6,7 @@ import time
 import torch
 from ultralytics.utils import ops
 
-import pyshoz
+import pygaps
 
 #
 #  This is a node that does instance segmentation
@@ -31,7 +31,7 @@ def main():
     model = torch.load(model_path)["model"].to(DEVICE)
     model.eval()
 
-    session = pyshoz.ZenohSession(LLOCATOR)
+    session = pygaps.ZenohSession(LLOCATOR)
 
     count = 0
     def msg_handler(inputs):
@@ -58,7 +58,7 @@ def main():
         if count == expect_img_num:
             print(f"end: {time.monotonic()}")
             os.kill(os.getpid(), signal.SIGINT)
-    _sub = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
+    _sub = pygaps.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
     print("Ctrl+C to leave")
     signal.pause()

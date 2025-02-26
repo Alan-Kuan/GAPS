@@ -2,7 +2,7 @@ import argparse
 import signal
 import time
 
-import pyshoz
+import pygaps
 
 #
 #  This program is used to profile the publishing loop at the Python side
@@ -28,7 +28,7 @@ def main():
 
     signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
 
-    session = pyshoz.ZenohSession(LLOCATOR)
+    session = pygaps.ZenohSession(LLOCATOR)
     if args.p:
         if args.s == None:
             print('-s should be specified')
@@ -44,7 +44,7 @@ def main():
         run_as_subscriber(session)
 
 def run_as_publisher(session, payload_size, times, pub_interval):
-    publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
+    publisher = pygaps.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     count = payload_size // 4
     total_times = times + 3
     time_points_1 = [None] * total_times
@@ -54,7 +54,7 @@ def run_as_publisher(session, payload_size, times, pub_interval):
     # warming up
     for i in range(3):
         time_points_1[i] = time.monotonic()
-        tensor = publisher.empty((count, ), pyshoz.int32)
+        tensor = publisher.empty((count, ), pygaps.int32)
         tensor.fill_(i)
         time_points_2[i] = time.monotonic()
         publisher.put(tensor)
@@ -63,7 +63,7 @@ def run_as_publisher(session, payload_size, times, pub_interval):
 
     for i in range(3, total_times):
         time_points_1[i] = time.monotonic()
-        tensor = publisher.empty((count, ), pyshoz.int32)
+        tensor = publisher.empty((count, ), pygaps.int32)
         tensor.fill_(i)
         time_points_2[i] = time.monotonic()
         publisher.put(tensor)
@@ -83,7 +83,7 @@ def run_as_subscriber(session):
         time_points.append(time.monotonic())
 
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
-    _subscriber = pyshoz.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
+    _subscriber = pygaps.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
     print("Ctrl+C to leave")
     signal.pause()

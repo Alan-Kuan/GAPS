@@ -14,7 +14,7 @@
 #include "metadata.hpp"
 #include "profiling.hpp"
 
-#ifdef BUILD_PYSHOZ
+#ifdef BUILD_PYGAPS
 #include <nanobind/ndarray.h>
 
 #include "zenoh_wrapper.hpp"
@@ -26,12 +26,12 @@ Subscriber::Subscriber(const session_t& session, std::string&& topic_name,
                        size_t pool_size, int msg_queue_cap_exp,
                        MessageHandler handler)
         : Node(topic_name.c_str(), pool_size, msg_queue_cap_exp, true),
-#ifdef BUILD_PYSHOZ
+#ifdef BUILD_PYGAPS
           z_subscriber(session.getSession().declare_subscriber(
-              "shoz/" + topic_name,
+              "gaps/" + topic_name,
 #else
           z_subscriber(session.declare_subscriber(
-              "shoz/" + topic_name,
+              "gaps/" + topic_name,
 #endif
               this->makeCallback(handler), zenoh::closures::none)) {
     PROFILE_WARN;
@@ -54,7 +54,7 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
         PROFILE_INIT(4);
         PROFILE_SETPOINT(0);
 
-#ifdef BUILD_PYSHOZ
+#ifdef BUILD_PYGAPS
         std::vector<uint8_t> raw_msg{sample.get_payload().as_vector()};
         auto msg_header = (MsgHeader*) raw_msg.data();
         auto shape_buf = (size_t*) ((uintptr_t) msg_header + sizeof(MsgHeader));
@@ -72,7 +72,7 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
             (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
         PROFILE_SETPOINT(1);
 
-#ifdef BUILD_PYSHOZ
+#ifdef BUILD_PYGAPS
         {
             nb::gil_scoped_acquire acq;
             // NOTE: use nb::bytes("0") to trick nanobind into believing it's

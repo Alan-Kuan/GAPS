@@ -1,4 +1,4 @@
-# shoz
+# GAPS
 
 ## Environment
 A Docker development environment is priovded in `env/`.
@@ -25,9 +25,9 @@ docker compose down
 
 ## Build
 To configure build instructions with CMake and build the project with Ninja,
-run the following commands in the parent directory of `shoz/`:
+run the following commands in the parent directory of `GAPS/`:
 ```sh
-cmake shoz -B build -G Ninja
+cmake GAPS -B build -G Ninja
 ninja -C build
 ```
 

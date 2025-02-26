@@ -5,7 +5,7 @@ import torch
 import torchvision.transforms.v2.functional as F
 from ultralytics.utils import ops
 
-import pyshoz
+import pygaps
 
 #
 #  This is a node that detects and blurs human faces
@@ -31,15 +31,15 @@ def main():
     model = torch.load(model_path)["model"].to(DEVICE)
     model.eval()
 
-    session = pyshoz.ZenohSession(LLOCATOR)
-    pub = pyshoz.Publisher(session, TOPIC_OUT, POOL_SIZE, MSG_QUEUE_CAP_EXP)
+    session = pygaps.ZenohSession(LLOCATOR)
+    pub = pygaps.Publisher(session, TOPIC_OUT, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
     def msg_handler(img_batch):
-        buf = pub.empty(img_batch.shape, pyshoz.float16)
+        buf = pub.empty(img_batch.shape, pygaps.float16)
         buf.copy_(img_batch)
         blur_faces(model, buf)
         pub.put(buf)
-    _sub = pyshoz.Subscriber(session, TOPIC_IN, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
+    _sub = pygaps.Subscriber(session, TOPIC_IN, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
     print("Ctrl+C to leave")
     signal.pause()

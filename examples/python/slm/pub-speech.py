@@ -4,7 +4,7 @@ import time
 
 from transformers import AutoTokenizer
 
-import pyshoz
+import pygaps
 
 TOPIC = "slm"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
@@ -18,8 +18,8 @@ def main():
 
     model_name = "microsoft/Phi-3.5-mini-instruct"
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    session = pyshoz.ZenohSession(LLOCATOR)
-    publisher = pyshoz.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
+    session = pygaps.ZenohSession(LLOCATOR)
+    publisher = pygaps.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     sents = read_sentences(sys.argv[1])
 
     print("Publisher is ready")
@@ -37,7 +37,7 @@ def main():
         buffer_time = 1
         time.sleep(speaking_time + buffer_time)
 
-        msg_tokens = publisher.empty(input_tokens.shape, pyshoz.int64)
+        msg_tokens = publisher.empty(input_tokens.shape, pygaps.int64)
         msg_tokens.copy_(input_tokens)
         publisher.put(msg_tokens)
 
