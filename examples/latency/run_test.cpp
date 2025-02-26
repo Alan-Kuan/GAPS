@@ -102,7 +102,6 @@ int main(int argc, char* argv[]) {
         } else if (pid == 0) {
             break;
         }
-        this_thread::sleep_for(20ms);
     }
 
     auto config = z::Config::create_default();
@@ -111,6 +110,11 @@ int main(int argc, char* argv[]) {
     z::Session session(std::move(config));
 
     if (is_publisher) {
+        // TLDR; make sure the publisher is ready.
+        // If the publishers rush to publish messages before they discover all
+        // the peers, the "write filter" may stay in an "active" state, which
+        // prevents the messages from actually being delivered out.
+        this_thread::sleep_for(1s);
         runAsPublisher(session, id, output_name, payload_size, times,
                        pub_interval);
     } else {
