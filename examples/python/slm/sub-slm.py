@@ -6,7 +6,7 @@ import time
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-import pyshoi
+import pygaps
 
 TOPIC = "slm"
 RUNTIME = "slm-sub"
@@ -66,9 +66,9 @@ English: """
         timepoints.append(time.time())
         print(len(translation))
 
-    pyshoi.turn_off_logging()
-    pyshoi.init_runtime(RUNTIME)
-    _subscriber = pyshoi.Subscriber(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, handler)
+    pygaps.turn_off_logging()
+    pygaps.init_runtime(RUNTIME)
+    _subscriber = pygaps.Subscriber(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, handler)
 
     print("Subscriber is ready")
     print("Ctrl+C to leave")

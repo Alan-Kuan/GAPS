@@ -13,7 +13,7 @@
 #include "metadata.hpp"
 #include "profiling.hpp"
 
-#ifdef BUILD_PYSHOI
+#ifdef BUILD_PYGAPS
 #include <nanobind/ndarray.h>
 
 namespace nb = nanobind;
@@ -22,7 +22,7 @@ namespace nb = nanobind;
 Subscriber::Subscriber(const char* topic_name, size_t pool_size,
                        int msg_queue_cap_exp, MessageHandler handler)
         : Node(topic_name, pool_size, msg_queue_cap_exp, true),
-          iox_subscriber({"", "shoi",
+          iox_subscriber({"", "gaps",
                           iox::capro::IdString_t(iox::cxx::TruncateToCapacity,
                                                  topic_name)},
                          {.queueCapacity = 256}),
@@ -55,7 +55,7 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
 
         iox_subscriber
             ->take()
-#ifdef BUILD_PYSHOI
+#ifdef BUILD_PYGAPS
             .and_then([iox_subscriber,
                        self PROFILE_CAPTURE](const void* payload) {
                 auto msg_header = (MsgHeader*) payload;
@@ -76,7 +76,7 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
                              offset);
                 PROFILE_SETPOINT(1);
 
-#ifdef BUILD_PYSHOI
+#ifdef BUILD_PYGAPS
                 {
                     nb::gil_scoped_acquire acq;
                     // NOTE: use nb::bytes("0") to trick nanobind into

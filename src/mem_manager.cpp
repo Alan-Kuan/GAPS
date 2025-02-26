@@ -21,7 +21,7 @@
 MemManager* manager = nullptr;
 
 int main(int argc, char* argv[]) {
-    manager = new MemManager(argc > 1 ? argv[1] : "/tmp/shoi");
+    manager = new MemManager(argc > 1 ? argv[1] : "/tmp/gaps");
 
     signal(SIGINT, [](int _) {
         delete manager;

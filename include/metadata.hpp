@@ -142,7 +142,7 @@ inline MessageQueueEntry* getMessageQueueEntry(MessageQueueHeader* mq_header,
                                  idx * sizeof(MessageQueueEntry));
 }
 
-#ifdef BUILD_PYSHOI
+#ifdef BUILD_PYGAPS
 #include <nanobind/ndarray.h>
 
 /**

@@ -1,12 +1,12 @@
 services:
-  shoi:
+  gaps:
     build:
       context: .
     restart: unless-stopped
     ports:
       - 127.0.0.1:22222:22
     volumes:
-      - ../../:/home/ubuntu/shoi:ro
+      - ../../:/home/ubuntu/gaps:ro
     runtime: nvidia
     # 256 MiB
     shm_size: 268435456

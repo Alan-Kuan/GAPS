@@ -2,7 +2,7 @@ import argparse
 import signal
 import time
 
-import pyshoi
+import pygaps
 
 TOPIC = "py_latency_test"
 POOL_SIZE = 32 << 20;  # 32 MiB
@@ -25,7 +25,7 @@ def main():
     args = parser.parse_args()
 
     signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
-    pyshoi.turn_off_logging()
+    pygaps.turn_off_logging()
 
     if args.p:
         if args.s == None:
@@ -37,28 +37,28 @@ def main():
         if args.i == None:
             print('-i should be specified')
             exit(1)
-        pyshoi.init_runtime("py-latency-pub")
+        pygaps.init_runtime("py-latency-pub")
         run_as_publisher(args.o, int(args.s), int(args.t), float(args.i))
     else:
-        pyshoi.init_runtime("py-latency-sub")
+        pygaps.init_runtime("py-latency-sub")
         run_as_subscriber(args.o)
 
 def run_as_publisher(output_name, payload_size, times, pub_interval):
-    publisher = pyshoi.Publisher(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
+    publisher = pygaps.Publisher(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     count = payload_size // 4
     total_times = times + 3
     time_points = [None] * total_times
 
     # warming up
     for i in range(3):
-        tensor = publisher.empty((count, ), pyshoi.int32)
+        tensor = publisher.empty((count, ), pygaps.int32)
         tensor.fill_(i)
         time_points[i] = time.monotonic()
         publisher.put(tensor)
         time.sleep(1)
 
     for i in range(3, total_times):
-        tensor = publisher.empty((count, ), pyshoi.int32)
+        tensor = publisher.empty((count, ), pygaps.int32)
         tensor.fill_(i)
         time_points[i] = time.monotonic()
         publisher.put(tensor)
@@ -73,7 +73,7 @@ def run_as_subscriber(output_name):
         time_points.append(time.monotonic())
 
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
-    _subscriber = pyshoi.Subscriber(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
+    _subscriber = pygaps.Subscriber(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
     print("Ctrl+C to leave")
     signal.pause()

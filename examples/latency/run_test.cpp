@@ -102,7 +102,6 @@ int main(int argc, char* argv[]) {
         } else if (pid == 0) {
             break;
         }
-        this_thread::sleep_for(20ms);
     }
 
     iox::log::LogManager::GetLogManager().SetDefaultLogLevel(
@@ -113,6 +112,9 @@ int main(int argc, char* argv[]) {
     iox::runtime::PoshRuntime::initRuntime(runtime_name);
 
     if (is_publisher) {
+        // It is required by the Zenoh-wrapping version GAPS.
+        // We still add this here for controling the same experiment setup.
+        this_thread::sleep_for(1s);
         runAsPublisher(id, output_name, payload_size, times, pub_interval);
     } else {
         runAsSubscriber(id, output_name);

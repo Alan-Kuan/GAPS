@@ -2,7 +2,7 @@ import argparse
 import signal
 import time
 
-import pyshoi
+import pygaps
 import torch
 
 TOPIC_PING = "p3-ping"
@@ -18,21 +18,21 @@ def main():
     args = parser.parse_args()
 
     signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
-    pyshoi.turn_off_logging()
+    pygaps.turn_off_logging()
 
     if args.p:
         print("Ping Side")
-        pyshoi.init_runtime("py-ping-pong-publisher")
+        pygaps.init_runtime("py-ping-pong-publisher")
         run_as_ping_side()
     else:
         print("Pong Side")
-        pyshoi.init_runtime("py-ping-pong-subscriber")
+        pygaps.init_runtime("py-ping-pong-subscriber")
         run_as_pong_side()
 
 def run_as_ping_side():
-    publisher = pyshoi.Publisher(TOPIC_PING, POOL_SIZE, MSG_QUEUE_CAP_EXP)
+    publisher = pygaps.Publisher(TOPIC_PING, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
-    ori_tensor = publisher.empty((64, ), pyshoi.int32)
+    ori_tensor = publisher.empty((64, ), pygaps.int32)
     for i in range(64):
         ori_tensor[i] = i
 
@@ -43,7 +43,7 @@ def run_as_ping_side():
             print('Failed')
 
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
-    _subscriber = pyshoi.Subscriber(TOPIC_PONG, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
+    _subscriber = pygaps.Subscriber(TOPIC_PONG, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
     # make sure the subscriber is ready
     time.sleep(2)
@@ -55,17 +55,17 @@ def run_as_ping_side():
     signal.pause()
 
 def run_as_pong_side():
-    publisher = pyshoi.Publisher(TOPIC_PONG, POOL_SIZE, MSG_QUEUE_CAP_EXP)
+    publisher = pygaps.Publisher(TOPIC_PONG, POOL_SIZE, MSG_QUEUE_CAP_EXP)
 
     def msg_handler(tensor):
-        buf = publisher.empty((64, ), pyshoi.int32)
+        buf = publisher.empty((64, ), pygaps.int32)
         buf.copy_(tensor)
         buf *= 2
         publisher.put(buf)
         print('Pong!')
 
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
-    _subscriber = pyshoi.Subscriber(TOPIC_PING, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
+    _subscriber = pygaps.Subscriber(TOPIC_PING, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
     print("Ctrl+C to leave")
     signal.pause()

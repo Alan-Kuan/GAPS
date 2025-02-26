@@ -1,4 +1,4 @@
-#include "pyshoi.hpp"
+#include "pygaps.hpp"
 
 #include <cstddef>
 
@@ -12,7 +12,7 @@
 
 namespace nb = nanobind;
 
-NB_MODULE(pyshoi, m) {
+NB_MODULE(pygaps, m) {
     // simple Iceoryx wrapper
     m.def("init_runtime", [](const char* name) {
         iox::RuntimeName_t runtime_name(iox::cxx::TruncateToCapacity, name);

@@ -1,4 +1,4 @@
-# Shoi
+# GAPS
 prj_add_target(node
     SRCS node/node.cpp node/publisher.cpp node/subscriber.cpp
     LIBS CUDA::cuda_driver iceoryx_posh::iceoryx_posh allocator error)
@@ -16,17 +16,17 @@ prj_add_target(mem_manager
     SRCS mem_manager.cpp
     LIBS CUDA::cuda_driver error)
 
-# Pyshoi
+# PyGAPS
 if(BUILD_TORCH_SUPPORT)
-    nanobind_add_module(pyshoi
-        pyshoi.cpp
+    nanobind_add_module(pygaps
+        pygaps.cpp
         node/node.cpp
         node/publisher.cpp
         node/subscriber.cpp)
-    target_compile_definitions(pyshoi
+    target_compile_definitions(pygaps
         PRIVATE
-        BUILD_PYSHOI)
-    target_link_libraries(pyshoi
+        BUILD_PYGAPS)
+    target_link_libraries(pygaps
         PRIVATE
         CUDA::cuda_driver
         iceoryx_posh::iceoryx_posh
@@ -34,7 +34,7 @@ if(BUILD_TORCH_SUPPORT)
         error)
 
     if (PROFILING)
-        target_compile_definitions(pyshoi
+        target_compile_definitions(pygaps
             PRIVATE
             PROFILING)
     endif()

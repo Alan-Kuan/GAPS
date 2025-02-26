@@ -9,7 +9,7 @@
 
 class MemManager {
 public:
-    MemManager(const std::string& sock_file_dir = "/tmp/shoi");
+    MemManager(const std::string& sock_file_dir = "/tmp/gaps");
     ~MemManager();
 
     [[noreturn]] void start();

@@ -8,7 +8,7 @@
 
 #include "node/node.hpp"
 
-#ifdef BUILD_PYSHOI
+#ifdef BUILD_PYGAPS
 #include <iceoryx_posh/popo/untyped_subscriber.hpp>
 #include <nanobind/ndarray.h>
 
@@ -24,7 +24,7 @@ typedef iox::popo::Subscriber<size_t> iox_subscriber_t;
 
 class Subscriber : public Node {
 public:
-#ifdef BUILD_PYSHOI
+#ifdef BUILD_PYGAPS
     typedef std::function<void(const DeviceTensor&)> MessageHandler;
 #else
     typedef std::function<void(void*, size_t)> MessageHandler;

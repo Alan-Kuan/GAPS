@@ -13,11 +13,11 @@
 #include "metadata.hpp"
 #include "profiling.hpp"
 
-#ifdef BUILD_PYSHOI
+#ifdef BUILD_PYGAPS
 #include <cuda_runtime.h>
 #include <nanobind/ndarray.h>
 
-#include "pyshoi.hpp"
+#include "pygaps.hpp"
 
 namespace nb = nanobind;
 #endif
@@ -25,13 +25,13 @@ namespace nb = nanobind;
 Publisher::Publisher(const char* topic_name, size_t pool_size,
                      int msg_queue_cap_exp)
         : Node(topic_name, pool_size, msg_queue_cap_exp),
-          iox_publisher({"", "shoi",
+          iox_publisher({"", "gaps",
                          iox::capro::IdString_t(iox::cxx::TruncateToCapacity,
                                                 topic_name)}) {
     PROFILE_WARN;
 }
 
-#ifdef BUILD_PYSHOI
+#ifdef BUILD_PYGAPS
 DeviceTensor Publisher::empty(nb::tuple shape, Dtype dtype) {
     nb::dlpack::dtype nb_dtype;
     switch (dtype) {

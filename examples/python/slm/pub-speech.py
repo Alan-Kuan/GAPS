@@ -4,7 +4,7 @@ import time
 
 from transformers import AutoTokenizer
 
-import pyshoi
+import pygaps
 
 TOPIC = "slm"
 RUNTIME = "slm-pub"
@@ -18,9 +18,9 @@ def main():
 
     model_name = "microsoft/Phi-3.5-mini-instruct"
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    pyshoi.turn_off_logging()
-    pyshoi.init_runtime(RUNTIME)
-    publisher = pyshoi.Publisher(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
+    pygaps.turn_off_logging()
+    pygaps.init_runtime(RUNTIME)
+    publisher = pygaps.Publisher(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     sents = read_sentences(sys.argv[1])
 
     print("Publisher is ready")
@@ -38,7 +38,7 @@ def main():
         buffer_time = 1
         time.sleep(speaking_time + buffer_time)
 
-        msg_tokens = publisher.empty(input_tokens.shape, pyshoi.int64)
+        msg_tokens = publisher.empty(input_tokens.shape, pygaps.int64)
         msg_tokens.copy_(input_tokens)
         publisher.put(msg_tokens)
 

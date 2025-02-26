@@ -2,7 +2,7 @@ import argparse
 import signal
 import time
 
-import pyshoi
+import pygaps
 
 #
 #  This program is used to profile the publishing loop at the Python side
@@ -26,7 +26,7 @@ def main():
     args = parser.parse_args()
 
     signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
-    pyshoi.turn_off_logging()
+    pygaps.turn_off_logging()
 
     if args.p:
         if args.s == None:
@@ -38,14 +38,14 @@ def main():
         if args.i == None:
             print('-i should be specified')
             exit(1)
-        pyshoi.init_runtime("py-latency-pub")
+        pygaps.init_runtime("py-latency-pub")
         run_as_publisher(int(args.s), int(args.t), float(args.i))
     else:
-        pyshoi.init_runtime("py-latency-sub")
+        pygaps.init_runtime("py-latency-sub")
         run_as_subscriber()
 
 def run_as_publisher(payload_size, times, pub_interval):
-    publisher = pyshoi.Publisher(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
+    publisher = pygaps.Publisher(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     count = payload_size // 4
     total_times = times + 3
     time_points_1 = [None] * total_times
@@ -55,7 +55,7 @@ def run_as_publisher(payload_size, times, pub_interval):
     # warming up
     for i in range(3):
         time_points_1[i] = time.monotonic()
-        tensor = publisher.empty((count, ), pyshoi.int32)
+        tensor = publisher.empty((count, ), pygaps.int32)
         tensor.fill_(i)
         time_points_2[i] = time.monotonic()
         publisher.put(tensor)
@@ -64,7 +64,7 @@ def run_as_publisher(payload_size, times, pub_interval):
 
     for i in range(3, total_times):
         time_points_1[i] = time.monotonic()
-        tensor = publisher.empty((count, ), pyshoi.int32)
+        tensor = publisher.empty((count, ), pygaps.int32)
         tensor.fill_(i)
         time_points_2[i] = time.monotonic()
         publisher.put(tensor)
@@ -84,7 +84,7 @@ def run_as_subscriber():
         time_points.append(time.monotonic())
 
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
-    _subscriber = pyshoi.Subscriber(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
+    _subscriber = pygaps.Subscriber(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
     print("Ctrl+C to leave")
     signal.pause()

@@ -6,11 +6,11 @@
 #include "metadata.hpp"
 #include "node/node.hpp"
 
-#ifdef BUILD_PYSHOI
+#ifdef BUILD_PYGAPS
 #include <iceoryx_posh/popo/untyped_publisher.hpp>
 #include <nanobind/ndarray.h>
 
-#include "pyshoi.hpp"
+#include "pygaps.hpp"
 
 namespace nb = nanobind;
 
@@ -27,7 +27,7 @@ public:
     Publisher() = delete;
     Publisher(const char* topic_name, size_t pool_size, int msg_queue_cap_exp);
 
-#ifdef BUILD_PYSHOI
+#ifdef BUILD_PYGAPS
     DeviceTensor empty(nb::tuple shape, Dtype dtype);
     void put(const DeviceTensor& tensor);
 #else

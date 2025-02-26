@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25.2)
-project(shoi LANGUAGES CXX CUDA)
+project(gaps LANGUAGES CXX CUDA)
 
 option(PROFILING "Build with profiling codes" OFF)
 option(BUILD_DEBUG "Build with debugging codes" OFF)
