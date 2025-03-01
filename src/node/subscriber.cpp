@@ -34,7 +34,7 @@ Subscriber::Subscriber(const session_t& session, std::string&& topic_name,
               "gaps/" + topic_name,
 #endif
               this->makeCallback(handler), zenoh::closures::none)) {
-    PROFILE_WARN;
+    PROF_WARN;
 }
 
 Subscriber::~Subscriber() {
@@ -51,8 +51,7 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
         getMessageQueueHeader(getTlsfHeader(topic_header));
 
     auto callback = [=, this](const zenoh::Sample& sample) {
-        PROFILE_INIT(4);
-        PROFILE_SETPOINT(0);
+        PROF_ADD_POINT;
 
 #ifdef BUILD_PYGAPS
         std::vector<uint8_t> raw_msg{sample.get_payload().as_vector()};
@@ -70,7 +69,7 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
         size_t offset = mq_entry->offset ^ 1;
         void* data =
             (void*) ((uintptr_t) this->allocator->getPoolBase() + offset);
-        PROFILE_SETPOINT(1);
+        PROF_ADD_POINT;
 
 #ifdef BUILD_PYGAPS
         {
@@ -86,7 +85,7 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
 #else
         handler(data, mq_entry->size);
 #endif
-        PROFILE_SETPOINT(2);
+        PROF_ADD_POINT;
 
         // last subscriber reading the message should free the allocation
         if (std::atomic_ref<uint32_t>(mq_entry->taken_num).fetch_add(1) ==
@@ -95,9 +94,13 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
             // remove the label that indicates the payload is not freed
             mq_entry->offset = offset;
         }
-        PROFILE_SETPOINT(3);
+        PROF_ADD_POINT;
 
-        PROFILE_OUTPUT(4, "sub", mq_entry->size);
+#ifdef BUILD_PYGAPS
+        PROF_ADD_TAG(msg_header->msg_id);
+#else
+        PROF_ADD_TAG(msg_id);
+#endif
     };
     return callback;
 }

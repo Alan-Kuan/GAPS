@@ -33,7 +33,7 @@ Publisher::Publisher(const session_t& session, std::string&& topic_name,
           z_publisher(session.declare_publisher("gaps/" + topic_name,
 #endif
                                                      {.is_express = true})) {
-    PROFILE_WARN;
+    PROF_WARN;
 }
 
 #ifdef BUILD_PYGAPS
@@ -82,8 +82,7 @@ DeviceTensor Publisher::empty(nb::tuple shape, Dtype dtype) {
 }
 
 void Publisher::put(const DeviceTensor& tensor) {
-    PROFILE_INIT(3);
-    PROFILE_SETPOINT(0);
+    PROF_ADD_POINT;
 
     size_t size = tensor.nbytes();
     if (size == 0) return;
@@ -104,7 +103,7 @@ void Publisher::put(const DeviceTensor& tensor) {
         getMessageQueueEntry(mq_header, msg_header.msg_id);
 
     this->updateEntry(mq_entry, offset, size);
-    PROFILE_SETPOINT(1);
+    PROF_ADD_POINT;
 
     // notify subscribers with the message ID & tensor info
     std::vector<uint8_t> byte_arr(sizeof(msg_header) +
@@ -116,9 +115,9 @@ void Publisher::put(const DeviceTensor& tensor) {
         shape_buf[i] = tensor.shape(i);
     }
     this->z_publisher.put(zenoh::Bytes(std::move(byte_arr)));
-    PROFILE_SETPOINT(2);
+    PROF_ADD_POINT;
 
-    PROFILE_OUTPUT(3, "pub", size);
+    PROF_ADD_TAG(msg_header.msg_id);
 }
 #else
 void* Publisher::malloc(size_t size) {
@@ -128,8 +127,7 @@ void* Publisher::malloc(size_t size) {
 }
 
 void Publisher::put(void* payload, size_t size) {
-    PROFILE_INIT(3);
-    PROFILE_SETPOINT(0);
+    PROF_ADD_POINT;
 
     if (!payload) throwError("Payload was not provided");
     if (size == 0) return;
@@ -145,14 +143,14 @@ void Publisher::put(void* payload, size_t size) {
     MessageQueueEntry* mq_entry = getMessageQueueEntry(mq_header, msg_id);
 
     this->updateEntry(mq_entry, offset, size);
-    PROFILE_SETPOINT(1);
+    PROF_ADD_POINT;
 
     // notify subscribers with the message ID
     std::vector<uint8_t> byte_arr(sizeof(msg_id));
     memcpy(byte_arr.data(), &msg_id, sizeof(msg_id));
     this->z_publisher.put(zenoh::Bytes(std::move(byte_arr)));
-    PROFILE_SETPOINT(2);
+    PROF_ADD_POINT;
 
-    PROFILE_OUTPUT(3, "pub", size);
+    PROF_ADD_TAG(msg_id);
 }
 #endif

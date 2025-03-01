@@ -9,6 +9,13 @@ prj_add_target(allocator
 prj_add_target(error
     SRCS error.cpp
     PIC)
+if(PROFILING)
+    target_link_libraries(node
+        PRIVATE profiling)
+    prj_add_target(profiling
+        SRCS profiling.cpp
+        PIC)
+endif()
 
 # Memory Manager
 prj_add_target(mem_manager
@@ -25,8 +32,7 @@ if(BUILD_TORCH_SUPPORT)
         node/subscriber.cpp
         zenoh_wrapper.cpp)
     target_compile_definitions(pygaps
-        PRIVATE
-        BUILD_PYGAPS)
+        PRIVATE BUILD_PYGAPS)
     target_link_libraries(pygaps
         PRIVATE
         CUDA::cuda_driver
@@ -36,7 +42,8 @@ if(BUILD_TORCH_SUPPORT)
 
     if (PROFILING)
         target_compile_definitions(pygaps
-            PRIVATE
-            PROFILING)
+            PRIVATE PROFILING)
+        target_link_libraries(pygaps
+            PRIVATE profiling)
     endif()
 endif()

@@ -18,6 +18,7 @@
 #include "init.hpp"
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
+#include "profiling.hpp"
 
 using namespace std;
 namespace z = zenoh;
@@ -117,8 +118,14 @@ int main(int argc, char* argv[]) {
         this_thread::sleep_for(1s);
         runAsPublisher(session, id, output_name, payload_size, times,
                        pub_interval);
+#ifdef PROFILING
+        profiling::dump_profiling_records("pub", id, 3);
+#endif
     } else {
         runAsSubscriber(session, id, output_name);
+#ifdef PROFILING
+        profiling::dump_profiling_records("sub", id, 4);
+#endif
     }
 
     if (pid == 0) return 0;
