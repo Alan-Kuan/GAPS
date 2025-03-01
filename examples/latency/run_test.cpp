@@ -29,6 +29,8 @@ void runAsSubscriber(z::Session& session, int id);
 void printUsageAndExit(const char* arg0);
 
 int main(int argc, char* argv[]) {
+    if (argc == 1) printUsageAndExit(argv[0]);
+
     bool is_publisher = false;
     int nproc = -1;
     const char* output_prefix = nullptr;
@@ -37,7 +39,7 @@ int main(int argc, char* argv[]) {
     double pub_interval = -1;
     int opt;
 
-    while ((opt = getopt(argc, argv, "pn:o:s:t:i:")) != -1) {
+    while ((opt = getopt(argc, argv, "hpn:o:s:t:i:")) != -1) {
         switch (opt) {
         case 'p':
             is_publisher = true;
@@ -187,8 +189,9 @@ void runAsSubscriber(z::Session& session, int id) {
 }
 
 void printUsageAndExit(const char* arg0) {
-    cerr << "usage: " << arg0 << " [-p] -n N -o O [-s S] [-t T] [-i I]\n\n"
+    cerr << "usage: " << arg0 << " [-h] [-p] -n N -o O [-s S] [-t T] [-i I]\n\n"
          << "options:\n"
+         << "  -h\tshow this help message and exit\n"
          << "  -p\tbe a publisher or not (if not specify, it becomes a "
             "subscriber)\n"
          << "  -n N\tnumber of publishers / subscribers\n"
