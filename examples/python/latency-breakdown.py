@@ -31,13 +31,13 @@ def main():
     session = pygaps.ZenohSession(LLOCATOR)
     if args.p:
         if args.s == None:
-            print('-s should be specified')
+            print("-s should be specified")
             exit(1)
         if args.t == None:
             print("-t should be specified")
             exit(1)
         if args.i == None:
-            print('-i should be specified')
+            print("-i should be specified")
             exit(1)
 
         run_as_publisher(session, int(args.s), int(args.t), float(args.i))
@@ -93,5 +93,5 @@ def run_as_subscriber(session):
     print("Ctrl+C to leave")
     signal.pause()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

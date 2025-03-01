@@ -73,7 +73,7 @@ English: """
     print("Ctrl+C to leave")
     signal.pause()
 
-    print('The translation:')
+    print("The translation:")
     for sent in translation:
         print(sent)
 

@@ -30,13 +30,13 @@ def main():
     session = pygaps.ZenohSession(LLOCATOR)
     if args.p:
         if args.s == None:
-            print('-s should be specified')
+            print("-s should be specified")
             exit(1)
         if args.t == None:
             print("-t should be specified")
             exit(1)
         if args.i == None:
-            print('-i should be specified')
+            print("-i should be specified")
             exit(1)
 
         run_as_publisher(session, args.o, int(args.s), int(args.t), float(args.i))
@@ -85,9 +85,9 @@ def run_as_subscriber(session, output_name):
     dump_time_points(time_points, output_name)
 
 def dump_time_points(time_points, output_name):
-    with open(output_name, 'w') as f:
+    with open(output_name, "w") as f:
         for point in time_points:
-            f.write(f'{point}\n')
+            f.write(f"{point}\n")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

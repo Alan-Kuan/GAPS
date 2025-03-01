@@ -13,7 +13,7 @@ MSG_QUEUE_CAP_EXP = 7
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p',
+    parser.add_argument("-p",
                         action="store_true",
                         help="be a publisher or not (if not specify, it becomes a subscriber)")
     args = parser.parse_args()
@@ -37,9 +37,9 @@ def run_as_ping_side(session):
 
     def msg_handler(tensor):
         if torch.equal(tensor, ori_tensor * 2):
-            print('Passed')
+            print("Passed")
         else:
-            print('Failed')
+            print("Failed")
 
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
     _subscriber = pygaps.Subscriber(session, TOPIC_PONG, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
@@ -48,7 +48,7 @@ def run_as_ping_side(session):
     time.sleep(2)
 
     publisher.put(ori_tensor)
-    print('Ping!')
+    print("Ping!")
 
     print("Ctrl+C to leave")
     signal.pause()
@@ -61,7 +61,7 @@ def run_as_pong_side(session):
         buf.copy_(tensor)
         buf *= 2
         publisher.put(buf)
-        print('Pong!')
+        print("Pong!")
 
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
     _subscriber = pygaps.Subscriber(session, TOPIC_PING, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
