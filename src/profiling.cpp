@@ -1,14 +1,16 @@
 #include "profiling.hpp"
 
 #include <fstream>
+#include <iostream>
 #include <string>
 
 namespace profiling {
 
 Records records;
 
-void dump_records(std::string& name, int points_per_group) {
-    std::ofstream out(name + ".csv");
+void dump_records(const std::string& name, int points_per_group) {
+    std::string output_name = name + ".csv";
+    std::ofstream out(output_name);
 
     int j_beg = 0;
     for (int i = 0; i < records.tag_idx; i++) {
@@ -23,6 +25,8 @@ void dump_records(std::string& name, int points_per_group) {
 
         j_beg = j_end;
     }
+
+    std::cout << output_name << " is created." << std::endl;
 }
 
 }  // namespace profiling

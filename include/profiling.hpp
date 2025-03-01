@@ -29,7 +29,7 @@ struct Records {
 
 extern struct Records records;
 
-void dump_records(std::string& name, int points_per_group);
+void dump_records(const std::string& name, int points_per_group);
 
 }  // namespace profiling
 
