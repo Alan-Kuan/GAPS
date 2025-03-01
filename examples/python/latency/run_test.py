@@ -4,16 +4,16 @@ import time
 
 import pygaps
 
-#
-#  This program is used to profile the publishing loop at the Python side
-#
-
 TOPIC = "py_latency_test"
 LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
 POOL_SIZE = 32 << 20;  # 32 MiB
 MSG_QUEUE_CAP_EXP = 7
 
 def main():
+    if hasattr(pygaps, "profiling"):
+        print("Please built the project with PROFILING=off to run this program.")
+        return
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-p",
                         action="store_true",
@@ -24,6 +24,9 @@ def main():
                         help="publishing how many times (only required if -p is specified)")
     parser.add_argument("-i",
                         help="publishing interval in second (only required if -p is specified)")
+    parser.add_argument("-o",
+                        required=True,
+                        help="prefix of the output csv (may contain directory)")
     args = parser.parse_args()
 
     signal.signal(signal.SIGINT, lambda _sig, _frame: print("Stopped"))
@@ -40,58 +43,56 @@ def main():
             print("-i should be specified")
             exit(1)
 
-        run_as_publisher(session, int(args.s), int(args.t), float(args.i))
-        if hasattr(pygaps, "profiling"):
-            pygaps.profiling.dump_records("pub", 1, 3)
+        run_as_publisher(session, args.o, int(args.s), int(args.t), float(args.i))
     else:
-        run_as_subscriber(session)
-        if hasattr(pygaps, "profiling"):
-            pygaps.profiling.dump_records("sub", 1, 4)
+        run_as_subscriber(session, args.o)
 
-def run_as_publisher(session, payload_size, times, pub_interval):
+def run_as_publisher(session, output_prefix, payload_size, times, pub_interval):
     publisher = pygaps.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
     count = payload_size // 4
     total_times = times + 3
-    time_points_1 = [None] * total_times
-    time_points_2 = [None] * total_times
-    time_points_3 = [None] * total_times
+    time_points = [0] * total_times
 
     # warming up
     for i in range(3):
-        time_points_1[i] = time.monotonic()
         tensor = publisher.empty((count, ), pygaps.int32)
         tensor.fill_(i)
-        time_points_2[i] = time.monotonic()
+        time_points[i] = time.monotonic()
         publisher.put(tensor)
-        time_points_3[i] = time.monotonic()
         time.sleep(1)
 
     for i in range(3, total_times):
-        time_points_1[i] = time.monotonic()
         tensor = publisher.empty((count, ), pygaps.int32)
         tensor.fill_(i)
-        time_points_2[i] = time.monotonic()
+        time_points[i] = time.monotonic()
         publisher.put(tensor)
-        time_points_3[i] = time.monotonic()
         time.sleep(pub_interval)
 
-    print("init put")
-    for i in range(total_times):
-        dur_init = (time_points_2[i] - time_points_1[i]) * 1e6
-        dur_put = (time_points_3[i] - time_points_2[i]) * 1e6
-        print(dur_init, dur_put)
+    dump_time_points(time_points, output_prefix)
 
-def run_as_subscriber(session):
-    time_points = []
+def run_as_subscriber(session, output_prefix):
+    time_points = [0] * 1000
+    idx = 0
 
     def msg_handler(_tensor):
-        time_points.append(time.monotonic())
+        nonlocal idx
+        time_points[idx] = time.monotonic()
+        idx += 1
 
     # NOTE: intentionally assign it to a variable, or it destructs right after this line is executed
     _subscriber = pygaps.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
-    print("Ctrl+C to leave")
+    print("Ctrl+C to stop")
     signal.pause()
+
+    dump_time_points(time_points, output_prefix)
+
+def dump_time_points(time_points, output_prefix):
+    output_name = output_prefix + ".csv"
+    with open(output_name, "w") as f:
+        for point in time_points:
+            f.write(f"{point}\n")
+    print(f"{output_name} is created.")
 
 if __name__ == "__main__":
     main()
