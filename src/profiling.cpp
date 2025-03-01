@@ -7,7 +7,7 @@ namespace profiling {
 
 Records records;
 
-void dump_profiling_records(const char* name, int id, int points_per_group) {
+void dump_records(const char* name, int id, int points_per_group) {
     std::stringstream ss;
     ss << "profile-" << name << '-' << id;
     std::ofstream out(ss.str());

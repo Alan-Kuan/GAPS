@@ -119,12 +119,12 @@ int main(int argc, char* argv[]) {
         runAsPublisher(session, id, output_name, payload_size, times,
                        pub_interval);
 #ifdef PROFILING
-        profiling::dump_profiling_records("pub", id, 3);
+        profiling::dump_records("pub", id, 3);
 #endif
     } else {
         runAsSubscriber(session, id, output_name);
 #ifdef PROFILING
-        profiling::dump_profiling_records("sub", id, 4);
+        profiling::dump_records("sub", id, 4);
 #endif
     }
 
