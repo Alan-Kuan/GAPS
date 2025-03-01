@@ -1,5 +1,5 @@
-prj_add_target(helpers
-    SRCS helpers.cpp)
+prj_add_target(utils
+    SRCS utils.cpp)
 
 add_subdirectory(latency)
 add_subdirectory(ping-pong)

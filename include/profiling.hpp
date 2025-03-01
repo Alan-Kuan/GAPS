@@ -5,6 +5,7 @@
 
 #include <ctime>
 #include <iostream>
+#include <string>
 
 #define PROF_WARN                                                    \
     std::cout << "Warn: the library was built with profiling codes!" \
@@ -28,7 +29,7 @@ struct Records {
 
 extern struct Records records;
 
-void dump_records(const char* name, int id, int points_per_group);
+void dump_records(std::string& name, int points_per_group);
 
 }  // namespace profiling
 
