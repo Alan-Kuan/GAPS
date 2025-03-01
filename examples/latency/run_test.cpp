@@ -29,6 +29,12 @@ void runAsSubscriber(z::Session& session, int id);
 void printUsageAndExit(const char* arg0);
 
 int main(int argc, char* argv[]) {
+#ifndef PROFILING
+    cout << "Please build the project with PROFILING=on to run this program."
+         << endl;
+    return 0;
+#endif
+
     if (argc == 1) printUsageAndExit(argv[0]);
 
     bool is_publisher = false;
