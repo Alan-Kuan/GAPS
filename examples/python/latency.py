@@ -38,9 +38,14 @@ def main():
         if args.i == None:
             print('-i should be specified')
             exit(1)
+
         run_as_publisher(session, args.o, int(args.s), int(args.t), float(args.i))
+        if hasattr(pygaps, "profiling"):
+            pygaps.profiling.dump_records("pub", 1, 3)
     else:
         run_as_subscriber(session, args.o)
+        if hasattr(pygaps, "profiling"):
+            pygaps.profiling.dump_records("sub", 1, 4)
 
 def run_as_publisher(session, output_name, payload_size, times, pub_interval):
     publisher = pygaps.Publisher(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP)
