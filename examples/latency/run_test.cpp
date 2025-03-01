@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
         // If the publishers rush to publish messages before they discover all
         // the peers, the "write filter" may stay in an "active" state, which
         // prevents the messages from actually being delivered out.
-        this_thread::sleep_for(1s);
+        this_thread::sleep_for(3s);
         runAsPublisher(session, id, output_name, payload_size, times,
                        pub_interval);
 #ifdef PROFILING
