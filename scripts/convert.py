@@ -3,8 +3,12 @@ import sys
 
 import pandas as pd
 
+#
+#  convert a table of time points to a table of time periods
+#
+
 if len(sys.argv) < 2:
-    print(f'Usage: {sys.argv[0]} FILE')
+    print(f"Usage: {sys.argv[0]} FILE")
     exit(1)
 
 filename = sys.argv[1]
