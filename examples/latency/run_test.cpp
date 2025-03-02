@@ -181,7 +181,7 @@ void runAsPublisher(z::Session& session, int id, size_t payload_size, int times,
 void runAsSubscriber(z::Session& session, int id) {
     try {
         Subscriber sub(session, env::kTopic, env::kPoolSize,
-                       env::kMsgQueueCapExp, [](void* msg, size_t tag) {
+                       env::kMsgQueueCapExp, [](void* msg, size_t size) {
                            // upon received, set the current time point
                            PROF_ADD_POINT;
                        });
