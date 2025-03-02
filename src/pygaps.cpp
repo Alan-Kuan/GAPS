@@ -6,6 +6,7 @@
 #include <iceoryx_posh/runtime/posh_runtime.hpp>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/function.h>
+#include <nanobind/stl/string.h>
 
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
