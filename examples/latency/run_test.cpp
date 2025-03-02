@@ -180,7 +180,7 @@ void runAsPublisher(int id, size_t payload_size, int times,
 void runAsSubscriber(int id) {
     try {
         Subscriber sub(env::kTopic, env::kPoolSize, env::kMsgQueueCapExp,
-                       [](void* msg, size_t tag) {
+                       [](void* msg, size_t size) {
                            // upon received, set the current time point
                            PROF_ADD_POINT;
                        });
