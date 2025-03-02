@@ -86,7 +86,7 @@ def run_as_subscriber(session, output_prefix):
     print("Ctrl+C to stop")
     signal.pause()
 
-    dump_time_points(time_points, output_prefix)
+    dump_time_points(time_points[:idx], output_prefix)
 
 def dump_time_points(time_points, output_prefix):
     output_name = output_prefix + ".csv"
