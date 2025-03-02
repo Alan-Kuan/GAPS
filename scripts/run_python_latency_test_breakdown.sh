@@ -15,11 +15,14 @@ PUB_INTERVAL=0.0001  # 100 us
 
 mkdir -p "${OUTPUT_DIR}"
 
+iox-roudi -l off &
+ROUDI_PID="$!"
+
 ./build/src/mem_manager >/dev/null &
 MM_PID="$!"
 sleep 1
 
-trap -- "kill -s INT ${MM_PID}" EXIT
+trap -- "kill -s INT ${ROUDI_PID} ${MM_PID}" EXIT
 
 echo "Starting PyGAPS Latency Breakdown Test"
 

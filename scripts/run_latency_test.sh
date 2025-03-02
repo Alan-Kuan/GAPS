@@ -27,8 +27,7 @@ ROUDI_PID="$!"
 MM_PID="$!"
 sleep 1
 
-trap -- "kill -s INT ${ROUDI_PID}" EXIT
-trap -- "kill -s INT ${MM_PID}" EXIT
+trap -- "kill -s INT ${ROUDI_PID}" ${MM_PID}" EXIT
 
 echo "Starting GAPS Latency Test"
 echo
