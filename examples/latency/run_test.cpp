@@ -6,7 +6,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -15,29 +14,38 @@
 #include <iceoryx_posh/runtime/posh_runtime.hpp>
 
 #include "env.hpp"
-#include "helpers.hpp"
 #include "init.hpp"
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
+#include "profiling.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
-void runAsPublisher(int id, const char* output_name, size_t payload_size,
-                    int times, double pub_interval);
-void runAsSubscriber(int id, const char* output_name);
+void runAsPublisher(int id, size_t payload_size, int times,
+                    double pub_interval);
+void runAsSubscriber(int id);
 
 void printUsageAndExit(const char* arg0);
 
 int main(int argc, char* argv[]) {
+#ifndef PROFILING
+    cerr << "Please build the project with PROFILING=on to run this program."
+         << endl;
+    return 1;
+#endif
+
+    if (argc == 1) printUsageAndExit(argv[0]);
+
     bool is_publisher = false;
     int nproc = -1;
-    const char* output_name = nullptr;
+    const char* output_prefix = nullptr;
     size_t payload_size = 0;
     int times = -1;
     double pub_interval = -1;
     int opt;
 
-    while ((opt = getopt(argc, argv, "pn:o:s:t:i:")) != -1) {
+    while ((opt = getopt(argc, argv, "hpn:o:s:t:i:")) != -1) {
         switch (opt) {
         case 'p':
             is_publisher = true;
@@ -46,7 +54,7 @@ int main(int argc, char* argv[]) {
             nproc = stoi(optarg);
             break;
         case 'o':
-            output_name = optarg;
+            output_prefix = optarg;
             break;
         case 's':
             payload_size = stoul(optarg);
@@ -66,7 +74,7 @@ int main(int argc, char* argv[]) {
         cout << "-n should be specified" << endl;
         exit(1);
     }
-    if (!output_name) {
+    if (!output_prefix) {
         cout << "-o should be specifed" << endl;
         exit(1);
     }
@@ -114,11 +122,17 @@ int main(int argc, char* argv[]) {
     if (is_publisher) {
         // It is required by the Zenoh-wrapping version GAPS.
         // We still add this here for controling the same experiment setup.
-        this_thread::sleep_for(1s);
-        runAsPublisher(id, output_name, payload_size, times, pub_interval);
+        this_thread::sleep_for(3s);
+        runAsPublisher(id, payload_size, times, pub_interval);
     } else {
-        runAsSubscriber(id, output_name);
+        runAsSubscriber(id);
     }
+
+#ifdef PROFILING
+    string output_name = string(output_prefix) + '-' + to_string(id);
+    int points_per_group = is_publisher ? 4 : 5;
+    profiling::dump_records(output_name, points_per_group);
+#endif
 
     if (pid == 0) return 0;
     for (int i = 1; i < nproc; i++) wait(nullptr);
@@ -126,34 +140,33 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void runAsPublisher(int id, const char* output_name, size_t payload_size,
-                    int times, double pub_interval) {
+void runAsPublisher(int id, size_t payload_size, int times,
+                    double pub_interval) {
     int total_times = 3 + times;
-    hlp::Timer timer(total_times);
 
     try {
         Publisher pub(env::kTopic, env::kPoolSize, env::kMsgQueueCapExp);
 
         // warming up
         for (int t = 0; t < 3; t++) {
-            int tag = (id - 1) * total_times + t + 1;
+            int val = (id - 1) * total_times + t + 1;
             int* buf_d = (int*) pub.malloc(payload_size);
-            init::fillArray(buf_d, payload_size / sizeof(int), tag);
-            timer.setPoint(tag);
-            pub.put(buf_d, (size_t) tag);
+            init::fillArray(buf_d, payload_size / sizeof(int), val);
+
+            PROF_ADD_POINT;
+            pub.put(buf_d, payload_size);
+
             this_thread::sleep_for(1s);
         }
 
+        // real test
         for (int t = 3; t < total_times; t++) {
-            int tag = (id - 1) * total_times + t + 1;
+            int val = (id - 1) * total_times + t + 1;
             int* buf_d = (int*) pub.malloc(payload_size);
-            init::fillArray(buf_d, payload_size / sizeof(int), tag);
+            init::fillArray(buf_d, payload_size / sizeof(int), val);
 
-            timer.setPoint(tag);
-            // since we won't use the data from the subscriber side, it's ok to
-            // exploit the size field to send the tag
-            pub.put(buf_d, (size_t) tag);
-            // another time point is set at the subscriber-end
+            PROF_ADD_POINT;
+            pub.put(buf_d, payload_size);
 
             // control publishing frequency
             this_thread::sleep_for(chrono::duration<double>(pub_interval));
@@ -162,38 +175,28 @@ void runAsPublisher(int id, const char* output_name, size_t payload_size,
         cerr << "Publisher: " << err.what() << endl;
         exit(1);
     }
-
-    stringstream ss;
-    ss << output_name << "-" << id << ".csv";
-    timer.dump(ss.str().c_str());
 }
 
-void runAsSubscriber(int id, const char* output_name) {
-    hlp::Timer timer(10000);
-
+void runAsSubscriber(int id) {
     try {
-        auto handler = [&timer](void* msg, size_t tag) {
-            // upon received, set the current time point
-            timer.setPoint(tag);
-        };
         Subscriber sub(env::kTopic, env::kPoolSize, env::kMsgQueueCapExp,
-                       handler);
+                       [](void* msg, size_t tag) {
+                           // upon received, set the current time point
+                           PROF_ADD_POINT;
+                       });
 
-        if (id == 1) cout << "Ctrl+C to leave" << endl;
-        hlp::waitForSigInt();
+        if (id == 1) cout << "Ctrl+C to stop" << endl;
+        utils::waitForSigInt();
     } catch (runtime_error& err) {
         cerr << "Subscriber: " << err.what() << endl;
         exit(1);
     }
-
-    stringstream ss;
-    ss << output_name << "-" << id << ".csv";
-    timer.dump(ss.str().c_str());
 }
 
 void printUsageAndExit(const char* arg0) {
-    cerr << "usage: " << arg0 << " [-p] -n N -o O [-s S] [-t T] [-i I]\n\n"
+    cerr << "usage: " << arg0 << " [-h] [-p] -n N -o O [-s S] [-t T] [-i I]\n\n"
          << "options:\n"
+         << "  -h\tshow this help message and exit\n"
          << "  -p\tbe a publisher or not (if not specify, it becomes a "
             "subscriber)\n"
          << "  -n N\tnumber of publishers / subscribers\n"

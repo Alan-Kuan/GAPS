@@ -12,8 +12,8 @@
 
 #include "blur.hpp"
 #include "env.hpp"
-#include "helpers.hpp"
 #include "node/subscriber.hpp"
+#include "utils.hpp"
 
 using namespace std;
 using namespace cv;
@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
                        handler);
 
         cout << "Ctrl+C to continue" << endl;
-        hlp::waitForSigInt();
+        ::utils::waitForSigInt();
 
         cudaFree(filter_d);
         cudaFree(frame_blurred_d);

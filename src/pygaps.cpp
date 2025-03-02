@@ -9,6 +9,7 @@
 
 #include "node/publisher.hpp"
 #include "node/subscriber.hpp"
+#include "profiling.hpp"
 
 namespace nb = nanobind;
 
@@ -42,4 +43,9 @@ NB_MODULE(pygaps, m) {
         .value("float16", Dtype::float16)
         .value("float32", Dtype::float32)
         .export_values();
+
+#ifdef PROFILING
+    nb::module_ m2 = m.def_submodule("profiling");
+    m2.def("dump_records", &profiling::dump_records);
+#endif
 }

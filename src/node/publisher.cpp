@@ -28,7 +28,7 @@ Publisher::Publisher(const char* topic_name, size_t pool_size,
           iox_publisher({"", "gaps",
                          iox::capro::IdString_t(iox::cxx::TruncateToCapacity,
                                                 topic_name)}) {
-    PROFILE_WARN;
+    PROF_WARN;
 }
 
 #ifdef BUILD_PYGAPS
@@ -77,8 +77,7 @@ DeviceTensor Publisher::empty(nb::tuple shape, Dtype dtype) {
 }
 
 void Publisher::put(const DeviceTensor& tensor) {
-    PROFILE_INIT(3);
-    PROFILE_SETPOINT(0);
+    PROF_ADD_POINT;
 
     size_t size = tensor.nbytes();
     if (size == 0) return;
@@ -99,7 +98,7 @@ void Publisher::put(const DeviceTensor& tensor) {
         getMessageQueueEntry(mq_header, msg_header.msg_id);
 
     this->updateEntry(mq_entry, offset, size);
-    PROFILE_SETPOINT(1);
+    PROF_ADD_POINT;
 
     // notify subscribers with the message ID & tensor info
     this->iox_publisher
@@ -117,9 +116,9 @@ void Publisher::put(const DeviceTensor& tensor) {
             ss << "Iceoryx failed to send a message: " << error;
             throwError(ss.str().c_str());
         });
-    PROFILE_SETPOINT(2);
+    PROF_ADD_POINT;
 
-    PROFILE_OUTPUT(3, "pub", size);
+    PROF_ADD_TAG(msg_header.msg_id);
 }
 #else
 void* Publisher::malloc(size_t size) {
@@ -129,8 +128,7 @@ void* Publisher::malloc(size_t size) {
 }
 
 void Publisher::put(void* payload, size_t size) {
-    PROFILE_INIT(3);
-    PROFILE_SETPOINT(0);
+    PROF_ADD_POINT;
 
     if (!payload) throwError("Payload was not provided");
     if (size == 0) return;
@@ -146,7 +144,7 @@ void Publisher::put(void* payload, size_t size) {
     MessageQueueEntry* mq_entry = getMessageQueueEntry(mq_header, msg_id);
 
     this->updateEntry(mq_entry, offset, size);
-    PROFILE_SETPOINT(1);
+    PROF_ADD_POINT;
 
     // notify subscribers with the message ID
     this->iox_publisher.publishCopyOf(msg_id).or_else([](auto& error) {
@@ -154,8 +152,8 @@ void Publisher::put(void* payload, size_t size) {
         ss << "Iceoryx failed to send a message: " << error;
         throwError(ss.str().c_str());
     });
-    PROFILE_SETPOINT(2);
+    PROF_ADD_POINT;
 
-    PROFILE_OUTPUT(3, "pub", size);
+    PROF_ADD_TAG(msg_id);
 }
 #endif

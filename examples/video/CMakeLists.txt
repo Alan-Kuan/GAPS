@@ -18,4 +18,4 @@ prj_add_target(sub_blur
     IS_EXE
     SRCS sub_blur.cpp blur.cu
     INCS ${OpenCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/..
-    LIBS ${common_libs} helpers)
+    LIBS ${common_libs} utils)

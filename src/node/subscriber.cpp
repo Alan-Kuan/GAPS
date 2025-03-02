@@ -38,7 +38,7 @@ Subscriber::Subscriber(const char* topic_name, size_t pool_size,
                          this->onSampleReceived, *this))
         .or_else(
             [](auto) { throwError("Failed to register message handler"); });
-    PROFILE_WARN;
+    PROF_WARN;
 }
 
 Subscriber::~Subscriber() {
@@ -50,21 +50,19 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
                                   Subscriber* self) {
     bool keep = true;
     while (keep) {
-        PROFILE_INIT(4);
-        PROFILE_SETPOINT(0);
+        PROF_ADD_POINT;
 
         iox_subscriber
             ->take()
 #ifdef BUILD_PYGAPS
-            .and_then([iox_subscriber,
-                       self PROFILE_CAPTURE](const void* payload) {
+            .and_then([iox_subscriber, self](const void* payload) {
                 auto msg_header = (MsgHeader*) payload;
                 auto shape_buf =
                     (size_t*) ((uintptr_t) msg_header + sizeof(MsgHeader));
                 MessageQueueEntry* mq_entry =
                     getMessageQueueEntry(self->mq_header, msg_header->msg_id);
 #else
-            .and_then([iox_subscriber, self PROFILE_CAPTURE](auto& msg_id) {
+            .and_then([iox_subscriber, self](auto& msg_id) {
                 MessageQueueEntry* mq_entry =
                     getMessageQueueEntry(self->mq_header, *msg_id);
 #endif
@@ -74,7 +72,7 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
                 void* data =
                     (void*) ((uintptr_t) self->allocator->getPoolBase() +
                              offset);
-                PROFILE_SETPOINT(1);
+                PROF_ADD_POINT;
 
 #ifdef BUILD_PYGAPS
                 {
@@ -91,7 +89,7 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
 #else
                 self->handler(data, mq_entry->size);
 #endif
-                PROFILE_SETPOINT(2);
+                PROF_ADD_POINT;
 
                 // last subscriber reading the message should free the
                 // allocation
@@ -102,9 +100,13 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
                     // freed
                     mq_entry->offset = offset;
                 }
-                PROFILE_SETPOINT(3);
+                PROF_ADD_POINT;
 
-                PROFILE_OUTPUT(4, "sub", mq_entry->size);
+#if BUILD_PYGAPS
+                PROF_ADD_TAG(msg_header->msg_id);
+#else
+                PROF_ADD_TAG(*msg_id);
+#endif
             })
             .or_else([&keep](auto& result) { keep = false; });
     }
