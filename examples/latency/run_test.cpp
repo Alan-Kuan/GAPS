@@ -30,9 +30,9 @@ void printUsageAndExit(const char* arg0);
 
 int main(int argc, char* argv[]) {
 #ifndef PROFILING
-    cout << "Please build the project with PROFILING=on to run this program."
+    cerr << "Please build the project with PROFILING=on to run this program."
          << endl;
-    return 0;
+    return 1;
 #endif
 
     if (argc == 1) printUsageAndExit(argv[0]);

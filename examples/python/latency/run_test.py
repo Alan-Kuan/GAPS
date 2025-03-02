@@ -1,5 +1,6 @@
 import argparse
 import signal
+import sys
 import time
 
 import pygaps
@@ -11,8 +12,8 @@ MSG_QUEUE_CAP_EXP = 7
 
 def main():
     if hasattr(pygaps, "profiling"):
-        print("Please built the project with PROFILING=off to run this program.")
-        return
+        print("Please built the project with PROFILING=off to run this program.", file=sys.stderr)
+        exit(1)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-p",
