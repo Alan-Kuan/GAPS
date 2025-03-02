@@ -26,10 +26,10 @@ def get_e2e_latency(df_pub, df_sub):
 
 def dump_latency_of_each_part(df, output_prefix):
     cols = []
-    for i in range(3, df.columns.size, 2):
+    for i in range(2, df.columns.size, 2):
         prev = i - 2
-        diff_sec = df[i] - df[prev]
-        diff_nsec = df[i + 1] - df[prev + 1]
+        diff_sec = df.iloc[:, i] - df.iloc[:, prev]
+        diff_nsec = df.iloc[:, i + 1] - df.iloc[:, prev + 1]
         diff = diff_sec * 1e6 + diff_nsec / 1e3
         cols.append(diff)
     res = pd.concat(cols, axis=1)
@@ -51,8 +51,8 @@ for name in names:
     cols_e2e.append(get_e2e_latency(df_pub, df_sub))
 
     # latency of each part
-    dump_latency_of_each_part(df_pub, pub_prefix)
-    dump_latency_of_each_part(df_sub, sub_prefix)
+    dump_latency_of_each_part(df_pub.drop(columns=[1, 2]), pub_prefix)
+    dump_latency_of_each_part(df_sub.drop(columns=[5, 6]), sub_prefix)
 
 res = pd.concat(cols_e2e, axis=1)
 res.columns = names
@@ -75,7 +75,7 @@ for mpns in mpns_list:
         df_pub = pd.read_csv(f"{pub_prefix}.csv", header=None, index_col=0)
 
         # latency of each part
-        dump_latency_of_each_part(df_pub, pub_prefix)
+        dump_latency_of_each_part(df_pub.drop(columns=[1, 2]), pub_prefix)
 
         df_pub_list.append(df_pub)
     df_pub = pd.concat(df_pub_list).sort_index()
@@ -86,7 +86,7 @@ for mpns in mpns_list:
         df_sub = pd.read_csv(f"{sub_prefix}.csv", header=None, index_col=0)
 
         # latency of each part
-        dump_latency_of_each_part(df_sub, sub_prefix)
+        dump_latency_of_each_part(df_sub.drop(columns=[5, 6]), sub_prefix)
 
         # end-to-end latency
         df_sub = df_sub.sort_index()
