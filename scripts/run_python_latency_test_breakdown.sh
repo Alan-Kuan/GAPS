@@ -23,7 +23,7 @@ trap -- "kill -s INT ${MM_PID}" EXIT
 
 echo "Starting PyGAPS Latency Breakdown Test"
 
-for i in {0..1}; do
+for i in "${!SIZE[@]}"; do
     echo "Testing with payload size: ${NAME[i]} ..."
 
     PUB_PREFIX="${OUTPUT_DIR}/pub-${NAME[i]}"
