@@ -2,15 +2,15 @@
 
 set -e
 
-SIZE=(1024 4096 16384 65536 262144 1048576 4194304)
-NAME=(1KB 4KB 16KB 64KB 256KB 1MB 4MB)
-
 SCRIPT_DIR=`dirname $(realpath "$0")`
 PROJECT_DIR=`dirname "${SCRIPT_DIR}"`
-TEST="${PROJECT_DIR}/examples/python/latency.py"
-OUTPUT_DIR="outputs/python"
-TIMES=100
-PUB_INTERVAL=0.02  # 20 ms
+TEST="${PROJECT_DIR}/examples/python/latency/run_test.py"
+OUTPUT_DIR="outputs/python/latency"
+
+SIZE=(1024 4096 16384 65536 262144 1048576 4194304)
+NAME=(1KB 4KB 16KB 64KB 256KB 1MB 4MB)
+TIMES=10
+PUB_INTERVAL=0.0001  # 100 us
 
 mkdir -p "${OUTPUT_DIR}"
 
@@ -20,16 +20,19 @@ sleep 1
 
 trap -- "kill -s INT ${MM_PID}" EXIT
 
-echo "1. Testing with different payload sizes"
+echo "Starting PyGAPS Latency Test"
 echo
 
-for i in {0..6}; do
+for i in "${!SIZE[@]}"; do
     echo "Testing with payload size: ${NAME[i]} ..."
 
-    python3 "${TEST}" -o "${OUTPUT_DIR}/sub-${NAME[i]}" >/dev/null &
+    PUB_PREFIX="${OUTPUT_DIR}/pub-${NAME[i]}"
+    SUB_PREFIX="${OUTPUT_DIR}/sub-${NAME[i]}"
+
+    python3 "${TEST}" -o "${SUB_PREFIX}" >/dev/null &
     SUB_PID="$!"
     sleep 1  # wait a while for the subscriber to be ready
-    python3 "${TEST}" -o "${OUTPUT_DIR}/pub-${NAME[i]}" -p -s "${SIZE[i]}" -t "${TIMES}" -i "${PUB_INTERVAL}"
+    python3 "${TEST}" -o "${PUB_PREFIX}" -p -s "${SIZE[i]}" -t "${TIMES}" -i "${PUB_INTERVAL}" >/dev/null
     sleep 1  # wait a while for the subscriber to finish handling
 
     kill -s INT "${SUB_PID}"
@@ -39,4 +42,4 @@ done
 echo
 echo "Done!"
 
-"${SCRIPT_DIR}/get_python_results.py"
+"${SCRIPT_DIR}/get_python_results.py" "${OUTPUT_DIR}"

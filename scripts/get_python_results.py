@@ -1,22 +1,29 @@
 #!/usr/bin/env python3
+import sys
+
 import pandas as pd
 
-OUTPUT_DIR = "outputs/python"
+#
+#  calculate the end-to-end latency
+#
 
+if len(sys.argv) < 2:
+    print(f"Usage: {sys.argv[0]} OUTPUT_DIR")
+    exit(1)
+
+output_dir = sys.argv[1]
 names = ["1KB", "4KB", "16KB", "64KB", "256KB", "1MB", "4MB"]
 
-table = {}
-
+cols = []
 for name in names:
-    with open(f"{OUTPUT_DIR}/pub-{name}") as f:
-        pub_list = [float(line) * 1e6 for line in f]
+    df_pub = pd.read_csv(f"{output_dir}/pub-{name}.csv", header=None)
+    df_sub = pd.read_csv(f"{output_dir}/sub-{name}.csv", header=None)
+    diff = (df_sub - df_pub) * 1e6
+    cols.append(diff)
 
-    with open(f"{OUTPUT_DIR}/sub-{name}") as f:
-        sub_list = [float(line) * 1e6 for line in f]
+res = pd.concat(cols, axis=1)
+res.columns = names
 
-    diff_list = [s - p for s, p in zip(sub_list, pub_list)]
-    table[name] = diff_list
-
-output_file = "python_results.csv"
-pd.DataFrame(table).to_csv(output_file, index=False)
-print(f"{output_file} is generated")
+output_file = f"{output_dir}/e2e-latency.csv"
+res.to_csv(output_file, index=False)
+print(f"{output_file} is generated.")
