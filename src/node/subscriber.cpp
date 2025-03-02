@@ -50,12 +50,12 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
                                   Subscriber* self) {
     bool keep = true;
     while (keep) {
-        PROF_ADD_POINT;
-
         iox_subscriber
             ->take()
 #ifdef BUILD_PYGAPS
             .and_then([iox_subscriber, self](const void* payload) {
+                PROF_ADD_POINT;
+
                 auto msg_header = (MsgHeader*) payload;
                 auto shape_buf =
                     (size_t*) ((uintptr_t) msg_header + sizeof(MsgHeader));
@@ -63,6 +63,8 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
                     getMessageQueueEntry(self->mq_header, msg_header->msg_id);
 #else
             .and_then([iox_subscriber, self](auto& msg_id) {
+                PROF_ADD_POINT;
+
                 MessageQueueEntry* mq_entry =
                     getMessageQueueEntry(self->mq_header, *msg_id);
 #endif
