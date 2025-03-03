@@ -68,6 +68,7 @@ table = {}
 
 for mpns in mpns_list:
     name = f"{mpns[0]}p{mpns[1]}s"
+    indices_to_drop = []
 
     df_pub_list = []
     for i in range(mpns[0]):
@@ -77,7 +78,9 @@ for mpns in mpns_list:
         # latency of each part
         dump_latency_of_each_part(df_pub.drop(columns=[1, 2]), pub_prefix)
 
-        df_pub_list.append(df_pub)
+        to_drop = df_pub.index[:3].to_list()
+        df_pub_list.append(df_pub.drop(to_drop))
+        indices_to_drop += to_drop
     df_pub = pd.concat(df_pub_list).sort_index()
 
     diff_list = []
@@ -89,10 +92,10 @@ for mpns in mpns_list:
         dump_latency_of_each_part(df_sub.drop(columns=[5, 6]), sub_prefix)
 
         # end-to-end latency
-        df_sub = df_sub.sort_index()
+        df_sub = df_sub.drop(indices_to_drop).sort_index()
         diff_list.append(get_e2e_latency(df_pub, df_sub))
-    table[name] = pd.concat(diff_list)
+    table[name] = pd.concat(diff_list, ignore_index=True)
 
 output_name = f"{output_dir_mpns}/e2e-latency-mpns.csv"
-pd.DataFrame.from_dict(table, orient="index").T.to_csv(output_name, index=False)
+pd.DataFrame(table).to_csv(output_name, index=False)
 print(f"{output_name} is generated.")
