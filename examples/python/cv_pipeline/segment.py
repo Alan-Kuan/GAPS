@@ -1,4 +1,3 @@
-import os
 import signal
 import sys
 import time
@@ -19,12 +18,14 @@ POOL_SIZE = 256 << 20
 MSG_QUEUE_CAP_EXP = 7
 
 def main():
-    if len(sys.argv) < 3:
-        print(f"Usage: {sys.argv[0]} EXPECT_IMG_NUM MODEL_PATH")
+    if len(sys.argv) < 4:
+        print(f"Usage: {sys.argv[0]} MODEL_PATH MAX_IMG_NUM BATCH_SIZE")
         exit(1)
 
-    expect_img_num = int(sys.argv[1])
-    model_path = sys.argv[2]
+    model_path = sys.argv[1]
+    max_img_num = int(sys.argv[2])
+    batch_size = int(sys.argv[3])
+    expect_img_num = max_img_num + 3 * batch_size
 
     signal.signal(signal.SIGINT, lambda sig, frame: print("Stopped"))
 
@@ -57,7 +58,6 @@ def main():
         count += inputs.shape[0]
         if count == expect_img_num:
             print(f"end: {time.monotonic()}")
-            os.kill(os.getpid(), signal.SIGINT)
     _sub = pygaps.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
     print("Ctrl+C to leave")
