@@ -62,7 +62,7 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
                 MessageQueueEntry* mq_entry =
                     getMessageQueueEntry(self->mq_header, msg_header->msg_id);
 #else
-            .and_then([iox_subscriber, self](auto& msg_id) {
+            .and_then([self](auto& msg_id) {
                 PROF_ADD_POINT;
 
                 MessageQueueEntry* mq_entry =
@@ -105,6 +105,7 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
                 PROF_ADD_POINT;
 
 #if BUILD_PYGAPS
+                iox_subscriber->release(payload);
                 PROF_ADD_TAG(msg_header->msg_id);
 #else
                 PROF_ADD_TAG(*msg_id);
