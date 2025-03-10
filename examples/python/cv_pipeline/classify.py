@@ -12,7 +12,7 @@ import pygaps
 
 DEVICE = "cuda"
 TOPIC = "cv_pipeline-blurred_frames"
-LLOCATOR = "udp/224.0.0.123:7447#iface=lo"
+RUNTIME = "cv_pipeline-cls"
 POOL_SIZE = 256 << 20
 MSG_QUEUE_CAP_EXP = 7
 
@@ -31,7 +31,8 @@ def main():
     model = torch.load(model_path, weights_only=False)["model"].to(DEVICE)
     model.eval()
 
-    session = pygaps.ZenohSession(LLOCATOR)
+    pygaps.turn_off_logging()
+    pygaps.init_runtime(RUNTIME)
 
     count = 0
     def msg_handler(inputs):
@@ -45,7 +46,7 @@ def main():
         count += inputs.shape[0]
         if count == expect_img_num:
             print(f"end: {time.monotonic()}")
-    _sub = pygaps.Subscriber(session, TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
+    _sub = pygaps.Subscriber(TOPIC, POOL_SIZE, MSG_QUEUE_CAP_EXP, msg_handler)
 
     print("Ctrl+C to leave")
     signal.pause()
