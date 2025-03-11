@@ -21,9 +21,9 @@
 namespace profiling {
 
 struct Records {
-    struct timespec tps[1000];
+    struct timespec tps[2000];
     int tp_idx = 0;
-    int tags[100];
+    int tags[1000];
     int tag_idx = 0;
 };
 
