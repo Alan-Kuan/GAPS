@@ -54,6 +54,7 @@ RUN echo 'export PYTHONPATH=./build/src' >> /home/ubuntu/.bashrc
 WORKDIR /home/ubuntu
 ADD --chown ubuntu https://github.com/akanametov/yolo-face/releases/download/v0.0.0/yolov11n-face.pt yolo11n-face.pt
 ADD --chown ubuntu https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-seg.pt yolo11n-seg.pt
+ADD --chown ubuntu https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-cls.pt yolo11n-cls.pt
 
 # configure ssh server
 RUN mkdir /var/run/sshd
