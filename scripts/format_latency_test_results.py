@@ -11,7 +11,7 @@ if len(sys.argv) < 2:
     print(f"Usage: {sys.argv[0]} OUTPUT_DIR")
     exit(1)
 
-output_dir = f"{sys.argv[1]}/1p1s"
+output_dir = sys.argv[1]
 names = ["1KB", "4KB", "16KB", "64KB", "256KB", "1MB", "4MB"]
 
 def get_e2e_latency(df_pub, df_sub):

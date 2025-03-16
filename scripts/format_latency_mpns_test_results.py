@@ -11,7 +11,7 @@ if len(sys.argv) < 2:
     print(f"Usage: {sys.argv[0]} OUTPUT_DIR")
     exit(1)
 
-output_dir = f"{sys.argv[1]}/mpns"
+output_dir = sys.argv[1]
 mpns_list = [(1, 2), (1, 4), (2, 1), (4, 1), (2, 2)]
 queue_size = 128
 
