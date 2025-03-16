@@ -9,7 +9,7 @@ OUTPUT_DIR="outputs/python/latency"
 
 SIZE=(1024 4096 16384 65536 262144 1048576 4194304)
 NAME=(1KB 4KB 16KB 64KB 256KB 1MB 4MB)
-TIMES=10
+TIMES=100
 PUB_INTERVAL=0.0001  # 100 us
 
 mkdir -p "${OUTPUT_DIR}"
@@ -45,4 +45,4 @@ done
 echo
 echo "Done!"
 
-"${SCRIPT_DIR}/get_python_results.py" "${OUTPUT_DIR}"
+"${SCRIPT_DIR}/format_python_latency_test_results.py" "${OUTPUT_DIR}"
