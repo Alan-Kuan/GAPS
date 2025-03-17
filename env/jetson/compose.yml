@@ -1,5 +1,5 @@
 services:
-  gaps-z:
+  gaps-i:
     build:
       context: .
     restart: unless-stopped
