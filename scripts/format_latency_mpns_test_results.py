@@ -21,8 +21,8 @@ def update_indices(df):
     amend = 0
     prev = -1
     for i in df.index:
-        # a repeat point is found
-        if i < prev:
+        # a repeat point is found (a sudden drop in index)
+        if prev - i > 5:
             amend += queue_size
         new_index.append(i + amend)
         prev = i
