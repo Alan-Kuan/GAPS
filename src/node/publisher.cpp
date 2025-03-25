@@ -116,8 +116,6 @@ void Publisher::put(const DeviceTensor& tensor) {
     }
     this->z_publisher.put(zenoh::Bytes(std::move(byte_arr)));
     PROF_ADD_POINT;
-
-    PROF_ADD_TAG(msg_header.msg_id);
 }
 #else
 void* Publisher::malloc(size_t size) {
@@ -150,7 +148,5 @@ void Publisher::put(void* payload, size_t size) {
     memcpy(byte_arr.data(), &msg_id, sizeof(msg_id));
     this->z_publisher.put(zenoh::Bytes(std::move(byte_arr)));
     PROF_ADD_POINT;
-
-    PROF_ADD_TAG(msg_id);
 }
 #endif

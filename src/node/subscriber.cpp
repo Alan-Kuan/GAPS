@@ -95,12 +95,6 @@ std::function<void(const zenoh::Sample&)> Subscriber::makeCallback(
             mq_entry->offset = offset;
         }
         PROF_ADD_POINT;
-
-#ifdef BUILD_PYGAPS
-        PROF_ADD_TAG(msg_header->msg_id);
-#else
-        PROF_ADD_TAG(msg_id);
-#endif
     };
     return callback;
 }

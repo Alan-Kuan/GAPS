@@ -150,24 +150,29 @@ void runAsPublisher(z::Session& session, int id, size_t payload_size, int times,
 
         // warming up
         for (int t = 0; t < 3; t++) {
-            int val = (id - 1) * total_times + t + 1;
+            int tag = (id - 1) * total_times + t + 1;
             int* buf_d = (int*) pub.malloc(payload_size);
-            init::fillArray(buf_d, payload_size / sizeof(int), val);
+            init::fillArray(buf_d, payload_size / sizeof(int), tag);
 
+            PROF_ADD_TAG(tag);
             PROF_ADD_POINT;
-            pub.put(buf_d, payload_size);
+            pub.put(buf_d, tag);
 
             this_thread::sleep_for(1s);
         }
 
         // real test
         for (int t = 3; t < total_times; t++) {
-            int val = (id - 1) * total_times + t + 1;
+            int tag = (id - 1) * total_times + t + 1;
             int* buf_d = (int*) pub.malloc(payload_size);
-            init::fillArray(buf_d, payload_size / sizeof(int), val);
+            init::fillArray(buf_d, payload_size / sizeof(int), tag);
 
+            PROF_ADD_TAG(tag);
             PROF_ADD_POINT;
-            pub.put(buf_d, payload_size);
+            // we won't use the payload size at the subscriber side during the
+            // test therefore, we exploit the payload_size argument to pass the
+            // tag
+            pub.put(buf_d, tag);
 
             // control publishing frequency
             this_thread::sleep_for(chrono::duration<double>(pub_interval));
@@ -181,9 +186,10 @@ void runAsPublisher(z::Session& session, int id, size_t payload_size, int times,
 void runAsSubscriber(z::Session& session, int id) {
     try {
         Subscriber sub(session, env::kTopic, env::kPoolSize,
-                       env::kMsgQueueCapExp, [](void* msg, size_t size) {
+                       env::kMsgQueueCapExp, [](void* msg, size_t tag) {
                            // upon received, set the current time point
                            PROF_ADD_POINT;
+                           PROF_ADD_TAG(tag);
                        });
 
         if (id == 1) cout << "Ctrl+C to stop" << endl;

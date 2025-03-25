@@ -15,19 +15,6 @@ output_dir = sys.argv[1]
 mpns_list = [(1, 2), (1, 4), (2, 1), (4, 1), (2, 2)]
 queue_size = 128
 
-# the original tag repeats every `queue_size` times, so we make it unique here
-def update_indices(df):
-    new_index = []
-    amend = 0
-    prev = -1
-    for i in df.index:
-        # a repeat point is found (a sudden drop in index)
-        if prev - i > 5:
-            amend += queue_size
-        new_index.append(i + amend)
-        prev = i
-    df.index = new_index
-
 def get_e2e_latency(df_pub, df_sub):
     diff_sec = df_sub[5] - df_pub[1]
     diff_nsec = df_sub[6] - df_pub[2]
@@ -45,14 +32,12 @@ for mpns in mpns_list:
     diff_list = []
     for i in range(np):
         df_pub = pd.read_csv(f"{pub_prefix}-{i + 1}.csv", header=None, index_col=0)
-        update_indices(df_pub)
 
         # drop wram-up rounds
         df_pub = df_pub.drop(df_pub.index[:3].to_list())
 
         for j in range(ns):
             df_sub = pd.read_csv(f"{sub_prefix}-{j + 1}.csv", header=None, index_col=0)
-            update_indices(df_sub)
 
             # end-to-end latency
             diff_list.append(get_e2e_latency(df_pub, df_sub).dropna().reset_index(drop=True))
