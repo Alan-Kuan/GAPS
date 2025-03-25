@@ -117,8 +117,6 @@ void Publisher::put(const DeviceTensor& tensor) {
             throwError(ss.str().c_str());
         });
     PROF_ADD_POINT;
-
-    PROF_ADD_TAG(msg_header.msg_id);
 }
 #else
 void* Publisher::malloc(size_t size) {
@@ -153,7 +151,5 @@ void Publisher::put(void* payload, size_t size) {
         throwError(ss.str().c_str());
     });
     PROF_ADD_POINT;
-
-    PROF_ADD_TAG(msg_id);
 }
 #endif

@@ -106,9 +106,6 @@ void Subscriber::onSampleReceived(iox_subscriber_t* iox_subscriber,
 
 #if BUILD_PYGAPS
                 iox_subscriber->release(payload);
-                PROF_ADD_TAG(msg_header->msg_id);
-#else
-                PROF_ADD_TAG(*msg_id);
 #endif
             })
             .or_else([&keep](auto& result) { keep = false; });
