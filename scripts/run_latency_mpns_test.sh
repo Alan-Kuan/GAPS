@@ -6,9 +6,9 @@ SCRIPT_DIR=`dirname $(realpath "$0")`
 RUN_TEST="./build/examples/latency/run_test"
 OUTPUT_DIR="outputs/mpns"
 
-NP=(1 1 2 4 2)
-NS=(2 4 1 1 2)
-SIZE=1024
+NP=(1 1 1 2 4 8)
+NS=(2 4 8 1 1 1)
+SIZE=65536
 TIMES=50
 PUB_INTERVAL=0.0001  # 100 us
 
