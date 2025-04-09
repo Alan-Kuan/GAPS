@@ -12,7 +12,7 @@ if len(sys.argv) < 2:
     exit(1)
 
 output_dir = sys.argv[1]
-mpns_list = [(1, 2), (1, 4), (2, 1), (4, 1), (2, 2)]
+mpns_list = [(1, 2), (1 ,4), (1, 8), (2, 1), (4, 1), (8, 1)]
 queue_size = 128
 
 def get_e2e_latency(df_pub, df_sub):
