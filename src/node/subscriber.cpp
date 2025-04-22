@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 
-#include <zenoh-pico/config.h>
 #include <zenoh.hxx>
 
 #include "metadata.hpp"

@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-#include <zenoh-pico/config.h>
 #include <zenoh.hxx>
 
 #include "error.hpp"
