@@ -18,7 +18,7 @@ To set it up, make sure the following requirements are met:
 There are two environments under `env/`:
 - `x86`: for x86 machines with an NVIDIA GPU
 - `jetson`: for NVIDIA Jetson embedded system like Jetson AGX Orin
-    - :warning: Please see `env/jetson/README.md` for how to build its base image before proceeding
+    - :warning: Please see [`env/jetson/README.md`](./env/jetson/README.md) for how to build its base image before proceeding
 
 Change directory to either one, and then run the following commands:
 ```sh
