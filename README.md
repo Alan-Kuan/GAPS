@@ -1,4 +1,4 @@
-# GAPS
+# GAPS: GPU-Aware Pub/Sub Communication
 
 ## Environment
 A Docker development environment is priovded in `env/`.
