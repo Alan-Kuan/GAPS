@@ -1,24 +1,32 @@
 # GAPS: GPU-Aware Pub/Sub Communication
+## Implementations
+There are two implementations of GAPS in different branches:
+
+- `main`: GAPS-z, built on top of Zenoh-cpp (with Zenoh-pico as backend)
+- `iceoryx`: GAPS-i, built on top of Iceoryx.
 
 ## Environment
-A Docker development environment is priovded in `env/`.
-To setup the environment, make sure the following requirements are met:
+Docker environment is priovded for development or testing.
+To set it up, make sure the following requirements are met:
 - Docker is installed
 - Docker Compose is installed
 - NVIDIA Container Toolkit is installed
     - Follow the installation and configuration steps [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 - CUDA 12.6 is supported by your host's NVIDIA driver
-- Some CUDA Driver APIs like `cuMemCreate` and `cuMemExportToShareableHandle` are supported by your NVIDIA GPU
+- CUDA Driver APIs like `cuMemCreate` and `cuMemExportToShareableHandle` are supported by your NVIDIA GPU
 
-There is an environment for development on x86 machine in `env/dev` and an environment for testing on Jetson Dev Board in `env/jetson`.
+There are two environments under `env/`:
+- `x86`: for x86 machines with an NVIDIA GPU
+- `jetson`: for NVIDIA Jetson embedded system like Jetson AGX Orin
+    - :warning: Please see `env/jetson/README.md` for how to build its base image before proceeding
 
-Choose one environment, and then run the following commands:
+Change directory to either one, and then run the following commands:
 ```sh
 docker compose up -d
 ssh ubuntu@localhost -p 22222
 ```
 
-To destroy the environment, run the following command:
+To destroy the environment, run the following command under the same directory:
 ```sh
 docker compose down
 ```
@@ -31,16 +39,13 @@ cmake GAPS -B build -G Ninja
 ninja -C build
 ```
 
-After building the project, the compiled executables lie in `build/src`.
+The compiled executables will be generated under `./build/src`.
 
-### CMake Build Options
+**CMake Build Options:**
+
 - `PROFILING=[on|(off)]`: whether to profile publisher's put and subscriber's callback
-    > [!WARN]
-    > When profiling the callback,
-    > make sure the publishing interval is high enough,
-    > or the outputing lines will affect the time measurement significantly
 - `BUILD_DEBUG=[on|(off)]`: whether to build with debugging codes
-- `BUILD_TORCH_SUPPORT=[on|(off)]`: whether to build PyTorch support
+- `BUILD_TORCH_SUPPORT=[on|(off)]`: whether to build PyTorch support (i.e., to build PyGAPS)
 - `BUILD_EXAMPLES=[(on)|off]`: whether to build example codes
 
 > [!Note]
