@@ -52,3 +52,19 @@ Pre-commit is used to setup clang-format pre-commit hooks.
 1. Install [pre-commit](https://pre-commit.com/) in your Python virtual environment.
 2. Run `pre-commit install` to install the hooks.
 3. Each time before committing, committed files will be formatted with `clang-format`.
+
+## Acknowledgements
+Thanks for the following works to make this project possible.
+
+- This project depends on the following third-party libraries:
+    - [CUDA](https://developer.nvidia.com/cuda-toolkit)
+    - [Zenoh-cpp](https://github.com/eclipse-zenoh/zenoh-cpp)
+    - [Zenoh-pico](https://github.com/eclipse-zenoh/zenoh-pico)
+    - [Iceoryx](https://github.com/eclipse-iceoryx/iceoryx)
+    - [nanobind](https://github.com/wjakob/nanobind)
+- Example codes in this projects depend on the following third-party libraries:
+    - [OpenCV](https://github.com/opencv/opencv)
+    - [PyTorch](https://github.com/pytorch/pytorch)
+    - [ultralytics](https://github.com/ultralytics/ultralytics)
+- Thanks [tlsf-bsd](https://github.com/jserv/tlsf-bsd) for showing how to implement the TLSF allocator.
+- Thanks [jetson-containers](https://github.com/dusty-nv/jetson-containers) for providing machine learning containers on NVIDIA Jetson embedded systems.
