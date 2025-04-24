@@ -6,14 +6,6 @@
 #include <cstddef>
 #include <cstdint>
 
-enum class DeviceType : uint8_t { kHost, kGPU };
-
-struct Domain {
-    uint16_t getId() const;
-    DeviceType dev_type;
-    uint16_t dev_id;
-};
-
 /**
  *  Shared Metadata Store:
  *  ┌──────────────┬──────────────┬───────────────────────┐
@@ -109,11 +101,6 @@ struct MessageQueueEntry {
 /**
  *  Inline Utility Functions
  */
-
-inline uint16_t Domain::getId() const {
-    // +1 to preserve 0 as undefined
-    return dev_id * 10 + (uint16_t) dev_type + 1;
-}
 
 inline TopicHeader* getTopicHeader(void* shm_base) {
     return (TopicHeader*) shm_base;
