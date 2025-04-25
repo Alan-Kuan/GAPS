@@ -63,7 +63,7 @@ struct TlsfHeader {
     uint32_t first_lvl;
     // indicate if any block exists in the list indexed by `fidx` and `sidx`
     uint32_t second_lvl[kFstLvlCnt];
-    // free lists of blocks (saved in the form of "block_idx + 1")
+    // lists of free blocks (saved in the form of "block_idx + 1")
     size_t free_lists[kFstLvlCnt][kSndLvlCnt];
 };
 
@@ -92,7 +92,7 @@ struct MessageQueueEntry {
     // referenced)
     uint32_t taken_num;
     // address offset of the allocated space for the payload
-    // (its first bit is used to determine if the relevant space is freed)
+    // (its right-most bit is used to determine if the relevant space is freed)
     size_t offset;
     // size of the payload
     size_t size;
