@@ -9,7 +9,7 @@ OUTPUT_DIR="outputs/mpns"
 NP=(1 1 1 2 4 8)
 NS=(2 4 8 1 1 1)
 SIZE=65536
-TIMES=50
+TIMES=100
 PUB_INTERVAL=0.0001  # 100 us
 
 mkdir -p "${OUTPUT_DIR}"
