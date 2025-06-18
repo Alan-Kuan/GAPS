@@ -12,7 +12,7 @@ if len(sys.argv) < 2:
     exit(1)
 
 output_dir = sys.argv[1]
-names = ["1KB", "4KB", "16KB", "64KB", "256KB", "1MB", "4MB"]
+names = ["4KB", "16KB", "64KB", "256KB", "1MB", "4MB"]
 
 cols = []
 for name in names:
