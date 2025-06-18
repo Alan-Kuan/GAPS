@@ -6,8 +6,8 @@ SCRIPT_DIR=`dirname $(realpath "$0")`
 RUN_TEST="./build/examples/latency/run_test"
 OUTPUT_DIR="outputs/1p1s"
 
-SIZE=(1024 4096 16384 65536 262144 1048576 4194304)
-NAME=(1KB 4KB 16KB 64KB 256KB 1MB 4MB)
+SIZE=(4096 16384 65536 262144 1048576 4194304)
+NAME=(4KB 16KB 64KB 256KB 1MB 4MB)
 TIMES=100
 PUB_INTERVAL=0.0001  # 100 us
 
@@ -35,7 +35,7 @@ for i in "${!SIZE[@]}"; do
     sleep 1  # wait a while for the subscriber to finish handling
 
     kill -s INT "${SUB_PID}"
-    sleep 1  # wait a while for the subscriber to finish dumping
+    wait "${SUB_PID}"
 done
 
 echo
