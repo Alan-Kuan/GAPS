@@ -39,7 +39,7 @@ for i in "${!SIZE[@]}"; do
     sleep 1  # wait a while for the subscriber to finish handling
 
     kill -s INT "${SUB_PID}"
-    sleep 1  # wait a while for the subscriber to finish dumping
+    wait "${SUB_PID}"
 done
 
 echo

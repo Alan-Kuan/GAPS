@@ -33,12 +33,13 @@ for i in "${!NP[@]}"; do
     SUB_PREFIX="${OUTPUT_DIR}/sub-${NP[i]}p${NS[i]}s"
 
     "${RUN_TEST}" -n "${NS[i]}" -o "${SUB_PREFIX}" >/dev/null &
+    SUB_PID="$!"
     sleep 1  # wait a while for the subscriber to be ready
     "${RUN_TEST}" -n "${NP[i]}" -o "${PUB_PREFIX}" -p -s "${SIZE}" -t "${TIMES}" -i "${PUB_INTERVAL}" >/dev/null
     sleep 1  # wait a while for the subscriber to finish handling
 
-    pkill --signal INT run_test
-    sleep 1  # wait a while for the subscriber to finish dumping
+    kill -s INT "-${SUB_PID}"  # send SIGINT to all subscribers
+    wait "${SUB_PID}"
 done
 
 echo
