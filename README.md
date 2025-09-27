@@ -1,4 +1,6 @@
 # GAPS: GPU-Aware Pub/Sub Communication
+This repo contains the framework introduced in the paper "Towards Low-Latency GPU-Aware Pub/Sub Communication for Real-Time Edge Computing" accepted by RTCSA 2025.
+
 ## Implementations
 There are two implementations of GAPS in different branches:
 
